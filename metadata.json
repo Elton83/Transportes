@@ -1,0 +1,6 @@
+{
+  "name": "SIGPAT Transportes - TJPR",
+  "description": "Sistema Integrado de Gestão de Transportes e Frotas Oficiais do TJPR, contemplando Dashboard Executivo da Frota (carros na frota, em uso, viagens no dia e agendadas), perfil operacional de motoristas, controle de viagens com checklist e diário de bordo, módulo de Oficinas (manutenção, inspeção, laudos e upload de notas) e Central de Documentos (veículos, condutores e atos administrativos).",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
