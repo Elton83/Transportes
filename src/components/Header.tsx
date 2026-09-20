@@ -11,11 +11,16 @@ import {
   FileText,
   Wrench,
   FolderLock,
-  LayoutDashboard
+  LayoutDashboard,
+  Menu,
+  Fuel,
+  CreditCard,
+  BarChart3,
+  LifeBuoy
 } from 'lucide-react';
 import { NotificationItem, Role } from '../types';
 
-export type MainNavTab = 'dashboard' | 'operacoes' | 'oficinas' | 'documentos';
+export type MainNavTab = 'dashboard' | 'operacoes' | 'chamados' | 'oficinas' | 'abastecer' | 'meu_beneficio' | 'documentos' | 'relatorios';
 
 interface HeaderProps {
   currentRole: Role;
@@ -28,6 +33,10 @@ interface HeaderProps {
   onComarcaChange: (comarca: string) => void;
   maintenancesCount?: number;
   documentsCount?: number;
+  chamadosCount?: number;
+  onOpenMobileSidebar?: () => void;
+  isSidebarCollapsed?: boolean;
+  onToggleSidebar?: () => void;
 }
 
 export const Header: React.FC<HeaderProps> = ({
@@ -41,6 +50,10 @@ export const Header: React.FC<HeaderProps> = ({
   onComarcaChange,
   maintenancesCount = 6,
   documentsCount = 8,
+  chamadosCount = 3,
+  onOpenMobileSidebar,
+  isSidebarCollapsed,
+  onToggleSidebar,
 }) => {
   const [showNotifications, setShowNotifications] = useState(false);
   const unreadCount = notifications.filter(n => !n.lida).length;
@@ -59,16 +72,42 @@ export const Header: React.FC<HeaderProps> = ({
   return (
     <header className="bg-[#002B49] text-white shadow-md border-b-4 border-[#C4A052] sticky top-0 z-40">
       {/* Top Bar Institucional TJPR */}
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="flex items-center justify-between h-20 gap-4">
+      <div className="w-full px-4 sm:px-6 lg:px-8">
+        <div className="flex items-center justify-between h-16 sm:h-20 gap-4">
           
-          {/* Logo / Brasão TJPR e Título do Sistema */}
-          <div className="flex items-center gap-3.5">
-            <div className="flex items-center justify-center w-12 h-12 rounded-lg bg-white/10 border border-white/20 shadow-inner flex-shrink-0">
+          {/* Logo / Brasão TJPR e Título do Sistema com Botão do Menu Lateral */}
+          <div className="flex items-center gap-3">
+            {/* Botão Menu Lateral Mobile */}
+            {onOpenMobileSidebar && (
+              <button
+                type="button"
+                onClick={onOpenMobileSidebar}
+                className="lg:hidden p-2 rounded-xl text-amber-400 hover:text-white hover:bg-white/10 transition-colors shrink-0"
+                title="Abrir Menu Lateral"
+                aria-label="Abrir Menu Lateral"
+              >
+                <Menu className="w-6 h-6" />
+              </button>
+            )}
+
+            {/* Botão Recolher/Expandir Menu Lateral Desktop */}
+            {onToggleSidebar && (
+              <button
+                type="button"
+                onClick={onToggleSidebar}
+                className="hidden lg:flex p-2 rounded-xl text-amber-400 hover:text-white hover:bg-white/10 transition-colors shrink-0"
+                title={isSidebarCollapsed ? "Expandir Menu Lateral" : "Recolher Menu Lateral"}
+                aria-label="Alternar Menu Lateral"
+              >
+                <Menu className="w-5 h-5" />
+              </button>
+            )}
+
+            <div className="flex items-center justify-center w-10 h-10 sm:w-12 sm:h-12 rounded-lg bg-white/10 border border-white/20 shadow-inner flex-shrink-0">
               {/* Símbolo Institucional Judiciário / Brasão TJPR estilizado */}
               <div className="relative flex flex-col items-center justify-center">
-                <Shield className="w-7 h-7 text-[#C4A052]" />
-                <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 font-serif font-black text-[9px] text-white tracking-widest">
+                <Shield className="w-5 h-5 sm:w-7 sm:h-7 text-[#C4A052]" />
+                <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 font-serif font-black text-[8px] sm:text-[9px] text-white tracking-widest">
                   TJPR
                 </div>
               </div>
@@ -79,61 +118,92 @@ export const Header: React.FC<HeaderProps> = ({
                 <span className="text-[10px] uppercase tracking-wider font-semibold text-blue-200">
                   Tribunal de Justiça do Estado do Paraná
                 </span>
-                <span className="text-[9px] bg-white/15 px-1.5 py-0.5 rounded text-amber-200 border border-amber-300/30 font-mono">
+                <span className="hidden sm:inline-block text-[9px] bg-white/15 px-1.5 py-0.5 rounded text-amber-200 border border-amber-300/30 font-mono">
                   PROJUDI / SEI
                 </span>
               </div>
-              <h1 className="text-lg sm:text-xl font-bold tracking-tight text-white flex items-center gap-2">
-                SIGPAT <span className="text-blue-300 font-normal">| Gestão de Transportes</span>
+              <h1 className="text-base sm:text-lg font-bold tracking-tight text-white flex items-center gap-2">
+                SIGPAT <span className="text-blue-300 font-normal hidden md:inline">| Gestão de Transportes</span>
               </h1>
+            </div>
+
+            {/* Badge do Módulo Ativo */}
+            <div className="hidden 2xl:flex items-center gap-2 pl-3 border-l border-white/15">
+              <span className="px-2.5 py-1 bg-white/10 border border-white/20 rounded-lg text-xs font-semibold text-amber-300 flex items-center gap-1.5">
+                {activeNavTab === 'dashboard' && <LayoutDashboard className="w-3.5 h-3.5" />}
+                {activeNavTab === 'operacoes' && <Car className="w-3.5 h-3.5" />}
+                {activeNavTab === 'chamados' && <LifeBuoy className="w-3.5 h-3.5" />}
+                {activeNavTab === 'oficinas' && <Wrench className="w-3.5 h-3.5" />}
+                {activeNavTab === 'abastecer' && <Fuel className="w-3.5 h-3.5" />}
+                {activeNavTab === 'meu_beneficio' && <CreditCard className="w-3.5 h-3.5" />}
+                {activeNavTab === 'documentos' && <FolderLock className="w-3.5 h-3.5" />}
+                {activeNavTab === 'relatorios' && <BarChart3 className="w-3.5 h-3.5" />}
+                <span>
+                  {activeNavTab === 'dashboard' && 'Dashboard Frota'}
+                  {activeNavTab === 'operacoes' && 'Operações & Viagens'}
+                  {activeNavTab === 'chamados' && 'Chamados & Suporte'}
+                  {activeNavTab === 'oficinas' && 'Oficinas & Manutenções'}
+                  {activeNavTab === 'abastecer' && 'Abastecer & Combustível'}
+                  {activeNavTab === 'meu_beneficio' && 'API Meu Benefício (Custas)'}
+                  {activeNavTab === 'documentos' && 'Documentos Oficiais'}
+                  {activeNavTab === 'relatorios' && 'Relatórios & Auditoria'}
+                </span>
+              </span>
             </div>
           </div>
 
-          {/* Central: Seletor Rápido de Perfis quando em Operações */}
-          {activeNavTab === 'operacoes' && (
-            <div className="hidden xl:flex items-center bg-[#001D33] p-1 rounded-lg border border-white/10">
-              <span className="text-xs text-slate-300 px-2 font-medium">Perfil:</span>
-              
-              <button
-                id="role-btn-motorista"
-                onClick={() => onRoleChange('motorista')}
-                className={`flex items-center gap-1.5 px-3 py-1.5 rounded-md text-xs font-semibold transition-all ${
-                  currentRole === 'motorista'
-                    ? 'bg-[#0084C7] text-white shadow'
-                    : 'text-slate-300 hover:text-white hover:bg-white/5'
-                }`}
-              >
-                <Car className="w-3.5 h-3.5" />
-                Motorista
-              </button>
+          {/* Central: Seletor Rápido de Padrões de Acesso (Administrador, Operador, Coordenador) */}
+          <div className="hidden xl:flex items-center bg-[#001D33] p-1 rounded-xl border border-white/10 shadow-inner">
+            <span className="text-[11px] text-slate-300 px-2 font-bold uppercase tracking-wider flex items-center gap-1">
+              <Shield className="w-3 h-3 text-[#C4A052]" />
+              Acesso:
+            </span>
+            
+            <button
+              id="role-btn-admin"
+              type="button"
+              onClick={() => onRoleChange('administrador')}
+              title="Acesso total à frota, aprovações, parametrizações e controle geral"
+              className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold transition-all ${
+                currentRole === 'administrador' || currentRole === 'gestor'
+                  ? 'bg-[#0084C7] text-white shadow-md'
+                  : 'text-slate-300 hover:text-white hover:bg-white/5'
+              }`}
+            >
+              <UserCheck className="w-3.5 h-3.5" />
+              Administrador
+            </button>
 
-              <button
-                id="role-btn-gestor"
-                onClick={() => onRoleChange('gestor')}
-                className={`flex items-center gap-1.5 px-3 py-1.5 rounded-md text-xs font-semibold transition-all ${
-                  currentRole === 'gestor'
-                    ? 'bg-[#0084C7] text-white shadow'
-                    : 'text-slate-300 hover:text-white hover:bg-white/5'
-                }`}
-              >
-                <UserCheck className="w-3.5 h-3.5" />
-                Gestor de Frota
-              </button>
+            <button
+              id="role-btn-operador"
+              type="button"
+              onClick={() => onRoleChange('operador')}
+              title="Acesso operacional do motorista: checklist, diário de bordo e abastecimento"
+              className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold transition-all ${
+                currentRole === 'operador' || currentRole === 'motorista'
+                  ? 'bg-[#0084C7] text-white shadow-md'
+                  : 'text-slate-300 hover:text-white hover:bg-white/5'
+              }`}
+            >
+              <Car className="w-3.5 h-3.5" />
+              Operador (Motorista)
+            </button>
 
-              <button
-                id="role-btn-solicitante"
-                onClick={() => onRoleChange('solicitante')}
-                className={`flex items-center gap-1.5 px-3 py-1.5 rounded-md text-xs font-semibold transition-all ${
-                  currentRole === 'solicitante'
-                    ? 'bg-[#0084C7] text-white shadow'
-                    : 'text-slate-300 hover:text-white hover:bg-white/5'
-                }`}
-              >
-                <FileText className="w-3.5 h-3.5" />
-                Solicitante
-              </button>
-            </div>
-          )}
+            <button
+              id="role-btn-coordenador"
+              type="button"
+              onClick={() => onRoleChange('coordenador')}
+              title="Acesso do coordenador: ver relatórios, abrir chamados e acompanhamento diário"
+              className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold transition-all ${
+                currentRole === 'coordenador'
+                  ? 'bg-[#0084C7] text-white shadow-md'
+                  : 'text-slate-300 hover:text-white hover:bg-white/5'
+              }`}
+            >
+              <LifeBuoy className="w-3.5 h-3.5" />
+              Coordenador
+            </button>
+          </div>
 
           {/* Lado Direito: Filtro de Comarca, Notificações e Usuário */}
           <div className="flex items-center gap-3">
@@ -228,132 +298,32 @@ export const Header: React.FC<HeaderProps> = ({
             {/* Avatar / Usuário TJPR */}
             <div className="flex items-center gap-2.5 pl-2 border-l border-white/15">
               <div className="w-9 h-9 rounded-full bg-gradient-to-br from-amber-400 to-amber-600 flex items-center justify-center font-bold text-slate-900 text-xs shadow">
-                {currentRole === 'motorista' ? 'CS' : currentRole === 'gestor' ? 'TJ' : 'MV'}
+                {currentRole === 'operador' || currentRole === 'motorista'
+                  ? 'OP'
+                  : currentRole === 'coordenador'
+                  ? 'CO'
+                  : 'AD'}
               </div>
               <div className="hidden sm:block text-left">
                 <p className="text-xs font-semibold text-white leading-tight">
-                  {currentRole === 'motorista'
+                  {currentRole === 'operador' || currentRole === 'motorista'
                     ? 'Carlos E. Silveira'
-                    : currentRole === 'gestor'
-                    ? 'Divisão de Transportes'
-                    : 'Dra. Mariana V.'}
+                    : currentRole === 'coordenador'
+                    ? 'Juliana Mendes'
+                    : 'Dr. Marcelo Ramos'}
                 </p>
                 <p className="text-[10px] text-blue-200">
-                  {currentRole === 'motorista'
-                    ? 'Condutor Oficial (Matr. 48.912)'
-                    : currentRole === 'gestor'
-                    ? 'Gestor da Frota Geral'
-                    : 'Gabinete Magistratura'}
+                  {currentRole === 'operador' || currentRole === 'motorista'
+                    ? 'Operador (Condutor Oficial)'
+                    : currentRole === 'coordenador'
+                    ? 'Coordenadora Regional TJPR'
+                    : 'Administrador da Frota (SIGPAT)'}
                 </p>
               </div>
             </div>
 
           </div>
 
-        </div>
-      </div>
-
-      {/* Menu Principal de Navegação (Operações, Oficinas e Documentos) */}
-      <div className="bg-[#00223A] border-t border-white/10 px-4 sm:px-6 lg:px-8">
-        <div className="max-w-7xl mx-auto flex items-center justify-between overflow-x-auto py-1">
-          <nav className="flex items-center space-x-1 sm:space-x-2 text-xs font-bold" aria-label="Módulos do Sistema">
-            
-            {/* Aba 0: Dashboard Geral da Frota (4 Indicadores Centrais) */}
-            <button
-              id="main-nav-dashboard"
-              onClick={() => onNavTabChange('dashboard')}
-              className={`px-3.5 py-2 rounded-lg flex items-center gap-2 transition-all whitespace-nowrap ${
-                activeNavTab === 'dashboard'
-                  ? 'bg-[#0084C7] text-white shadow-sm'
-                  : 'text-slate-300 hover:text-white hover:bg-white/5'
-              }`}
-            >
-              <LayoutDashboard className="w-4 h-4 text-amber-300" />
-              <span>Dashboard Frota</span>
-              <span className="px-1.5 py-0.2 bg-amber-400/30 text-amber-200 border border-amber-300/40 rounded-full text-[10px] font-mono">
-                Indicadores
-              </span>
-            </button>
-
-            {/* Aba 1: Operações & Viagens */}
-            <button
-              id="main-nav-operacoes"
-              onClick={() => onNavTabChange('operacoes')}
-              className={`px-3.5 py-2 rounded-lg flex items-center gap-2 transition-all whitespace-nowrap ${
-                activeNavTab === 'operacoes'
-                  ? 'bg-[#0084C7] text-white shadow-sm'
-                  : 'text-slate-300 hover:text-white hover:bg-white/5'
-              }`}
-            >
-              <Car className="w-4 h-4 text-amber-300" />
-              <span>Operações & Viagens</span>
-            </button>
-
-            {/* Aba 2: Oficinas (Requisitada pelo usuário) */}
-            <button
-              id="main-nav-oficinas"
-              onClick={() => onNavTabChange('oficinas')}
-              className={`px-3.5 py-2 rounded-lg flex items-center gap-2 transition-all whitespace-nowrap ${
-                activeNavTab === 'oficinas'
-                  ? 'bg-[#0084C7] text-white shadow-sm'
-                  : 'text-slate-300 hover:text-white hover:bg-white/5'
-              }`}
-            >
-              <Wrench className="w-4 h-4 text-amber-300" />
-              <span>Oficinas & Manutenções</span>
-              <span className="px-1.5 py-0.2 bg-amber-400/30 text-amber-200 border border-amber-300/40 rounded-full text-[10px] font-mono">
-                Laudos & NF-e
-              </span>
-            </button>
-
-            {/* Aba 3: Documentos (Requisitada pelo usuário) */}
-            <button
-              id="main-nav-documentos"
-              onClick={() => onNavTabChange('documentos')}
-              className={`px-3.5 py-2 rounded-lg flex items-center gap-2 transition-all whitespace-nowrap ${
-                activeNavTab === 'documentos'
-                  ? 'bg-[#0084C7] text-white shadow-sm'
-                  : 'text-slate-300 hover:text-white hover:bg-white/5'
-              }`}
-            >
-              <FolderLock className="w-4 h-4 text-amber-300" />
-              <span>Documentos Oficiais</span>
-              <span className="px-1.5 py-0.2 bg-emerald-400/30 text-emerald-200 border border-emerald-300/40 rounded-full text-[10px] font-mono">
-                CRLV • CNH • SEI
-              </span>
-            </button>
-
-          </nav>
-
-          {/* Seletor de Perfil Responsivo quando em Operações */}
-          {activeNavTab === 'operacoes' && (
-            <div className="flex xl:hidden items-center gap-1 py-1 pl-3 border-l border-white/10">
-              <button
-                onClick={() => onRoleChange('motorista')}
-                className={`px-2 py-1 rounded text-[11px] font-medium ${
-                  currentRole === 'motorista' ? 'bg-[#0084C7] text-white' : 'text-slate-300'
-                }`}
-              >
-                Motorista
-              </button>
-              <button
-                onClick={() => onRoleChange('gestor')}
-                className={`px-2 py-1 rounded text-[11px] font-medium ${
-                  currentRole === 'gestor' ? 'bg-[#0084C7] text-white' : 'text-slate-300'
-                }`}
-              >
-                Gestor
-              </button>
-              <button
-                onClick={() => onRoleChange('solicitante')}
-                className={`px-2 py-1 rounded text-[11px] font-medium ${
-                  currentRole === 'solicitante' ? 'bg-[#0084C7] text-white' : 'text-slate-300'
-                }`}
-              >
-                Solicitante
-              </button>
-            </div>
-          )}
         </div>
       </div>
     </header>

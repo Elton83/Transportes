@@ -10,20 +10,31 @@ import {
   ShieldCheck, 
   UserPlus, 
   Users, 
-  X 
+  X,
+  Radio,
+  ExternalLink,
+  MessageSquare,
+  Info,
+  CheckCircle2
 } from 'lucide-react';
-import { Trip } from '../../types';
+import { Trip, TeamsIntegrationConfig } from '../../types';
 
 interface SolicitationPortalProps {
   trips: Trip[];
   onCreateTrip: (trip: Omit<Trip, 'id' | 'codigo' | 'status' | 'diarioBordo' | 'dataCriacao'>) => void;
   onOpenOfficialOrder: (trip: Trip) => void;
+  onOpenTeamsExtract?: (trip: Trip) => void;
+  onOpenTeamsConfig?: () => void;
+  teamsConfig?: TeamsIntegrationConfig;
 }
 
 export const SolicitationPortal: React.FC<SolicitationPortalProps> = ({
   trips,
   onCreateTrip,
   onOpenOfficialOrder,
+  onOpenTeamsExtract,
+  onOpenTeamsConfig,
+  teamsConfig,
 }) => {
   const [showForm, setShowForm] = useState(false);
 
@@ -41,11 +52,16 @@ export const SolicitationPortal: React.FC<SolicitationPortalProps> = ({
   const [dataRetornoPrevista, setDataRetornoPrevista] = useState('2026-09-24');
   const [horaRetornoPrevista, setHoraRetornoPrevista] = useState('19:00');
   const [passengerInput, setPassengerInput] = useState('');
+  const [notifyTeams, setNotifyTeams] = useState(true);
   const [passageiros, setPassageiros] = useState<string[]>([
     'Dra. Mariana Vasconcellos (Magistrada)',
     'Dra. Camila Duarte (Assessora)',
   ]);
   const [observacoes, setObservacoes] = useState('');
+
+  const coordenadorPadraoNome = teamsConfig?.coordenadorNome || 'Juliana Mendes';
+  const coordenadorPadraoCargo = teamsConfig?.coordenadorCargo || 'Coordenadora Regional de Transportes';
+  const coordenadorPadraoEmail = teamsConfig?.coordenadorEmail || 'juliana.mendes@tjpr.jus.br';
 
   const handleAddPassenger = () => {
     if (passengerInput.trim() && !passageiros.includes(passengerInput.trim())) {
@@ -89,28 +105,53 @@ export const SolicitationPortal: React.FC<SolicitationPortalProps> = ({
       {/* Banner Institucional do Solicitante */}
       <div className="bg-white rounded-xl shadow-xs border border-slate-200 p-6 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
         <div>
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-2 flex-wrap">
             <span className="px-2.5 py-0.5 bg-blue-100 text-[#002B49] rounded text-xs font-bold uppercase font-mono">
               Módulo Solicitante TJPR
             </span>
             <span className="text-xs text-slate-500 font-medium">Magistrados & Servidores</span>
+            
+            {/* Badge de Integração com o Teams */}
+            {onOpenTeamsConfig && (
+              <button
+                onClick={onOpenTeamsConfig}
+                className="px-2 py-0.5 rounded text-[11px] font-semibold bg-[#464EB8]/10 text-[#464EB8] hover:bg-[#464EB8]/20 border border-[#464EB8]/20 flex items-center gap-1.5 transition-colors cursor-pointer"
+                title="Configurações e Histórico de Extratos do Microsoft Teams"
+              >
+                <span className="w-2 h-2 rounded-full bg-emerald-500"></span>
+                <span>Microsoft Teams Conectado</span>
+              </button>
+            )}
           </div>
           <h2 className="text-lg font-bold text-slate-900 mt-1">
             Requisição de Veículos Oficiais para Diligências Institucionais
           </h2>
           <p className="text-xs text-slate-500 mt-0.5">
-            Solicite transporte oficial conforme as resoluções vigentes do Tribunal de Justiça do Estado do Paraná.
+            Solicite transporte oficial com despacho automatizado e extrato em tempo real ao demandante e à coordenação regional via Teams.
           </p>
         </div>
 
-        <button
-          id="btn-nova-solicitacao"
-          onClick={() => setShowForm(!showForm)}
-          className="px-4 py-2.5 bg-[#002B49] hover:bg-[#003860] text-white rounded-lg text-xs font-bold shadow-xs transition-colors flex items-center gap-2 shrink-0"
-        >
-          {showForm ? <X className="w-4 h-4" /> : <Plus className="w-4 h-4 text-[#C4A052]" />}
-          {showForm ? 'Fechar Formulário' : 'Nova Requisição de Transporte'}
-        </button>
+        <div className="flex items-center gap-2 shrink-0">
+          {onOpenTeamsConfig && (
+            <button
+              onClick={onOpenTeamsConfig}
+              className="px-3 py-2.5 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-lg text-xs font-semibold flex items-center gap-1.5 transition-colors cursor-pointer"
+              title="Gerenciar envio de extratos do Teams"
+            >
+              <Radio className="w-3.5 h-3.5 text-[#464EB8]" />
+              Teams
+            </button>
+          )}
+
+          <button
+            id="btn-nova-solicitacao"
+            onClick={() => setShowForm(!showForm)}
+            className="px-4 py-2.5 bg-[#002B49] hover:bg-[#003860] text-white rounded-lg text-xs font-bold shadow-xs transition-colors flex items-center gap-2 shrink-0 cursor-pointer"
+          >
+            {showForm ? <X className="w-4 h-4" /> : <Plus className="w-4 h-4 text-[#C4A052]" />}
+            {showForm ? 'Fechar Formulário' : 'Nova Requisição de Transporte'}
+          </button>
+        </div>
       </div>
 
       {/* Formulário de Solicitação */}
@@ -339,21 +380,70 @@ export const SolicitationPortal: React.FC<SolicitationPortalProps> = ({
               />
             </div>
 
+            {/* Integração Microsoft Teams - Notificação do Demandante e Coordenador */}
+            <div className="bg-[#464EB8]/5 border border-[#464EB8]/25 rounded-xl p-4 space-y-3">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-2">
+                  <div className="w-7 h-7 rounded-lg bg-[#464EB8] text-white flex items-center justify-center font-bold text-xs shadow-xs">
+                    <svg className="w-4 h-4 fill-white" viewBox="0 0 24 24">
+                      <path d="M19.5 7.5a2.5 2.5 0 0 0-2.5 2.5v1.2a4.4 4.4 0 0 1 2.5.8V10a.5.5 0 0 1 .5-.5h2a.5.5 0 0 1 .5.5v3.5a.5.5 0 0 1-.5.5h-2c-.28 0-.5-.22-.5-.5v-.3a4.5 4.5 0 0 1-2.5.8v1a2.5 2.5 0 0 0 2.5 2.5h2a2.5 2.5 0 0 0 2.5-2.5V10a2.5 2.5 0 0 0-2.5-2.5h-2zM15 4a3 3 0 0 0-3 3v.2a5.4 5.4 0 0 1 3 1.3V7a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v4a1 1 0 0 1-1 1h-4a1 1 0 0 1-1-1v-.3a5.5 5.5 0 0 1-3 1.3V14a3 3 0 0 0 3 3h4a3 3 0 0 0 3-3V7a3 3 0 0 0-3-3h-4zM9 8a4 4 0 1 0 0 8 4 4 0 0 0 0-8zm-5 9a3 3 0 0 0-3 3v1h16v-1a3 3 0 0 0-3-3H4z"/>
+                    </svg>
+                  </div>
+                  <div>
+                    <span className="text-[10px] font-bold uppercase tracking-wider text-[#464EB8] block">
+                      Integração Microsoft Teams TJPR
+                    </span>
+                    <h4 className="text-xs font-bold text-slate-900">
+                      Disparo Automático de Extrato da Solicitação
+                    </h4>
+                  </div>
+                </div>
+
+                <label className="flex items-center gap-2 cursor-pointer">
+                  <input
+                    type="checkbox"
+                    checked={notifyTeams}
+                    onChange={(e) => setNotifyTeams(e.target.checked)}
+                    className="w-4 h-4 rounded text-[#464EB8] focus:ring-[#464EB8] cursor-pointer"
+                  />
+                  <span className="text-xs font-bold text-[#464EB8]">Notificar via Teams</span>
+                </label>
+              </div>
+
+              <p className="text-[11px] text-slate-600 leading-relaxed">
+                Após o protocolo da solicitação, o sistema despacha automaticamente um <strong>extrato oficial de viagem</strong> via Microsoft Teams (Adaptive Card v1.4) com todos os dados da requisição:
+              </p>
+
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 text-[11px]">
+                <div className="bg-white p-2.5 rounded-lg border border-slate-200">
+                  <span className="text-[10px] uppercase font-bold text-slate-500 block">👤 Ao Demandante (Solicitante)</span>
+                  <strong className="text-slate-900 block mt-0.5">{solicitanteNome}</strong>
+                  <span className="text-slate-600 block text-[10px]">mariana.vasconcellos@tjpr.jus.br</span>
+                </div>
+
+                <div className="bg-white p-2.5 rounded-lg border border-slate-200">
+                  <span className="text-[10px] uppercase font-bold text-slate-500 block">🏛️ Ao Coordenador Regional</span>
+                  <strong className="text-slate-900 block mt-0.5">{coordenadorPadraoNome}</strong>
+                  <span className="text-slate-600 block text-[10px]">{coordenadorPadraoEmail}</span>
+                </div>
+              </div>
+            </div>
+
             {/* Ações */}
             <div className="flex items-center justify-end gap-3 pt-3 border-t border-slate-200">
               <button
                 type="button"
                 onClick={() => setShowForm(false)}
-                className="px-3.5 py-1.5 text-xs font-semibold text-slate-600 hover:text-slate-800 rounded transition-colors"
+                className="px-3.5 py-1.5 text-xs font-semibold text-slate-600 hover:text-slate-800 rounded transition-colors cursor-pointer"
               >
                 Cancelar
               </button>
               <button
                 type="submit"
-                className="px-4 py-2 text-xs font-bold text-white bg-[#002B49] hover:bg-[#003860] rounded-lg shadow transition-colors flex items-center gap-1.5"
+                className="px-4 py-2 text-xs font-bold text-white bg-[#002B49] hover:bg-[#003860] rounded-lg shadow-xs transition-colors flex items-center gap-1.5 cursor-pointer"
               >
                 <Send className="w-4 h-4 text-[#C4A052]" />
-                Protocolar Requisição de Transporte
+                Protocolar Requisição & Notificar Teams
               </button>
             </div>
 
@@ -368,7 +458,7 @@ export const SolicitationPortal: React.FC<SolicitationPortalProps> = ({
             Minhas Solicitações de Transporte Cadastradas
           </h3>
           <p className="text-[11px] text-slate-500">
-            Acompanhe a análise da Divisão de Transportes e a designação do motorista
+            Acompanhe a análise da Divisão de Transportes, extratos transmitidos ao Teams e a designação do motorista
           </p>
         </div>
 
@@ -406,6 +496,11 @@ export const SolicitationPortal: React.FC<SolicitationPortalProps> = ({
                   <span className="font-mono text-slate-500 text-[11px]">
                     SEI: {trip.processoSei}
                   </span>
+
+                  <span className="inline-flex items-center gap-1 text-[10px] text-[#464EB8] font-bold bg-[#464EB8]/10 border border-[#464EB8]/20 px-2 py-0.5 rounded">
+                    <CheckCircle2 className="w-2.5 h-2.5 text-[#464EB8]" />
+                    Extrato Teams Transmitido
+                  </span>
                 </div>
 
                 <div className="flex items-center gap-1.5 font-semibold text-slate-800">
@@ -430,9 +525,20 @@ export const SolicitationPortal: React.FC<SolicitationPortalProps> = ({
               </div>
 
               <div className="flex items-center gap-2 shrink-0">
+                {onOpenTeamsExtract && (
+                  <button
+                    onClick={() => onOpenTeamsExtract(trip)}
+                    className="px-3 py-1.5 bg-[#464EB8]/10 hover:bg-[#464EB8]/20 text-[#464EB8] border border-[#464EB8]/30 rounded-lg font-bold text-xs flex items-center gap-1.5 transition-colors cursor-pointer"
+                    title="Abrir extrato oficial transmitido ao Microsoft Teams"
+                  >
+                    <MessageSquare className="w-3 h-3 text-[#464EB8]" />
+                    Extrato Teams
+                  </button>
+                )}
+
                 <button
                   onClick={() => onOpenOfficialOrder(trip)}
-                  className="px-3 py-1.5 bg-slate-100 hover:bg-slate-200 text-slate-800 rounded-lg font-semibold text-xs flex items-center gap-1 transition-colors"
+                  className="px-3 py-1.5 bg-slate-100 hover:bg-slate-200 text-slate-800 rounded-lg font-semibold text-xs flex items-center gap-1 transition-colors cursor-pointer"
                 >
                   <FileText className="w-3 h-3 text-[#002B49]" />
                   Guia Oficial

@@ -1,4 +1,48 @@
-export type Role = 'motorista' | 'gestor' | 'solicitante';
+export type Role = 
+  | 'administrador' 
+  | 'operador' 
+  | 'coordenador'
+  | 'gestor' 
+  | 'motorista' 
+  | 'solicitante';
+
+export type ChamadoStatus = 'aberto' | 'em_atendimento' | 'concluido' | 'cancelado';
+export type ChamadoPrioridade = 'baixa' | 'media' | 'alta' | 'urgente';
+export type ChamadoTipo = 
+  | 'solicitacao_veiculo' 
+  | 'manutencao_emergencial' 
+  | 'veiculo_apoio' 
+  | 'ajuste_beneficio' 
+  | 'ocorrencia_frota' 
+  | 'outro';
+
+export interface ChamadoResposta {
+  id: string;
+  autor: string;
+  cargo: string;
+  dataHora: string;
+  mensagem: string;
+  isAdmin?: boolean;
+}
+
+export interface Chamado {
+  id: string;
+  codigo: string; // Ex: CHA-2026-0041
+  titulo: string;
+  descricao: string;
+  tipo: ChamadoTipo;
+  prioridade: ChamadoPrioridade;
+  status: ChamadoStatus;
+  dataAbertura: string;
+  solicitanteNome: string;
+  solicitanteCargo: string;
+  solicitanteMatricula: string;
+  comarca: string;
+  veiculoPrefixo?: string;
+  processoSei?: string;
+  prazoSugerido?: string;
+  respostas: ChamadoResposta[];
+}
 
 export type VehicleStatus = 'disponivel' | 'em_viagem' | 'manutencao' | 'reservado';
 
@@ -254,6 +298,26 @@ export interface OfficialDocument {
   };
 }
 
+export interface TripSignatureData {
+  data: string; // Ex: '17/09/2026'
+  condutorNome: string;
+  condutorMatricula: string;
+  veiculoModelo: string;
+  placa: string;
+  destino: string;
+  horaSaida: string;
+  kmSaida: number | string;
+  horaRetorno: string;
+  kmRetorno: number | string;
+  passageiroNome: string;
+  passageiroMatricula: string;
+  assinaturaCondutorSvg?: string;
+  assinaturaPassageiroSvg?: string;
+  dataHoraAssinatura?: string;
+  autenticadoDigitalmente?: boolean;
+  hashAutenticidade?: string;
+}
+
 export interface Trip {
   id: string;
   codigo: string; // Ex: TRP-2026-0842
@@ -281,9 +345,56 @@ export interface Trip {
   kmFinal?: number;
   checklistSaida?: ChecklistData;
   checklistRetorno?: ChecklistData;
+  assinaturaRealizacao?: TripSignatureData;
   diarioBordo: LogEntry[];
   observacoes?: string;
   dataCriacao: string;
+  teamsNotified?: boolean;
+  teamsDispatchDate?: string;
+  teamsDispatchId?: string;
+  coordenadorNotificado?: string;
+}
+
+export interface TeamsIntegrationConfig {
+  webhookUrl: string;
+  channelName: string;
+  active: boolean;
+  notifyDemandante: boolean;
+  notifyCoordenador: boolean;
+  coordenadorNome: string;
+  coordenadorEmail: string;
+  coordenadorCargo: string;
+  tenantId: string;
+  autoDispatchOnCreation: boolean;
+  lastDispatchTime?: string;
+  totalDispatches: number;
+}
+
+export interface TeamsDispatchLog {
+  id: string;
+  tripId: string;
+  tripCodigo: string;
+  processoSei: string;
+  dataHora: string;
+  demandanteNome: string;
+  demandanteCargo: string;
+  demandanteEmail: string;
+  coordenadorNome: string;
+  coordenadorCargo: string;
+  coordenadorEmail: string;
+  comarca: string;
+  status: 'enviado' | 'pendente' | 'erro';
+  origem: string;
+  destino: string;
+  dataSaida: string;
+  horaSaida: string;
+  dataRetornoPrevista: string;
+  horaRetornoPrevista: string;
+  finalidade: string;
+  passageiros: string[];
+  canalTeams: string;
+  responseStatus: string;
+  payloadPreview?: string;
 }
 
 export interface NotificationItem {
@@ -294,4 +405,62 @@ export interface NotificationItem {
   lida: boolean;
   tipo: 'viagem' | 'manutencao' | 'cnh' | 'alerta';
   link?: string;
+}
+
+export type MeuBeneficioTipoCusta = 
+  | 'abastecimento' 
+  | 'pedagio' 
+  | 'estacionamento' 
+  | 'manutencao_rapida' 
+  | 'outros';
+
+export type MeuBeneficioStatusAuditoria = 
+  | 'auditado_aprovado' 
+  | 'em_analise' 
+  | 'divergencia' 
+  | 'pendente_comprovante';
+
+export interface MeuBeneficioTransaction {
+  id: string;
+  transacaoId: string;
+  nsu: string;
+  tipo: MeuBeneficioTipoCusta;
+  categoriaDescricao: string;
+  estabelecimento: string;
+  cnpj: string;
+  cidade: string;
+  uf: string;
+  dataHora: string;
+  valor: number;
+  veiculoPrefixo: string;
+  veiculoPlaca: string;
+  condutorNome: string;
+  condutorMatricula: string;
+  cartaoNumeroMascarado: string;
+  statusAuditoria: MeuBeneficioStatusAuditoria;
+  viagemVinculadaId?: string;
+  processoSei?: string;
+  odometroInformado?: number;
+  observacaoAuditoria?: string;
+  detalhes?: {
+    litros?: number;
+    precoLitro?: number;
+    tipoCombustivel?: string;
+    rodovia?: string;
+    kmPraca?: string;
+    concessionaria?: string;
+    tempoEstacionado?: string;
+  };
+}
+
+export interface MeuBeneficioApiConfig {
+  endpoint: string;
+  ambiente: 'producao' | 'homologacao';
+  statusConexao: 'online' | 'sincronizando' | 'offline';
+  ultimaSincronizacao: string;
+  latenciaMs: number;
+  webhookAtivo: boolean;
+  totalTransacoesHoje: number;
+  valorTotalHoje: number;
+  divergenciasDetectadas: number;
 }

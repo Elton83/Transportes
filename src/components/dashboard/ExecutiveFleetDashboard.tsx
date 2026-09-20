@@ -24,9 +24,17 @@ import {
   Plus,
   RefreshCw,
   Sparkles,
-  Gauge
+  Gauge,
+  Smartphone,
+  Phone,
+  Satellite,
+  Compass,
+  PenTool,
+  FileCheck2
 } from 'lucide-react';
-import { Driver, FuelLog, Trip, Vehicle } from '../../types';
+import { Driver, FuelLog, Trip, Vehicle, TripSignatureData } from '../../types';
+import { DriverGpsTrackingModal } from './DriverGpsTrackingModal';
+import { TripSignatureModal } from './TripSignatureModal';
 
 interface ExecutiveFleetDashboardProps {
   vehicles: Vehicle[];
@@ -37,6 +45,7 @@ interface ExecutiveFleetDashboardProps {
   onSelectVehicle?: (vehicle: Vehicle) => void;
   onOpenTripDetails?: (trip: Trip) => void;
   onOpenOfficialOrder?: (trip: Trip) => void;
+  onSaveTripSignature?: (tripId: string, signatureData: TripSignatureData) => void;
   onScheduleNewTrip?: () => void;
   onRegisterNewVehicle?: () => void;
 }
@@ -50,6 +59,7 @@ export const ExecutiveFleetDashboard: React.FC<ExecutiveFleetDashboardProps> = (
   selectedComarca,
   onOpenTripDetails,
   onOpenOfficialOrder,
+  onSaveTripSignature,
   onScheduleNewTrip,
   onRegisterNewVehicle,
 }) => {
@@ -60,6 +70,16 @@ export const ExecutiveFleetDashboard: React.FC<ExecutiveFleetDashboardProps> = (
   const [comarcaFilter, setComarcaFilter] = useState<string>(
     selectedComarca === 'Todas as Comarcas' ? 'todas' : selectedComarca
   );
+
+  // Estado para o Acompanhamento por GPS via celular do motorista
+  const [trackingModalData, setTrackingModalData] = useState<{
+    vehicle: Vehicle;
+    trip: Trip;
+    driver?: Driver;
+  } | null>(null);
+
+  // Estado para o Termo de Realização da Viagem com Assinatura
+  const [signatureModalTrip, setSignatureModalTrip] = useState<Trip | null>(null);
 
   // Filtragem base dos veículos pela comarca (se selecionada)
   const filteredVehicles = useMemo(() => {
@@ -325,9 +345,27 @@ export const ExecutiveFleetDashboard: React.FC<ExecutiveFleetDashboardProps> = (
             </div>
             <div className="flex items-center justify-between mt-2 text-[11px] text-slate-500">
               <span>{inUseCount} em deslocamento ativo</span>
-              <span className="text-sky-700 font-medium flex items-center gap-0.5 group-hover:translate-x-0.5 transition-transform">
-                Rastrear <ChevronRight className="w-3 h-3" />
-              </span>
+              <button 
+                type="button"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  if (inUseVehicles.length > 0) {
+                    const firstVeh = inUseVehicles[0];
+                    const activeTrp = trips.find(
+                      (t) => t.status === 'em_andamento' && (t.veiculoId === firstVeh.id || t.veiculoPrefixo === firstVeh.prefixo)
+                    );
+                    if (activeTrp) {
+                      const drv = drivers.find((d) => d.id === activeTrp.motoristaId);
+                      setTrackingModalData({ vehicle: firstVeh, trip: activeTrp, driver: drv });
+                      return;
+                    }
+                  }
+                  setActiveFocus('em_uso');
+                }}
+                className="text-sky-700 font-medium flex items-center gap-0.5 hover:underline cursor-pointer group-hover:translate-x-0.5 transition-transform"
+              >
+                Rastrear Celular <ChevronRight className="w-3 h-3" />
+              </button>
             </div>
           </div>
         </div>
@@ -517,7 +555,7 @@ export const ExecutiveFleetDashboard: React.FC<ExecutiveFleetDashboardProps> = (
           {/* SEÇÃO 1: CARROS EM USO (QUANDO 'todos' OU 'em_uso') */}
           {(activeFocus === 'todos' || activeFocus === 'em_uso') && (
             <div className="mb-8">
-              <div className="flex items-center justify-between mb-4">
+              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-4">
                 <div className="flex items-center gap-2">
                   <div className="w-2.5 h-2.5 rounded-full bg-sky-500 animate-ping" />
                   <h2 className="text-base font-bold text-slate-900">
@@ -527,14 +565,36 @@ export const ExecutiveFleetDashboard: React.FC<ExecutiveFleetDashboardProps> = (
                     • Veículos em trânsito com missão em andamento
                   </span>
                 </div>
-                {activeFocus === 'todos' && (
-                  <button 
-                    onClick={() => setActiveFocus('em_uso')}
-                    className="text-xs text-sky-700 font-semibold hover:underline flex items-center gap-1"
-                  >
-                    Ver somente em uso <ChevronRight className="w-3.5 h-3.5" />
-                  </button>
-                )}
+                
+                <div className="flex items-center gap-2">
+                  {inUseVehicles.length > 0 && (
+                    <button
+                      onClick={() => {
+                        const firstVeh = inUseVehicles[0];
+                        const activeTrp = trips.find(
+                          (t) => t.status === 'em_andamento' && (t.veiculoId === firstVeh.id || t.veiculoPrefixo === firstVeh.prefixo)
+                        );
+                        if (activeTrp) {
+                          const drv = drivers.find((d) => d.id === activeTrp.motoristaId);
+                          setTrackingModalData({ vehicle: firstVeh, trip: activeTrp, driver: drv });
+                        }
+                      }}
+                      className="flex items-center gap-1.5 px-3 py-1.5 bg-[#002B49] hover:bg-[#003B66] text-white rounded-xl text-xs font-semibold shadow-xs transition-colors"
+                    >
+                      <Radio className="w-3.5 h-3.5 text-emerald-400 animate-pulse" />
+                      <span>Mapa GPS dos Condutores ({inUseCount})</span>
+                    </button>
+                  )}
+
+                  {activeFocus === 'todos' && (
+                    <button 
+                      onClick={() => setActiveFocus('em_uso')}
+                      className="text-xs text-sky-700 font-semibold hover:underline flex items-center gap-1"
+                    >
+                      Ver somente em uso <ChevronRight className="w-3.5 h-3.5" />
+                    </button>
+                  )}
+                </div>
               </div>
 
               {inUseVehicles.length === 0 ? (
@@ -610,6 +670,28 @@ export const ExecutiveFleetDashboard: React.FC<ExecutiveFleetDashboardProps> = (
                                 {activeTrip.solicitanteNome}
                               </span>
                             </div>
+
+                            {/* Telemetria do Smartphone do Condutor em Destaque */}
+                            <div className="p-2.5 bg-white/90 rounded-lg border border-sky-200 flex flex-col gap-1.5">
+                              <div className="flex items-center justify-between">
+                                <div className="flex items-center gap-1.5 text-slate-700 font-medium">
+                                  <Smartphone className="w-3.5 h-3.5 text-[#002B49]" />
+                                  <span>{driver?.id === 'drv-2' ? 'Samsung Galaxy A54 5G' : 'Samsung Galaxy A34 5G'}</span>
+                                </div>
+                                <span className="text-[11px] font-mono font-bold text-emerald-700 bg-emerald-50 px-1.5 py-0.5 rounded border border-emerald-200">
+                                  84% 🔋 • 5G
+                                </span>
+                              </div>
+                              <div className="flex items-center justify-between text-[11px] text-slate-500">
+                                <span className="flex items-center gap-1 text-slate-700">
+                                  <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-ping" />
+                                  GPS: <strong>{vehicle.prefixo === 'TJ-208' ? 'BR-277, Km 142' : 'BR-277, Km 48'}</strong>
+                                </span>
+                                <span className="font-mono text-slate-800 font-semibold">
+                                  {vehicle.prefixo === 'TJ-208' ? '78 km/h' : '72 km/h'}
+                                </span>
+                              </div>
+                            </div>
                           </div>
                         ) : (
                           <div className="mt-3 pt-2 text-xs text-slate-500">
@@ -617,17 +699,37 @@ export const ExecutiveFleetDashboard: React.FC<ExecutiveFleetDashboardProps> = (
                           </div>
                         )}
 
-                        {activeTrip && onOpenOfficialOrder && (
-                          <div className="mt-3 flex justify-end">
+                        <div className="mt-3.5 pt-3 border-t border-sky-100 flex flex-wrap items-center justify-between gap-2">
+                          {activeTrip && onOpenOfficialOrder ? (
                             <button
                               onClick={() => onOpenOfficialOrder(activeTrip)}
-                              className="text-xs text-[#002B49] font-semibold hover:underline flex items-center gap-1"
+                              className="text-xs text-slate-600 hover:text-[#002B49] font-semibold hover:underline flex items-center gap-1"
                             >
                               <FileText className="w-3.5 h-3.5" />
                               Ver Ordem de Tráfego
                             </button>
-                          </div>
-                        )}
+                          ) : <div />}
+
+                          {activeTrip && (
+                            <div className="flex items-center gap-2">
+                              <a
+                                href={`tel:${(driver?.telefone || '(41) 98822-4910').replace(/\D/g, '')}`}
+                                className="p-2 bg-white hover:bg-slate-100 text-slate-700 border border-slate-200 rounded-lg text-xs transition-colors"
+                                title={`Ligar para o celular do motorista (${driver?.telefone || ''})`}
+                              >
+                                <Phone className="w-3.5 h-3.5 text-emerald-600" />
+                              </a>
+
+                              <button
+                                onClick={() => setTrackingModalData({ vehicle, trip: activeTrip, driver })}
+                                className="flex items-center gap-1.5 px-3 py-1.5 bg-[#002B49] hover:bg-[#003B66] text-white rounded-lg text-xs font-semibold shadow-xs transition-colors"
+                              >
+                                <Smartphone className="w-3.5 h-3.5 text-emerald-400 animate-pulse" />
+                                <span>Acompanhar GPS do Celular</span>
+                              </button>
+                            </div>
+                          )}
+                        </div>
                       </div>
                     );
                   })}
@@ -639,7 +741,7 @@ export const ExecutiveFleetDashboard: React.FC<ExecutiveFleetDashboardProps> = (
           {/* SEÇÃO 2: VIAGENS REALIZADAS NO DIA (QUANDO 'todos' OU 'viagens_dia') */}
           {(activeFocus === 'todos' || activeFocus === 'viagens_dia') && (
             <div className="mb-8">
-              <div className="flex items-center justify-between mb-4">
+              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-4">
                 <div className="flex items-center gap-2">
                   <div className="w-2.5 h-2.5 rounded-full bg-emerald-500" />
                   <h2 className="text-base font-bold text-slate-900">
@@ -649,14 +751,28 @@ export const ExecutiveFleetDashboard: React.FC<ExecutiveFleetDashboardProps> = (
                     • Missões finalizadas com retorno e checklist validados em {selectedDate}
                   </span>
                 </div>
-                {activeFocus === 'todos' && (
-                  <button 
-                    onClick={() => setActiveFocus('viagens_dia')}
-                    className="text-xs text-emerald-700 font-semibold hover:underline flex items-center gap-1"
-                  >
-                    Ver todas do dia <ChevronRight className="w-3.5 h-3.5" />
-                  </button>
-                )}
+
+                <div className="flex items-center gap-2">
+                  {completedTodayTrips.length > 0 && (
+                    <button
+                      onClick={() => setSignatureModalTrip(completedTodayTrips[0])}
+                      className="flex items-center gap-1.5 px-3 py-1.5 bg-emerald-700 hover:bg-emerald-800 text-white rounded-xl text-xs font-semibold shadow-xs transition-colors"
+                      title="Abrir Termos de Realização da Viagem com Assinatura do Condutor e Passageiro"
+                    >
+                      <PenTool className="w-3.5 h-3.5 text-emerald-200" />
+                      <span>Termos de Realização ({completedTodayCount})</span>
+                    </button>
+                  )}
+
+                  {activeFocus === 'todos' && (
+                    <button 
+                      onClick={() => setActiveFocus('viagens_dia')}
+                      className="text-xs text-emerald-700 font-semibold hover:underline flex items-center gap-1"
+                    >
+                      Ver todas do dia <ChevronRight className="w-3.5 h-3.5" />
+                    </button>
+                  )}
+                </div>
               </div>
 
               {completedTodayTrips.length === 0 ? (
@@ -682,7 +798,7 @@ export const ExecutiveFleetDashboard: React.FC<ExecutiveFleetDashboardProps> = (
                             <CheckCircle2 className="w-5 h-5" />
                           </div>
                           <div>
-                            <div className="flex items-center gap-2">
+                            <div className="flex flex-wrap items-center gap-2">
                               <span className="font-mono text-xs font-bold text-slate-900">
                                 {trip.codigo}
                               </span>
@@ -692,6 +808,15 @@ export const ExecutiveFleetDashboard: React.FC<ExecutiveFleetDashboardProps> = (
                               <span className="text-[11px] font-semibold text-emerald-700 bg-emerald-50 px-2 py-0.2 rounded-full border border-emerald-200">
                                 Concluída
                               </span>
+                              <button
+                                type="button"
+                                onClick={() => setSignatureModalTrip(trip)}
+                                className="text-[10px] font-semibold text-[#002B49] bg-sky-50 hover:bg-sky-100 px-2 py-0.5 rounded-full border border-sky-200 flex items-center gap-1 transition-colors cursor-pointer"
+                                title="Clique para visualizar o Termo de Realização assinado"
+                              >
+                                <CheckCheck className="w-3 h-3 text-emerald-600" />
+                                <span>Termo Assinado</span>
+                              </button>
                             </div>
                             <h4 className="text-xs font-semibold text-slate-800 mt-1">
                               {trip.finalidade}
@@ -706,23 +831,35 @@ export const ExecutiveFleetDashboard: React.FC<ExecutiveFleetDashboardProps> = (
                           </div>
                         </div>
 
-                        {/* Metadados de Horário e Quilometragem */}
-                        <div className="flex sm:flex-col items-center sm:items-end justify-between sm:justify-center border-t sm:border-t-0 pt-2 sm:pt-0 border-slate-100 shrink-0">
+                        {/* Metadados de Horário, Quilometragem e Termo de Assinatura */}
+                        <div className="flex sm:flex-col items-center sm:items-end justify-between sm:justify-center border-t sm:border-t-0 pt-2 sm:pt-0 border-slate-100 shrink-0 gap-1.5">
                           <span className="text-xs font-bold font-mono text-slate-900">
                             {kmRodado} km rodados
                           </span>
                           <span className="text-[11px] text-slate-500">
                             Retorno às {trip.horaRetornoEfetiva || trip.horaRetornoPrevista}
                           </span>
-                          {onOpenOfficialOrder && (
+
+                          <div className="flex items-center gap-2 mt-1">
+                            {onOpenOfficialOrder && (
+                              <button
+                                onClick={() => onOpenOfficialOrder(trip)}
+                                className="text-[11px] text-slate-600 hover:text-[#002B49] font-medium hover:underline flex items-center gap-1"
+                              >
+                                <FileText className="w-3 h-3" />
+                                Ordem de Tráfego
+                              </button>
+                            )}
+
                             <button
-                              onClick={() => onOpenOfficialOrder(trip)}
-                              className="mt-1 text-[11px] text-[#002B49] font-medium hover:underline flex items-center gap-1"
+                              onClick={() => setSignatureModalTrip(trip)}
+                              className="px-2.5 py-1 bg-emerald-50 hover:bg-emerald-100 text-emerald-800 border border-emerald-300/90 rounded-lg text-[11px] font-semibold flex items-center gap-1.5 transition-colors shadow-2xs cursor-pointer"
+                              title="Visualizar Termo e Assinaturas da Viagem (Condutor e Passageiro)"
                             >
-                              <FileText className="w-3 h-3" />
-                              Ordem de Tráfego
+                              <PenTool className="w-3 h-3 text-emerald-600" />
+                              <span>Assinatura da Realização</span>
                             </button>
-                          )}
+                          </div>
                         </div>
                       </div>
                     );
@@ -935,6 +1072,34 @@ export const ExecutiveFleetDashboard: React.FC<ExecutiveFleetDashboardProps> = (
           <span>Atualizado às 07:22 (Sincronizado com SEI/PROJUDI)</span>
         </div>
       </div>
+
+      {/* MODAL DE ACOMPANHAMENTO POR GPS VIA CELULAR DO MOTORISTA */}
+      {trackingModalData && (
+        <DriverGpsTrackingModal
+          isOpen={true}
+          onClose={() => setTrackingModalData(null)}
+          vehicle={trackingModalData.vehicle}
+          trip={trackingModalData.trip}
+          driver={trackingModalData.driver}
+          onOpenOfficialOrder={onOpenOfficialOrder}
+        />
+      )}
+
+      {/* MODAL DE ASSINATURA DA REALIZAÇÃO DA VIAGEM */}
+      {signatureModalTrip && (
+        <TripSignatureModal
+          isOpen={true}
+          onClose={() => setSignatureModalTrip(null)}
+          trip={signatureModalTrip}
+          vehicle={vehicles.find(v => v.id === signatureModalTrip.veiculoId || v.prefixo === signatureModalTrip.veiculoPrefixo)}
+          driver={drivers.find(d => d.id === signatureModalTrip.motoristaId || d.nome === signatureModalTrip.motoristaNome)}
+          onSaveSignature={(tripId, sigData) => {
+            if (onSaveTripSignature) {
+              onSaveTripSignature(tripId, sigData);
+            }
+          }}
+        />
+      )}
 
     </div>
   );
