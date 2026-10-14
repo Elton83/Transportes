@@ -21,7 +21,8 @@ import {
   Shield, 
   Star 
 } from 'lucide-react';
-import { Maintenance, Vehicle, Workshop, InvoiceAttachment, InspectionCheckItem } from '../../types';
+import { Maintenance, Vehicle, Workshop, InvoiceAttachment, InspectionCheckItem, Role, Driver } from '../../types';
+import { isDriverRole } from '../../services/accessControl';
 import { UploadInvoiceModal } from './UploadInvoiceModal';
 import { TechnicalReportModal } from './TechnicalReportModal';
 
@@ -33,6 +34,8 @@ interface OficinasViewProps {
   onUpdateMaintenance: (updatedMaint: Maintenance) => void;
   onUploadInvoice?: (invoice: InvoiceAttachment, maintenanceId: string) => void;
   onOpenNewMaintenanceModal: () => void;
+  currentRole?: Role;
+  restrictedDriver?: Driver;
 }
 
 export const OficinasView: React.FC<OficinasViewProps> = ({
@@ -43,7 +46,22 @@ export const OficinasView: React.FC<OficinasViewProps> = ({
   onUpdateMaintenance,
   onUploadInvoice,
   onOpenNewMaintenanceModal,
+  currentRole = 'administrador',
+  restrictedDriver,
 }) => {
+  const isDriver = isDriverRole(currentRole);
+  const driverPrefixo = restrictedDriver?.veiculoPrefixoAtual || 'TJ-104';
+  const assignedVehicle = vehicles.find(v => v.prefixo === driverPrefixo);
+
+  // Escopo de manutenções: Para o motorista, exibe apenas os registros mecânicos do seu veículo atual
+  const baseMaintenances = isDriver && restrictedDriver
+    ? maintenances.filter(m => 
+        m.veiculoPrefixo === driverPrefixo || 
+        (assignedVehicle && m.veiculoId === assignedVehicle.id) ||
+        m.veiculoPrefixo === 'TJ-104'
+      )
+    : maintenances;
+
   const [activeTab, setActiveTab] = useState<'ordens' | 'inspecoes' | 'notas' | 'oficinas'>('ordens');
   const [searchTerm, setSearchTerm] = useState('');
   const [statusFilter, setStatusFilter] = useState<'todos' | 'agendada' | 'em_execucao' | 'concluida'>('todos');
@@ -56,21 +74,21 @@ export const OficinasView: React.FC<OficinasViewProps> = ({
   const [selectedMaintForReport, setSelectedMaintForReport] = useState<Maintenance | null>(null);
 
   // Statistics
-  const totalEmExecucao = maintenances.filter(m => m.status === 'em_execucao').length;
-  const totalAgendadas = maintenances.filter(m => m.status === 'agendada').length;
-  const totalConcluidas = maintenances.filter(m => m.status === 'concluida').length;
-  const totalValorInvestido = maintenances.reduce((acc, m) => acc + (m.valorTotal || 0), 0);
+  const totalEmExecucao = baseMaintenances.filter(m => m.status === 'em_execucao').length;
+  const totalAgendadas = baseMaintenances.filter(m => m.status === 'agendada').length;
+  const totalConcluidas = baseMaintenances.filter(m => m.status === 'concluida').length;
+  const totalValorInvestido = baseMaintenances.reduce((acc, m) => acc + (m.valorTotal || 0), 0);
   
   // All invoices across maintenances
   const allInvoices: { invoice: InvoiceAttachment; maintenance: Maintenance }[] = [];
-  maintenances.forEach(m => {
+  baseMaintenances.forEach(m => {
     (m.notasFiscais || []).forEach(nf => {
       allInvoices.push({ invoice: nf, maintenance: m });
     });
   });
 
   // Filtered maintenances
-  const filteredMaintenances = maintenances.filter(m => {
+  const filteredMaintenances = baseMaintenances.filter(m => {
     const matchesSearch = 
       m.veiculoPrefixo.toLowerCase().includes(searchTerm.toLowerCase()) ||
       (m.veiculoModelo && m.veiculoModelo.toLowerCase().includes(searchTerm.toLowerCase())) ||
@@ -151,36 +169,40 @@ export const OficinasView: React.FC<OficinasViewProps> = ({
           <div className="space-y-1">
             <div className="flex items-center gap-2">
               <span className="text-[10px] uppercase font-bold tracking-widest bg-amber-400/20 text-amber-300 px-2 py-0.5 rounded border border-amber-300/30 font-mono">
-                MÓDULO DE OFICINAS & FROTAS
+                {isDriver ? 'CONSERVAÇÃO & MANUTENÇÃO DO VEÍCULO' : 'MÓDULO DE OFICINAS & FROTAS'}
               </span>
               <span className="text-xs text-blue-200">
-                Divisão de Gestão de Transportes • TJPR
+                {isDriver ? `Veículo Conduzido: ${driverPrefixo}` : 'Divisão de Gestão de Transportes • TJPR'}
               </span>
             </div>
             <h2 className="text-2xl font-black text-white tracking-tight flex items-center gap-2.5">
               <Wrench className="w-6 h-6 text-[#C4A052]" />
-              Gestão de Oficinas, Inspeções e Laudos Técnicos
+              {isDriver ? `Manutenção do Veículo ${driverPrefixo}` : 'Gestão de Oficinas, Inspeções e Laudos Técnicos'}
             </h2>
             <p className="text-xs text-slate-200 max-w-2xl leading-relaxed">
-              Controle centralizado de manutenções preventivas e corretivas, checklists de inspeção mecânica, emissão de laudos de aptidão veicular e upload de notas fiscais / orçamentos credenciados.
+              {isDriver
+                ? `Acompanhamento das ordens de serviço, revisões preventivas periódicas e laudos de aptidão técnica do veículo oficial sob sua condução.`
+                : 'Controle centralizado de manutenções preventivas e corretivas, checklists de inspeção mecânica, emissão de laudos de aptidão veicular e upload de notas fiscais / orçamentos credenciados.'}
             </p>
           </div>
 
           {/* Quick Action Buttons */}
           <div className="flex flex-wrap items-center gap-2.5">
-            <button
-              onClick={() => handleOpenUploadInvoice()}
-              className="px-3.5 py-2 rounded-xl bg-white/10 hover:bg-white/20 border border-white/20 text-white text-xs font-semibold flex items-center gap-2 transition-all shadow-sm"
-            >
-              <Upload className="w-4 h-4 text-amber-300" />
-              Upload Nota Fiscal
-            </button>
+            {!isDriver && (
+              <button
+                onClick={() => handleOpenUploadInvoice()}
+                className="px-3.5 py-2 rounded-xl bg-white/10 hover:bg-white/20 border border-white/20 text-white text-xs font-semibold flex items-center gap-2 transition-all shadow-sm cursor-pointer"
+              >
+                <Upload className="w-4 h-4 text-amber-300" />
+                Upload Nota Fiscal
+              </button>
+            )}
             <button
               onClick={onOpenNewMaintenanceModal}
-              className="px-4 py-2 rounded-xl bg-[#0084C7] hover:bg-[#0070AA] text-white text-xs font-bold flex items-center gap-2 transition-all shadow-md"
+              className="px-4 py-2 rounded-xl bg-[#0084C7] hover:bg-[#0070AA] text-white text-xs font-bold flex items-center gap-2 transition-all shadow-md cursor-pointer"
             >
               <Plus className="w-4 h-4" />
-              Nova Ordem de Serviço
+              {isDriver ? 'Reportar Ocorrência / Solicitar Revisão' : 'Nova Ordem de Serviço'}
             </button>
           </div>
         </div>
@@ -191,7 +213,7 @@ export const OficinasView: React.FC<OficinasViewProps> = ({
             <span className="text-[11px] text-blue-200 block">Em Execução na Oficina</span>
             <div className="flex items-baseline gap-2 mt-1">
               <span className="text-xl font-black text-amber-300">{totalEmExecucao}</span>
-              <span className="text-[10px] text-slate-300">veículos em reparo</span>
+              <span className="text-[10px] text-slate-300">{isDriver ? 'no seu veículo' : 'veículos em reparo'}</span>
             </div>
           </div>
 
@@ -204,19 +226,25 @@ export const OficinasView: React.FC<OficinasViewProps> = ({
           </div>
 
           <div className="bg-white/5 backdrop-blur-sm rounded-xl p-3 border border-white/10">
-            <span className="text-[11px] text-blue-200 block">Notas & Orçamentos Anexados</span>
+            <span className="text-[11px] text-blue-200 block">{isDriver ? 'Concluídas com Sucesso' : 'Notas & Orçamentos'}</span>
             <div className="flex items-baseline gap-2 mt-1">
-              <span className="text-xl font-black text-emerald-300">{allInvoices.length}</span>
-              <span className="text-[10px] text-slate-300">comprovantes fiscais</span>
+              <span className="text-xl font-black text-emerald-300">{isDriver ? totalConcluidas : allInvoices.length}</span>
+              <span className="text-[10px] text-slate-300">{isDriver ? 'revisões realizadas' : 'comprovantes fiscais'}</span>
             </div>
           </div>
 
           <div className="bg-white/5 backdrop-blur-sm rounded-xl p-3 border border-white/10">
-            <span className="text-[11px] text-blue-200 block">Investimento Registrado</span>
+            <span className="text-[11px] text-blue-200 block">{isDriver ? 'Veículo Vinculado' : 'Investimento Registrado'}</span>
             <div className="flex items-baseline gap-2 mt-1">
-              <span className="text-lg font-black text-white font-mono">
-                R$ {totalValorInvestido.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
-              </span>
+              {isDriver ? (
+                <span className="text-base font-black text-white font-mono">
+                  {driverPrefixo}
+                </span>
+              ) : (
+                <span className="text-lg font-black text-white font-mono">
+                  R$ {totalValorInvestido.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
+                </span>
+              )}
             </div>
           </div>
         </div>
@@ -227,19 +255,19 @@ export const OficinasView: React.FC<OficinasViewProps> = ({
         <div className="flex items-center gap-1">
           <button
             onClick={() => setActiveTab('ordens')}
-            className={`flex items-center gap-2 px-4 py-2 rounded-lg text-xs font-bold transition-all ${
+            className={`flex items-center gap-2 px-4 py-2 rounded-lg text-xs font-bold transition-all cursor-pointer ${
               activeTab === 'ordens'
                 ? 'bg-[#002B49] text-white shadow'
                 : 'text-slate-600 hover:bg-slate-100'
             }`}
           >
             <Wrench className="w-4 h-4" />
-            Ordens & Itens de Manutenção ({maintenances.length})
+            {isDriver ? `Manutenções do Veículo (${baseMaintenances.length})` : `Ordens & Itens de Manutenção (${maintenances.length})`}
           </button>
 
           <button
             onClick={() => setActiveTab('inspecoes')}
-            className={`flex items-center gap-2 px-4 py-2 rounded-lg text-xs font-bold transition-all ${
+            className={`flex items-center gap-2 px-4 py-2 rounded-lg text-xs font-bold transition-all cursor-pointer ${
               activeTab === 'inspecoes'
                 ? 'bg-[#002B49] text-white shadow'
                 : 'text-slate-600 hover:bg-slate-100'
@@ -249,29 +277,33 @@ export const OficinasView: React.FC<OficinasViewProps> = ({
             Inspeções & Laudos Técnicos
           </button>
 
-          <button
-            onClick={() => setActiveTab('notas')}
-            className={`flex items-center gap-2 px-4 py-2 rounded-lg text-xs font-bold transition-all ${
-              activeTab === 'notas'
-                ? 'bg-[#002B49] text-white shadow'
-                : 'text-slate-600 hover:bg-slate-100'
-            }`}
-          >
-            <FileText className="w-4 h-4" />
-            Uploads de Notas Fiscais ({allInvoices.length})
-          </button>
+          {!isDriver && (
+            <>
+              <button
+                onClick={() => setActiveTab('notas')}
+                className={`flex items-center gap-2 px-4 py-2 rounded-lg text-xs font-bold transition-all cursor-pointer ${
+                  activeTab === 'notas'
+                    ? 'bg-[#002B49] text-white shadow'
+                    : 'text-slate-600 hover:bg-slate-100'
+                }`}
+              >
+                <FileText className="w-4 h-4" />
+                Uploads de Notas Fiscais ({allInvoices.length})
+              </button>
 
-          <button
-            onClick={() => setActiveTab('oficinas')}
-            className={`flex items-center gap-2 px-4 py-2 rounded-lg text-xs font-bold transition-all ${
-              activeTab === 'oficinas'
-                ? 'bg-[#002B49] text-white shadow'
-                : 'text-slate-600 hover:bg-slate-100'
-            }`}
-          >
-            <Building2 className="w-4 h-4" />
-            Rede de Oficinas Credenciadas ({workshops.length})
-          </button>
+              <button
+                onClick={() => setActiveTab('oficinas')}
+                className={`flex items-center gap-2 px-4 py-2 rounded-lg text-xs font-bold transition-all cursor-pointer ${
+                  activeTab === 'oficinas'
+                    ? 'bg-[#002B49] text-white shadow'
+                    : 'text-slate-600 hover:bg-slate-100'
+                }`}
+              >
+                <Building2 className="w-4 h-4" />
+                Rede de Oficinas Credenciadas ({workshops.length})
+              </button>
+            </>
+          )}
         </div>
 
         {/* Global Quick Search */}

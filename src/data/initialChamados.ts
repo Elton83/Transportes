@@ -98,5 +98,67 @@ export const INITIAL_CHAMADOS: Chamado[] = [
     processoSei: '0051029-33.2026.8.16.6000',
     prazoSugerido: '2026-09-20 08:00',
     respostas: []
+  },
+  {
+    id: 'cham-5',
+    codigo: 'CHA-2026-0046',
+    titulo: 'Transporte Oficial para Sessão Extraordinária do Tribunal Pleno',
+    descricao: 'Deslocamento oficial do Desembargador Solicitante e equipe técnica do Gabinete entre o Palácio da Justiça e o Fórum Cível de Curitiba.',
+    tipo: 'solicitacao_veiculo',
+    prioridade: 'urgente',
+    status: 'em_atendimento',
+    dataAbertura: '2026-09-19 09:30',
+    solicitanteNome: 'Dr. Roberto',
+    solicitanteCargo: 'Magistrado / Desembargador',
+    solicitanteMatricula: 'TJPR-52.415-1',
+    comarca: 'Curitiba - Palácio da Justiça',
+    veiculoPrefixo: 'TJ-208',
+    veiculoId: 'v-1',
+    veiculoModelo: 'Toyota Corolla Altis Híbrido',
+    veiculoPlaca: 'DSD-6525',
+    motoristaId: 'drv-1',
+    motoristaNome: 'Roberto Takahashi',
+    motoristaTelefone: '(41) 98822-4910',
+    processoSei: '0019283-44.2026.8.16.6000',
+    prazoSugerido: '2026-09-19 16:30',
+    tripIdVinculada: 'trip-1',
+    atividadeConcluida: true,
+    assinaturaSolicitanteData: '19/09/2026 15:32',
+    assinaturaSolicitanteHash: 'TJPR-SIGPAT-89B72C-ROB6525',
+    respostas: [
+      {
+        id: 'resp-5',
+        autor: 'Coordenação de Transportes',
+        cargo: 'Coordenadora Regional',
+        dataHora: '2026-09-19 10:15',
+        mensagem: 'Demanda direcionada ao motorista Roberto Takahashi com o veículo oficial TJ-208 (Corolla DSD-6525). Aguardando conclusão da diligência e atesto.',
+        isAdmin: true
+      },
+      {
+        id: 'resp-6',
+        autor: 'Sistema SIGPAT (Tablet Solicitante)',
+        cargo: 'Autenticação Biométrica',
+        dataHora: '2026-09-19 15:32',
+        mensagem: 'Atividade Concluída: O solicitante Dr. Roberto assinou o atesto de encerramento via tablet corporativo com certificação digital. Chamado pronto para encerramento exclusivo da Coordenação.',
+        isAdmin: true
+      }
+    ]
+  },
+  {
+    id: 'cham-6',
+    codigo: 'CHA-2026-0048',
+    titulo: 'Apoio de Transporte para Inspeção Judicial na Comarca de Ponta Grossa',
+    descricao: 'Demanda aberta para deslocamento de equipe de auditoria e correição judiciária. Necessário direcionamento de motorista e veículo sedan executivo disponível.',
+    tipo: 'solicitacao_veiculo',
+    prioridade: 'alta',
+    status: 'aberto',
+    dataAbertura: '2026-09-19 11:00',
+    solicitanteNome: 'Dr. Alexandre Fontana',
+    solicitanteCargo: 'Juiz de Direito / Diretor do Fórum',
+    solicitanteMatricula: 'TJPR-48.210-3',
+    comarca: 'Ponta Grossa',
+    processoSei: '0062194-11.2026.8.16.6000',
+    prazoSugerido: '2026-09-20 09:00',
+    respostas: []
   }
 ];

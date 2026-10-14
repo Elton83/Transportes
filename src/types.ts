@@ -39,9 +39,24 @@ export interface Chamado {
   solicitanteMatricula: string;
   comarca: string;
   veiculoPrefixo?: string;
+  veiculoId?: string;
+  veiculoModelo?: string;
+  veiculoPlaca?: string;
+  motoristaId?: string;
+  motoristaNome?: string;
+  motoristaTelefone?: string;
   processoSei?: string;
   prazoSugerido?: string;
   respostas: ChamadoResposta[];
+  // Dados de encerramento exclusivo pelo coordenador
+  encerradoPor?: string;
+  dataEncerramento?: string;
+  justificativaEncerramento?: string;
+  // Vínculo com atividade e assinatura do solicitante
+  tripIdVinculada?: string;
+  atividadeConcluida?: boolean;
+  assinaturaSolicitanteData?: string;
+  assinaturaSolicitanteHash?: string;
 }
 
 export type VehicleStatus = 'disponivel' | 'em_viagem' | 'manutencao' | 'reservado';
@@ -316,6 +331,13 @@ export interface TripSignatureData {
   dataHoraAssinatura?: string;
   autenticadoDigitalmente?: boolean;
   hashAutenticidade?: string;
+  assinaturaTabletUrl?: string;
+  assinaturaTipo?: 'tablet_touch' | 'certificado_digital' | 'ambos';
+  avaliacaoEstrelas?: number;
+  avaliacaoComentario?: string;
+  geolocalizacaoAssinatura?: { lat: number; lng: number; local?: string; address?: string };
+  solicitanteCargo?: string;
+  finalizarAtendimento?: boolean;
 }
 
 export interface Trip {
@@ -338,6 +360,8 @@ export interface Trip {
   status: TripStatus;
   veiculoId?: string;
   veiculoPrefixo?: string;
+  veiculoModelo?: string;
+  veiculoPlaca?: string;
   motoristaId?: string;
   motoristaNome?: string;
   passageiros: string[];
@@ -353,6 +377,88 @@ export interface Trip {
   teamsDispatchDate?: string;
   teamsDispatchId?: string;
   coordenadorNotificado?: string;
+  // Integração WhatsApp
+  whatsappNotified?: boolean;
+  whatsappDispatchDate?: string;
+  whatsappTelefoneDestino?: string;
+  // Integração SIGA (Sistema Integrado de Gestão Administrativa)
+  sigaProtocolo?: string; // Ex: SIGA-2026-004821/TJPR
+  sigaStatus?: 'integrado' | 'pendente_sinc' | 'homologado';
+  sigaTipoDemanda?: string;
+}
+
+export interface WhatsAppReservationLog {
+  id: string;
+  tripId: string;
+  tripCodigo: string;
+  processoSeiOuSiga: string;
+  solicitanteNome: string;
+  solicitanteTelefone: string;
+  veiculoPrefixo: string;
+  veiculoModelo: string;
+  placa: string;
+  motoristaNome: string;
+  motoristaTelefone: string;
+  dataSaida: string;
+  horaSaida: string;
+  origem: string;
+  destino: string;
+  mensagem: string;
+  dataEnvio: string;
+  status: 'enviado' | 'entregue' | 'lido';
+  metodoEnvio: 'whatsapp_web' | 'api_tjpr';
+}
+
+export interface SigaSolicitationData {
+  id?: string;
+  protocoloSiga: string; // Ex: SIGA-2026-004821/TJPR
+  processoSei?: string;
+  solicitanteNome: string;
+  solicitanteMatricula: string;
+  solicitanteCargo: string;
+  solicitanteLotacao: string;
+  solicitanteComarca: string;
+  solicitanteEmail: string;
+  solicitanteTelefone: string;
+  tipoDemanda: string;
+  finalidade: string;
+  origem: string;
+  destino: string;
+  dataSaida: string;
+  horaSaida: string;
+  dataRetornoPrevista: string;
+  horaRetornoPrevista: string;
+  quantidadePassageiros: number;
+  nomesPassageiros: string[];
+  tipoVeiculoSugerido: VehicleType;
+  prioridadeSiga: 'normal' | 'urgente' | 'plantao_judiciario' | 'magistrado_presidencia';
+  observacoes?: string;
+  enviarWhatsAppImediato: boolean;
+  statusSiga?: 'submetido' | 'em_analise_coordenacao' | 'aprovado' | 'reprovado';
+  dataCriacao?: string;
+}
+
+export interface DriverScheduleItem {
+  id: string;
+  driverId: string;
+  driverNome: string;
+  driverMatricula: string;
+  driverTelefone: string;
+  driverFoto?: string;
+  comarca: string;
+  data: string; // Ex: '2026-09-18'
+  turnoNome: string; // Ex: 'Turno Matutino 1 (07h-16h)', 'Turno Integral (08h-17h)'
+  horaInicio: string;
+  horaFim: string;
+  statusEscala: 'em_viagem' | 'escalado' | 'disponivel_base' | 'folga' | 'plantao';
+  veiculoPrefixo?: string;
+  veiculoModelo?: string;
+  tripIdDesignada?: string;
+  destinoOuMissao?: string;
+  solicitanteNome?: string;
+  cnhCategoria: string;
+  cnhValidade: string;
+  observacoes?: string;
 }
 
 export interface TeamsIntegrationConfig {
@@ -403,7 +509,7 @@ export interface NotificationItem {
   mensagem: string;
   dataHora: string;
   lida: boolean;
-  tipo: 'viagem' | 'manutencao' | 'cnh' | 'alerta';
+  tipo: 'viagem' | 'manutencao' | 'cnh' | 'alerta' | 'assinatura_solicitante' | 'chamado';
   link?: string;
 }
 

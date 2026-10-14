@@ -31,8 +31,11 @@ import {
   MeuBeneficioApiConfig, 
   MeuBeneficioTipoCusta, 
   MeuBeneficioStatusAuditoria,
-  Vehicle 
+  Vehicle,
+  Role,
+  Driver 
 } from '../../types';
+import { isDriverRole } from '../../services/accessControl';
 
 interface MeuBeneficioViewProps {
   transactions: MeuBeneficioTransaction[];
@@ -41,6 +44,9 @@ interface MeuBeneficioViewProps {
   selectedComarca: string;
   onSyncApi: () => void;
   onAuditTransaction: (transactionId: string, novoStatus: MeuBeneficioStatusAuditoria, observacao?: string) => void;
+  currentRole?: Role;
+  restrictedDriver?: Driver;
+  onOpenQuickFuel?: () => void;
 }
 
 export const MeuBeneficioView: React.FC<MeuBeneficioViewProps> = ({
@@ -50,7 +56,22 @@ export const MeuBeneficioView: React.FC<MeuBeneficioViewProps> = ({
   selectedComarca,
   onSyncApi,
   onAuditTransaction,
+  currentRole = 'administrador',
+  restrictedDriver,
+  onOpenQuickFuel,
 }) => {
+  const isDriver = isDriverRole(currentRole);
+
+  // Escopo de transações: No perfil motorista, filtra estritamente para o condutor ativo
+  const baseTransactions = isDriver && restrictedDriver
+    ? transactions.filter((t) => {
+        const matchesMatricula = t.condutorMatricula === restrictedDriver.matricula;
+        const matchesNome = t.condutorNome.toLowerCase().includes(restrictedDriver.nome.split(' ')[0].toLowerCase());
+        const matchesVeiculo = t.veiculoPrefixo === restrictedDriver.veiculoPrefixoAtual;
+        return matchesMatricula || matchesNome || matchesVeiculo;
+      })
+    : transactions;
+
   const [activeFilterTab, setActiveFilterTab] = useState<'todos' | MeuBeneficioTipoCusta | 'divergencias'>('todos');
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedVehicle, setSelectedVehicle] = useState<string>('todos');
@@ -69,15 +90,15 @@ export const MeuBeneficioView: React.FC<MeuBeneficioViewProps> = ({
     }, 900);
   };
 
-  // Métricas financeiras consolidadas
-  const totalGasto = transactions.reduce((acc, t) => acc + t.valor, 0);
-  const totalPedagios = transactions.filter(t => t.tipo === 'pedagio').reduce((acc, t) => acc + t.valor, 0);
-  const totalAbastecimentos = transactions.filter(t => t.tipo === 'abastecimento').reduce((acc, t) => acc + t.valor, 0);
-  const totalEstacionamentoOutros = transactions.filter(t => t.tipo !== 'pedagio' && t.tipo !== 'abastecimento').reduce((acc, t) => acc + t.valor, 0);
-  const totalDivergencias = transactions.filter(t => t.statusAuditoria === 'divergencia' || t.statusAuditoria === 'pendente_comprovante').length;
+  // Métricas financeiras consolidadas (baseadas no escopo autorizado)
+  const totalGasto = baseTransactions.reduce((acc, t) => acc + t.valor, 0);
+  const totalPedagios = baseTransactions.filter(t => t.tipo === 'pedagio').reduce((acc, t) => acc + t.valor, 0);
+  const totalAbastecimentos = baseTransactions.filter(t => t.tipo === 'abastecimento').reduce((acc, t) => acc + t.valor, 0);
+  const totalEstacionamentoOutros = baseTransactions.filter(t => t.tipo !== 'pedagio' && t.tipo !== 'abastecimento').reduce((acc, t) => acc + t.valor, 0);
+  const totalDivergencias = baseTransactions.filter(t => t.statusAuditoria === 'divergencia' || t.statusAuditoria === 'pendente_comprovante').length;
 
-  // Filtragem dos dados
-  const filteredTransactions = transactions.filter((t) => {
+  // Filtragem dos dados autorizados
+  const filteredTransactions = baseTransactions.filter((t) => {
     // Filtro por aba
     if (activeFilterTab === 'divergencias') {
       if (t.statusAuditoria !== 'divergencia' && t.statusAuditoria !== 'pendente_comprovante') {
@@ -188,63 +209,89 @@ export const MeuBeneficioView: React.FC<MeuBeneficioViewProps> = ({
             <div>
               <div className="flex flex-wrap items-center gap-2">
                 <span className="text-[10px] uppercase font-bold tracking-widest px-2.5 py-0.5 rounded-full bg-[#002B49]/10 text-[#002B49] border border-[#002B49]/20">
-                  Integração API Corporativa
+                  {isDriver ? 'Cartão do Benefício TJPR' : 'Integração API Corporativa'}
                 </span>
                 
-                {/* Status da Conexão em Tempo Real */}
+                {/* Status da Conexão / Cartão */}
                 <div className="flex items-center gap-1.5 px-2 py-0.5 rounded-full bg-emerald-50 border border-emerald-200 text-emerald-700 text-[11px] font-bold">
                   <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
-                  API Meu Benefício • REST Conectada
+                  {isDriver ? 'Cartão Frota Ativo & Liberado' : 'API Meu Benefício • REST Conectada'}
                 </div>
 
-                <span className="text-[11px] text-slate-400 font-mono">
-                  Latência: {apiConfig.latenciaMs}ms
-                </span>
+                {!isDriver && (
+                  <span className="text-[11px] text-slate-400 font-mono">
+                    Latência: {apiConfig.latenciaMs}ms
+                  </span>
+                )}
               </div>
 
               <h1 className="text-xl font-bold text-slate-900 mt-1">
-                Auditoria de Despesas & Custas • API Meu Benefício
+                {isDriver ? 'Cartão do Benefício • Meu Benefício TJPR' : 'Auditoria de Despesas & Custas • API Meu Benefício'}
               </h1>
               <p className="text-xs text-slate-500 mt-1 max-w-3xl">
-                Verificação automatizada e conciliação de todos os <strong>abastecimentos</strong>, <strong>pedágios eletrônicos (Tags)</strong>, <strong>estacionamentos credenciados</strong> e despesas de viagem cruzadas em tempo real com as ordens de serviço do TJPR e processos SEI.
+                {isDriver && restrictedDriver
+                  ? `Extrato de abastecimentos, pedágios automáticos (Tags) e custas de viagem debitadas no cartão corporativo de ${restrictedDriver.nome} (Matrícula ${restrictedDriver.matricula}).`
+                  : 'Verificação automatizada e conciliação de todos os abastecimentos, pedágios eletrônicos (Tags), estacionamentos credenciados e despesas de viagem cruzadas em tempo real com as ordens de serviço do TJPR e processos SEI.'}
               </p>
             </div>
           </div>
 
-          {/* Ações da API */}
+          {/* Ações da API / Ações do Motorista */}
           <div className="flex flex-wrap sm:flex-nowrap items-center gap-2.5 shrink-0">
-            <button
-              onClick={handleTriggerSync}
-              disabled={isSyncing}
-              className={`flex items-center justify-center gap-2 px-4 py-2.5 bg-white hover:bg-slate-50 text-slate-700 border border-slate-300 rounded-xl text-xs font-bold shadow-xs transition-all cursor-pointer ${
-                isSyncing ? 'opacity-70 cursor-wait' : ''
-              }`}
-              title="Solicitar atualização imediata via webhook/REST da API Meu Benefício"
-            >
-              <RefreshCw className={`w-4 h-4 text-blue-600 ${isSyncing ? 'animate-spin' : ''}`} />
-              <span>{isSyncing ? 'Sincronizando...' : 'Sincronizar API Agora'}</span>
-            </button>
+            {isDriver ? (
+              <button
+                onClick={onOpenQuickFuel}
+                className="flex items-center justify-center gap-2 px-4 py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl text-xs font-bold shadow-sm transition-all cursor-pointer"
+              >
+                <Fuel className="w-4 h-4" />
+                <span>Lançar Abastecimento</span>
+              </button>
+            ) : (
+              <>
+                <button
+                  onClick={handleTriggerSync}
+                  disabled={isSyncing}
+                  className={`flex items-center justify-center gap-2 px-4 py-2.5 bg-white hover:bg-slate-50 text-slate-700 border border-slate-300 rounded-xl text-xs font-bold shadow-xs transition-all cursor-pointer ${
+                    isSyncing ? 'opacity-70 cursor-wait' : ''
+                  }`}
+                  title="Solicitar atualização imediata via webhook/REST da API Meu Benefício"
+                >
+                  <RefreshCw className={`w-4 h-4 text-blue-600 ${isSyncing ? 'animate-spin' : ''}`} />
+                  <span>{isSyncing ? 'Sincronizando...' : 'Sincronizar API Agora'}</span>
+                </button>
 
-            <button
-              onClick={() => {
-                alert(`Relatório sintético de auditoria da API Meu Benefício gerado para instrução no Processo SEI.\nTotal apurado: R$ ${totalGasto.toFixed(2)}.`);
-              }}
-              className="flex items-center justify-center gap-2 px-4 py-2.5 bg-[#002B49] hover:bg-[#003B66] text-white rounded-xl text-xs font-bold shadow-sm transition-all cursor-pointer"
-            >
-              <Download className="w-4 h-4 text-amber-300" />
-              <span>Exportar para SEI</span>
-            </button>
+                <button
+                  onClick={() => {
+                    alert(`Relatório sintético de auditoria da API Meu Benefício gerado para instrução no Processo SEI.\nTotal apurado: R$ ${totalGasto.toFixed(2)}.`);
+                  }}
+                  className="flex items-center justify-center gap-2 px-4 py-2.5 bg-[#002B49] hover:bg-[#003B66] text-white rounded-xl text-xs font-bold shadow-sm transition-all cursor-pointer"
+                >
+                  <Download className="w-4 h-4 text-amber-300" />
+                  <span>Exportar para SEI</span>
+                </button>
+              </>
+            )}
           </div>
         </div>
 
-        {/* Rodapé do Header com Detalhes da API */}
+        {/* Rodapé do Header com Detalhes da API ou do Cartão do Motorista */}
         <div className="mt-4 pt-3.5 border-t border-slate-100 flex flex-wrap items-center justify-between gap-3 text-[11px] text-slate-500 font-mono">
-          <div className="flex items-center gap-2">
-            <span className="text-slate-400">Endpoint:</span>
-            <span className="text-slate-700 bg-slate-100 px-2 py-0.5 rounded border border-slate-200 truncate max-w-md">
-              {apiConfig.endpoint}
-            </span>
-          </div>
+          {isDriver ? (
+            <div className="flex items-center gap-3">
+              <span className="text-slate-700 bg-amber-50 px-2.5 py-1 rounded-md border border-amber-200 font-bold text-amber-900 flex items-center gap-1.5">
+                <CreditCard className="w-3.5 h-3.5 text-amber-700" />
+                Cartão Frota: •••• •••• •••• 9102
+              </span>
+              <span>Titular: <strong>{restrictedDriver?.nome || 'Carlos Eduardo Silveira'}</strong></span>
+            </div>
+          ) : (
+            <div className="flex items-center gap-2">
+              <span className="text-slate-400">Endpoint:</span>
+              <span className="text-slate-700 bg-slate-100 px-2 py-0.5 rounded border border-slate-200 truncate max-w-md">
+                {apiConfig.endpoint}
+              </span>
+            </div>
+          )}
 
           <div className="flex items-center gap-4">
             <span>Última Sincronização: <strong className="text-slate-700 font-semibold">{apiConfig.ultimaSincronizacao}</strong></span>
@@ -268,7 +315,7 @@ export const MeuBeneficioView: React.FC<MeuBeneficioViewProps> = ({
             R$ {totalGasto.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
           </p>
           <span className="text-[10px] text-slate-400 mt-1 block">
-            {transactions.length} transações verificadas
+            {baseTransactions.length} transações verificadas
           </span>
         </div>
 
@@ -320,27 +367,46 @@ export const MeuBeneficioView: React.FC<MeuBeneficioViewProps> = ({
           </span>
         </div>
 
-        {/* Auditoria / Alertas */}
-        <div className={`p-4 rounded-2xl border shadow-xs ${
-          totalDivergencias > 0 
-            ? 'bg-rose-50/70 border-rose-200 text-rose-950' 
-            : 'bg-white border-slate-200'
-        }`}>
-          <div className="flex items-center justify-between">
-            <span className="text-[11px] font-semibold uppercase tracking-wider text-rose-700">
-              Auditoria / Alertas
-            </span>
-            <div className="p-1.5 bg-rose-100 text-rose-700 rounded-lg">
-              <AlertTriangle className="w-4 h-4" />
+        {/* Auditoria / Alertas ou Status do Cartão */}
+        {isDriver ? (
+          <div className="bg-emerald-50/70 border border-emerald-200 p-4 rounded-2xl shadow-xs">
+            <div className="flex items-center justify-between">
+              <span className="text-[11px] font-semibold uppercase tracking-wider text-emerald-800">
+                Cartão do Condutor
+              </span>
+              <div className="p-1.5 bg-emerald-100 text-emerald-800 rounded-lg">
+                <CheckCircle2 className="w-4 h-4" />
+              </div>
             </div>
+            <p className="text-xl font-bold font-mono text-emerald-900 mt-2">
+              Liberado TJPR
+            </p>
+            <span className="text-[10px] text-emerald-700 mt-1 block font-medium">
+              Limite disponível: R$ 3.500,00
+            </span>
           </div>
-          <p className="text-xl font-bold font-mono text-rose-700 mt-2">
-            {totalDivergencias} pendência(s)
-          </p>
-          <span className="text-[10px] text-rose-600 mt-1 block font-medium">
-            Exige justificativa SEI
-          </span>
-        </div>
+        ) : (
+          <div className={`p-4 rounded-2xl border shadow-xs ${
+            totalDivergencias > 0 
+              ? 'bg-rose-50/70 border-rose-200 text-rose-950' 
+              : 'bg-white border-slate-200'
+          }`}>
+            <div className="flex items-center justify-between">
+              <span className="text-[11px] font-semibold uppercase tracking-wider text-rose-700">
+                Auditoria / Alertas
+              </span>
+              <div className="p-1.5 bg-rose-100 text-rose-700 rounded-lg">
+                <AlertTriangle className="w-4 h-4" />
+              </div>
+            </div>
+            <p className="text-xl font-bold font-mono text-rose-700 mt-2">
+              {totalDivergencias} pendência(s)
+            </p>
+            <span className="text-[10px] text-rose-600 mt-1 block font-medium">
+              Exige justificativa SEI
+            </span>
+          </div>
+        )}
 
       </div>
 

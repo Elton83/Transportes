@@ -1,0 +1,162 @@
+import { Driver, Trip, Vehicle, WhatsAppReservationLog } from '../types';
+
+export const formatWhatsAppReservationMessage = (
+  trip: Trip,
+  vehicle?: Vehicle,
+  driver?: Driver,
+  customNote?: string
+): string => {
+  const solicitante = trip.solicitanteNome || 'Solicitante';
+  const veicModelo = vehicle?.modelo || trip.veiculoModelo || 'Veículo Oficial TJPR';
+  const veicPrefixo = vehicle?.prefixo || trip.veiculoPrefixo || 'TJPR';
+  const veicPlaca = vehicle?.placa || trip.veiculoPlaca || 'Oficial';
+  const comarca = vehicle?.comarca || trip.comarca || 'Paraná';
+  const motNome = driver?.nome || trip.motoristaNome || 'Motorista Oficial TJPR';
+  const motTel = driver?.telefone || '(41) 99841-2093';
+  const protocolo = trip.sigaProtocolo || trip.processoSei || trip.codigo;
+  const passageiros = trip.passageiros && trip.passageiros.length > 0 
+    ? trip.passageiros.join(', ') 
+    : solicitante;
+
+  return `🚗 *TRIBUNAL DE JUSTIÇA DO PARANÁ*
+*DIVISÃO DE TRANSPORTES | CONFIRMAÇÃO DE RESERVA*
+
+Prezado(a) *${solicitante}*,
+Sua solicitação de veículo oficial foi confirmada e os recursos já estão alocados para sua missão judicial.
+
+📋 *Código da Reserva:* ${trip.codigo}
+⚖️ *Protocolo SIGA/SEI:* ${protocolo}
+
+🚘 *Veículo Designado:* ${veicModelo}
+🏷️ *Prefixo / Placa:* *${veicPrefixo}* • ${veicPlaca} (${comarca})
+
+👤 *Motorista Oficial:* *${motNome}*
+📱 *WhatsApp/Tel do Motorista:* ${motTel}
+
+🗓️ *Data do Deslocamento:* ${trip.dataSaida}
+⏰ *Horário de Partida:* *${trip.horaSaida}*
+⏱️ *Previsão de Retorno:* ${trip.horaRetornoPrevista} (${trip.dataRetornoPrevista})
+
+📍 *Local de Embarque:* ${trip.origem}
+🎯 *Destino Oficial:* ${trip.destino}
+👥 *Passageiros:* ${passageiros}
+📌 *Finalidade:* ${trip.finalidade}
+
+🛰️ *Acompanhamento em Tempo Real:*
+https://frota.tjpr.jus.br/tracking/${trip.codigo}
+
+${customNote ? `💬 *Observação da Coordenação:* "${customNote}"\n\n` : ''}⚠️ *Orientações Importantes:*
+1. Apresente-se no local de embarque com 10 minutos de antecedência.
+2. Ao término da viagem, realize a confirmação e assinatura digital no tablet oficial do condutor para fechamento do termo.
+
+🏛️ *Coordenação Regional de Frotas TJPR*
+Central de Tráfego: (41) 3200-2100 | Plantão: (41) 98822-4910`;
+};
+
+export const formatWhatsAppDriverScheduleMessage = (
+  driver: Driver,
+  scheduleItem?: {
+    turnoNome: string;
+    horaInicio: string;
+    horaFim: string;
+    veiculoPrefixo?: string;
+    destinoOuMissao?: string;
+    solicitanteNome?: string;
+  }
+): string => {
+  return `🗓️ *TJPR - ESCALA OFICIAL DO CONDUTOR*
+Olá, *${driver.nome}* (Matr. ${driver.matricula})!
+
+Segue sua escala de trabalho homologada para hoje:
+⏰ *Turno:* ${scheduleItem?.turnoNome || 'Turno Regular (08h às 17h)'}
+🚘 *Veículo Atribuído:* ${scheduleItem?.veiculoPrefixo || driver.veiculoPrefixoAtual || 'A definir'}
+🎯 *Missão/Destino:* ${scheduleItem?.destinoOuMissao || 'Atendimento na Comarca'}
+👤 *Passageiro:* ${scheduleItem?.solicitanteNome || 'Sob demanda da Coordenação'}
+
+Em caso de emergência ou desvio de rota, acione imediatamente o Coordenador da Frota.
+Bom trabalho e dirija com segurança! ⚖️`;
+};
+
+export const sanitizeBrazilianPhone = (phone: string): string => {
+  let digits = phone.replace(/\D/g, '');
+  if (digits.startsWith('0')) {
+    digits = digits.substring(1);
+  }
+  if (!digits.startsWith('55')) {
+    if (digits.length === 10 || digits.length === 11) {
+      digits = '55' + digits;
+    }
+  }
+  return digits;
+};
+
+export const getWhatsAppWebLink = (phone: string, text: string): string => {
+  const cleaned = sanitizeBrazilianPhone(phone);
+  return `https://wa.me/${cleaned}?text=${encodeURIComponent(text)}`;
+};
+
+export const INITIAL_WHATSAPP_LOGS: WhatsAppReservationLog[] = [
+  {
+    id: 'wpp-log-1',
+    tripId: 'trip-102',
+    tripCodigo: 'TRP-2026-0839',
+    processoSeiOuSiga: '0018442-12.2026.8.16.6000',
+    solicitanteNome: 'Des. Gilberto Silveira Neto',
+    solicitanteTelefone: '(41) 99128-4091',
+    veiculoPrefixo: 'TJ-208',
+    veiculoModelo: 'Chevrolet Spin Premier 1.8 7L',
+    placa: 'BDX-8H15',
+    motoristaNome: 'Marcos Antonio Batista',
+    motoristaTelefone: '(41) 98822-4910',
+    dataSaida: '2026-09-18',
+    horaSaida: '07:00',
+    origem: 'Prédio Anexo TJPR - Curitiba',
+    destino: 'Fórum Des. Alberto Pacheco - Ponta Grossa (PR)',
+    mensagem: 'Reserva confirmada. Spin TJ-208 alocada para deslocamento solene a Ponta Grossa com motorista Marcos Antonio Batista.',
+    dataEnvio: '2026-09-17 18:30',
+    status: 'lido',
+    metodoEnvio: 'api_tjpr',
+  },
+  {
+    id: 'wpp-log-2',
+    tripId: 'trip-107',
+    tripCodigo: 'TRP-2026-0843',
+    processoSeiOuSiga: 'SIGA-2026-004821/TJPR',
+    solicitanteNome: 'Dr. Valter Silveira',
+    solicitanteTelefone: '(45) 99872-3341',
+    veiculoPrefixo: 'TJ-312',
+    veiculoModelo: 'Ford Ranger XLS 2.0 4x4 Diesel',
+    placa: 'BFL-2A99',
+    motoristaNome: 'Renato Guimarães',
+    motoristaTelefone: '(45) 99104-5820',
+    dataSaida: '2026-09-18',
+    horaSaida: '08:00',
+    origem: 'Fórum da Comarca de Cascavel (PR)',
+    destino: 'Vara Única de Capitão Leônidas Marques (PR)',
+    mensagem: 'Reserva confirmada via SIGA. Ranger TJ-312 com motorista Renato Guimarães em deslocamento.',
+    dataEnvio: '2026-09-18 07:15',
+    status: 'entregue',
+    metodoEnvio: 'whatsapp_web',
+  },
+  {
+    id: 'wpp-log-3',
+    tripId: 'trip-101',
+    tripCodigo: 'TRP-2026-0842',
+    processoSeiOuSiga: '0019283-44.2026.8.16.6000',
+    solicitanteNome: 'Dra. Mariana Vasconcellos',
+    solicitanteTelefone: '(41) 99940-1122',
+    veiculoPrefixo: 'TJ-104',
+    veiculoModelo: 'Toyota Corolla XEi 2.0 Dynamic',
+    placa: 'BEP-4J20',
+    motoristaNome: 'Carlos Eduardo Silveira',
+    motoristaTelefone: '(41) 99841-2093',
+    dataSaida: '2026-09-18',
+    horaSaida: '08:30',
+    origem: 'Palácio da Justiça - Curitiba (PR)',
+    destino: 'Fórum da Comarca de Paranaguá (PR)',
+    mensagem: 'Reserva confirmada. Corolla TJ-104 com motorista Carlos Eduardo Silveira aguardando saída às 08:30.',
+    dataEnvio: '2026-09-18 07:50',
+    status: 'lido',
+    metodoEnvio: 'api_tjpr',
+  },
+];

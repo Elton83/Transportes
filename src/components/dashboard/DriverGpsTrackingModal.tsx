@@ -27,9 +27,14 @@ import {
   User,
   Car,
   FileText,
-  Volume2
+  Volume2,
+  Tablet,
+  PenTool,
+  Check
 } from 'lucide-react';
-import { Driver, Trip, Vehicle } from '../../types';
+import { Driver, Trip, Vehicle, TripSignatureData } from '../../types';
+import { InteractiveSpeedometerCard } from './InteractiveSpeedometerCard';
+import { RequesterTabletSignatureModal } from './RequesterTabletSignatureModal';
 
 interface GpsCoordinate {
   lat: number;
@@ -48,6 +53,7 @@ interface DriverGpsTrackingModalProps {
   trip: Trip;
   driver?: Driver;
   onOpenOfficialOrder?: (trip: Trip) => void;
+  onSaveTripSignature?: (tripId: string, signatureData: TripSignatureData) => void;
 }
 
 // Rotas simuladas detalhadas para as viagens em andamento no Paraná
@@ -97,8 +103,23 @@ export const DriverGpsTrackingModal: React.FC<DriverGpsTrackingModalProps> = ({
   trip,
   driver,
   onOpenOfficialOrder,
+  onSaveTripSignature,
 }) => {
   if (!isOpen) return null;
+
+  // Assinatura via Tablet e Digital do Solicitante ao final do atendimento
+  const [isTabletSignatureOpen, setIsTabletSignatureOpen] = useState<boolean>(false);
+  const [currentTripSignature, setCurrentTripSignature] = useState<TripSignatureData | undefined>(trip.assinaturaRealizacao);
+
+  const handleSaveSignature = (tripId: string, sigData: TripSignatureData) => {
+    setCurrentTripSignature(sigData);
+    if (onSaveTripSignature) {
+      onSaveTripSignature(tripId, sigData);
+    }
+    setAlertSuccessBanner(
+      `✓ Assinatura via tablet e digital do solicitante (${sigData.passageiroNome}) homologada com sucesso! Protocolo: ${sigData.hashAutenticidade || 'TJPR-TRP'}`
+    );
+  };
 
   const routeConfig = PRESET_ROUTES[vehicle.prefixo] || {
     nomeRota: `${trip.origem} ➔ ${trip.destino}`,
@@ -118,6 +139,9 @@ export const DriverGpsTrackingModal: React.FC<DriverGpsTrackingModalProps> = ({
   const [mapLayer, setMapLayer] = useState<'vector' | 'satellite' | 'traffic'>('vector');
   const [realGpsActive, setRealGpsActive] = useState<boolean>(false);
   const [realGpsError, setRealGpsError] = useState<string | null>(null);
+
+  // Limite regulamentar do trecho interativo (padrão da rota selecionada)
+  const [customSpeedLimit, setCustomSpeedLimit] = useState<number>(routeConfig.limiteVelocidadeKmH);
 
   // Informações de Telemetria do Smartphone do Motorista
   const [batteryLevel, setBatteryLevel] = useState<number>(84);
@@ -174,10 +198,10 @@ export const DriverGpsTrackingModal: React.FC<DriverGpsTrackingModalProps> = ({
             const next = curr + 0.003;
             return next > 0.98 ? 0.98 : next;
           });
-          // Variação realista da velocidade (entre 68 e 88 km/h)
+          // Variação realista da velocidade (entre 68 e limite da via)
           setCurrentSpeed((prevSpeed) => {
             const delta = (Math.random() - 0.48) * 6;
-            const newSpeed = Math.round(Math.min(routeConfig.limiteVelocidadeKmH + 4, Math.max(55, prevSpeed + delta)));
+            const newSpeed = Math.round(Math.min(customSpeedLimit + 4, Math.max(45, prevSpeed + delta)));
             return newSpeed;
           });
           // Variação sutil da precisão do GPS
@@ -338,6 +362,21 @@ export const DriverGpsTrackingModal: React.FC<DriverGpsTrackingModalProps> = ({
           </div>
 
           <div className="flex items-center gap-2 self-end md:self-auto">
+            {/* Botão de Coleta de Assinatura via Tablet & Digital */}
+            <button
+              onClick={() => setIsTabletSignatureOpen(true)}
+              className={`flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold rounded-lg transition-all ${
+                currentTripSignature
+                  ? 'bg-emerald-500/20 text-emerald-300 border border-emerald-400/40 hover:bg-emerald-500/30'
+                  : 'bg-amber-400 hover:bg-amber-300 text-slate-950 font-bold shadow-xs'
+              }`}
+              title="Assinatura via tablet e digital do solicitante ao final do atendimento"
+            >
+              <Tablet className="w-3.5 h-3.5" />
+              <span>{currentTripSignature ? 'Assinado (Ver Termo)' : 'Assinatura no Tablet'}</span>
+              {currentTripSignature && <CheckCircle2 className="w-3 h-3 text-emerald-300" />}
+            </button>
+
             {onOpenOfficialOrder && (
               <button
                 onClick={() => onOpenOfficialOrder(trip)}
@@ -450,6 +489,38 @@ export const DriverGpsTrackingModal: React.FC<DriverGpsTrackingModalProps> = ({
         {/* ========================================================= */}
         <div className="p-4 sm:p-6 overflow-y-auto space-y-6 flex-1">
           
+          {/* BANNER DE CHEGADA AO DESTINO & FINALIZAÇÃO DE ATENDIMENTO */}
+          {(routeProgress >= 0.9 || remainingKm <= 5) && !currentTripSignature && (
+            <div className="bg-gradient-to-r from-amber-500 via-amber-400 to-amber-500 border border-amber-600/40 rounded-2xl p-4 px-5 text-slate-950 flex flex-col sm:flex-row items-center justify-between gap-3 shadow-md animate-in fade-in duration-300">
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-10 rounded-xl bg-slate-950 text-amber-300 flex items-center justify-center shrink-0 shadow-xs">
+                  <Tablet className="w-5 h-5 animate-bounce" />
+                </div>
+                <div>
+                  <div className="flex items-center gap-2">
+                    <span className="font-extrabold text-[11px] uppercase tracking-wide bg-slate-950 text-white px-2 py-0.5 rounded">
+                      Final do Atendimento no Destino
+                    </span>
+                    <span className="text-xs font-bold text-slate-900">
+                      Chegada em {trip.destino}
+                    </span>
+                  </div>
+                  <p className="text-xs text-slate-950 mt-0.5 font-medium">
+                    Veículo no destino. Entregue o tablet ao solicitante (<strong>{trip.solicitanteNome}</strong>) para coleta da assinatura touch e certificação digital.
+                  </p>
+                </div>
+              </div>
+
+              <button
+                onClick={() => setIsTabletSignatureOpen(true)}
+                className="w-full sm:w-auto px-5 py-2.5 bg-slate-950 hover:bg-slate-900 text-amber-300 font-bold text-xs rounded-xl shadow-md flex items-center justify-center gap-2 transition-transform active:scale-95 shrink-0 cursor-pointer"
+              >
+                <Tablet className="w-4 h-4 text-amber-300" />
+                <span>Coletar Assinatura no Tablet</span>
+              </button>
+            </div>
+          )}
+
           {/* Card Resumo do Trajeto e Motorista */}
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
             
@@ -488,6 +559,54 @@ export const DriverGpsTrackingModal: React.FC<DriverGpsTrackingModalProps> = ({
                     </span>
                   </div>
                 </div>
+
+                {/* Box de Assinatura do Solicitante ao Final do Atendimento */}
+                <div className="mt-3 pt-3 border-t border-slate-100">
+                  <div className="flex items-center justify-between mb-1.5">
+                    <span className="text-[10px] font-bold text-slate-500 uppercase tracking-wider flex items-center gap-1">
+                      <Tablet className="w-3 h-3 text-[#002B49]" />
+                      Assinatura do Solicitante
+                    </span>
+                    {currentTripSignature ? (
+                      <span className="text-[10px] font-semibold text-emerald-700 bg-emerald-50 border border-emerald-200 px-1.5 py-0.5 rounded flex items-center gap-1">
+                        <CheckCircle2 className="w-3 h-3 text-emerald-600" /> Homologado
+                      </span>
+                    ) : (
+                      <span className="text-[10px] font-semibold text-amber-700 bg-amber-50 border border-amber-200 px-1.5 py-0.5 rounded">
+                        Pendente no Destino
+                      </span>
+                    )}
+                  </div>
+
+                  {currentTripSignature ? (
+                    <div className="bg-emerald-50/70 border border-emerald-200 rounded-lg p-2.5 text-xs text-emerald-900 space-y-1">
+                      <div className="flex items-center justify-between">
+                        <span className="font-semibold text-slate-800 truncate">{currentTripSignature.passageiroNome}</span>
+                        <span className="text-[10px] font-mono text-emerald-700">{currentTripSignature.dataHoraAssinatura?.split(' às ')[1] || 'Assinado'}</span>
+                      </div>
+                      <div className="flex items-center justify-between text-[10px] text-slate-500 font-mono">
+                        <span className="truncate max-w-[150px]">{currentTripSignature.hashAutenticidade}</span>
+                        <button
+                          type="button"
+                          onClick={() => setIsTabletSignatureOpen(true)}
+                          className="text-[#002B49] font-bold hover:underline cursor-pointer"
+                        >
+                          Ver Termo
+                        </button>
+                      </div>
+                    </div>
+                  ) : (
+                    <button
+                      type="button"
+                      onClick={() => setIsTabletSignatureOpen(true)}
+                      className="w-full flex items-center justify-center gap-1.5 py-2 px-3 bg-amber-500 hover:bg-amber-600 text-slate-950 font-bold rounded-lg text-xs transition-colors shadow-2xs cursor-pointer"
+                    >
+                      <Tablet className="w-3.5 h-3.5 text-slate-900" />
+                      <span>Coletar Assinatura no Tablet</span>
+                    </button>
+                  )}
+                </div>
+
               </div>
 
               {/* Botões de Ação Direta com o Motorista */}
@@ -512,125 +631,31 @@ export const DriverGpsTrackingModal: React.FC<DriverGpsTrackingModalProps> = ({
               </div>
             </div>
 
-            {/* Velocímetro e Conformidade de Trânsito */}
-            <div className="bg-white border border-slate-200 rounded-xl p-4 shadow-xs flex flex-col justify-between">
-              <div>
-                <div className="flex items-center justify-between">
-                  <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">
-                    Velocímetro Digital do Celular
-                  </span>
-                  <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full ${
-                    currentSpeed > routeConfig.limiteVelocidadeKmH
-                      ? 'bg-amber-100 text-amber-800 border border-amber-300'
-                      : 'bg-emerald-100 text-emerald-800 border border-emerald-300'
-                  }`}>
-                    {currentSpeed > routeConfig.limiteVelocidadeKmH ? 'Atenção Limite' : 'Velocidade Conforme'}
-                  </span>
-                </div>
-
-                <div className="flex items-baseline justify-center gap-2 my-3">
-                  <span className="text-5xl font-extrabold text-slate-900 font-mono tracking-tight">
-                    {currentSpeed}
-                  </span>
-                  <span className="text-sm font-bold text-slate-500 uppercase">km/h</span>
-                </div>
-
-                {/* Barra do velocímetro */}
-                <div className="w-full bg-slate-100 rounded-full h-2 overflow-hidden">
-                  <div 
-                    className={`h-2 rounded-full transition-all duration-300 ${
-                      currentSpeed > routeConfig.limiteVelocidadeKmH ? 'bg-amber-500' : 'bg-[#002B49]'
-                    }`}
-                    style={{ width: `${Math.min(100, (currentSpeed / 120) * 100)}%` }}
-                  />
-                </div>
-
-                <div className="flex items-center justify-between text-[11px] text-slate-500 mt-2">
-                  <span>Limite da via: <strong>{routeConfig.limiteVelocidadeKmH} km/h</strong></span>
-                  <span>{routeConfig.rodovia}</span>
-                </div>
-              </div>
-
-              <div className="mt-3 pt-3 border-t border-slate-100 grid grid-cols-2 gap-2 text-center text-xs">
-                <div className="bg-slate-50 p-2 rounded-lg">
-                  <span className="text-[10px] text-slate-400 block">Km Percorrido</span>
-                  <span className="font-mono font-bold text-slate-800">{currentKm} km</span>
-                </div>
-                <div className="bg-slate-50 p-2 rounded-lg">
-                  <span className="text-[10px] text-slate-400 block">Restante</span>
-                  <span className="font-mono font-bold text-slate-800">{remainingKm} km</span>
-                </div>
-              </div>
-            </div>
-
-            {/* Estimativa de Chegada (ETA) & Trajeto */}
-            <div className="bg-white border border-slate-200 rounded-xl p-4 shadow-xs flex flex-col justify-between">
-              <div>
-                <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">
-                  Progresso & Previsão de Chegada
-                </span>
-                
-                <div className="mt-2">
-                  <div className="flex items-center justify-between text-xs font-semibold text-slate-700 mb-1">
-                    <span>{Math.round(routeProgress * 100)}% do trajeto concluído</span>
-                    <span className="text-[#002B49]">Restam ~{estimatedRemainingMinutes} min</span>
-                  </div>
-                  <div className="w-full bg-slate-100 rounded-full h-2.5 overflow-hidden">
-                    <div 
-                      className="bg-emerald-600 h-2.5 rounded-full transition-all duration-500"
-                      style={{ width: `${Math.round(routeProgress * 100)}%` }}
-                    />
-                  </div>
-                </div>
-
-                <div className="mt-3 space-y-2 text-xs">
-                  <div className="flex items-start gap-2">
-                    <div className="w-2.5 h-2.5 rounded-full bg-slate-400 mt-1 shrink-0" />
-                    <div>
-                      <p className="text-[10px] text-slate-400">Origem (Saída às {trip.horaSaida}):</p>
-                      <p className="font-medium text-slate-800 leading-tight">{trip.origem}</p>
-                    </div>
-                  </div>
-
-                  <div className="flex items-start gap-2">
-                    <div className="w-2.5 h-2.5 rounded-full bg-emerald-500 animate-ping mt-1 shrink-0" />
-                    <div>
-                      <p className="text-[10px] text-emerald-600 font-bold">Posição Atual do Celular:</p>
-                      <p className="font-bold text-slate-900 leading-tight">
-                        {routeConfig.rodovia} Km {currentKm} • {activeWaypoint.label}
-                      </p>
-                    </div>
-                  </div>
-
-                  <div className="flex items-start gap-2">
-                    <div className="w-2.5 h-2.5 rounded-full bg-[#002B49] mt-1 shrink-0" />
-                    <div>
-                      <p className="text-[10px] text-slate-400">Destino (Previsto: {trip.horaRetornoPrevista}):</p>
-                      <p className="font-medium text-slate-800 leading-tight">{trip.destino}</p>
-                    </div>
-                  </div>
-                </div>
-              </div>
-
-              {/* Botão de Ativação do GPS Real do Navegador / Smartphone */}
-              <div className="mt-3 pt-3 border-t border-slate-100">
-                <button
-                  onClick={handleToggleRealGps}
-                  className={`w-full py-1.5 px-3 rounded-lg text-xs font-semibold flex items-center justify-center gap-1.5 transition-colors ${
-                    realGpsActive
-                      ? 'bg-emerald-600 hover:bg-emerald-700 text-white'
-                      : 'bg-slate-100 hover:bg-slate-200 text-slate-700 border border-slate-200'
-                  }`}
-                >
-                  <Crosshair className={`w-3.5 h-3.5 ${realGpsActive ? 'animate-spin' : ''}`} />
-                  <span>{realGpsActive ? 'GPS Real Conectado (Desativar)' : 'Usar GPS Real do meu Celular'}</span>
-                </button>
-                {realGpsError && (
-                  <p className="text-[10px] text-red-600 mt-1 text-center">{realGpsError}</p>
-                )}
-              </div>
-            </div>
-
+            {/* Item Único Condensado: Cockpit de Velocidade Atual, Limite Máximo e Distância Faltante ao Destino */}
+            <InteractiveSpeedometerCard
+              currentSpeed={currentSpeed}
+              onSpeedChange={setCurrentSpeed}
+              maxSpeedLimit={customSpeedLimit}
+              onMaxSpeedLimitChange={setCustomSpeedLimit}
+              currentKm={currentKm}
+              remainingKm={remainingKm}
+              totalDistanceKm={routeConfig.distanciaTotalKm}
+              routeProgress={routeProgress}
+              onProgressChange={setRouteProgress}
+              rodovia={routeConfig.rodovia}
+              activeWaypointLabel={activeWaypoint.label}
+              origem={trip.origem}
+              horaSaida={trip.horaSaida}
+              destino={trip.destino}
+              horaRetornoPrevista={trip.horaRetornoPrevista}
+              isPlaying={isPlaying}
+              onTogglePlay={() => setIsPlaying(!isPlaying)}
+              realGpsActive={realGpsActive}
+              onToggleRealGps={handleToggleRealGps}
+              realGpsError={realGpsError}
+              onOpenTabletSignature={() => setIsTabletSignatureOpen(true)}
+              isSigned={!!currentTripSignature}
+            />
           </div>
 
           {/* ========================================================= */}
@@ -1003,15 +1028,53 @@ export const DriverGpsTrackingModal: React.FC<DriverGpsTrackingModalProps> = ({
             <Shield className="w-4 h-4 text-emerald-600" />
             <span>Módulo de Telemetria Oficial SIGPAT • Criptografia de Ponta a Ponta TJPR</span>
           </div>
-          <button
-            onClick={onClose}
-            className="px-4 py-2 bg-slate-200 hover:bg-slate-300 text-slate-800 font-semibold rounded-xl transition-colors"
-          >
-            Fechar Acompanhamento
-          </button>
+
+          <div className="flex items-center gap-2 w-full sm:w-auto">
+            <button
+              type="button"
+              onClick={() => setIsTabletSignatureOpen(true)}
+              className={`flex-1 sm:flex-none flex items-center justify-center gap-1.5 px-4 py-2 text-xs font-bold rounded-xl transition-all shadow-xs cursor-pointer ${
+                currentTripSignature
+                  ? 'bg-emerald-50 text-emerald-800 border border-emerald-300 hover:bg-emerald-100'
+                  : 'bg-[#002B49] hover:bg-[#003B66] text-white'
+              }`}
+            >
+              <Tablet className="w-3.5 h-3.5 text-amber-300" />
+              <span>{currentTripSignature ? 'Ver Assinatura do Solicitante' : 'Assinatura via Tablet'}</span>
+              {currentTripSignature && <CheckCircle2 className="w-3.5 h-3.5 text-emerald-600" />}
+            </button>
+
+            <button
+              onClick={onClose}
+              className="flex-1 sm:flex-none px-4 py-2 bg-slate-200 hover:bg-slate-300 text-slate-800 font-semibold rounded-xl transition-colors cursor-pointer"
+            >
+              Fechar Acompanhamento
+            </button>
+          </div>
         </div>
 
       </div>
+
+      {/* MODAL DE ASSINATURA VIA TABLET E DIGITAL DO SOLICITANTE */}
+      {isTabletSignatureOpen && (
+        <RequesterTabletSignatureModal
+          isOpen={true}
+          onClose={() => setIsTabletSignatureOpen(false)}
+          trip={{
+            ...trip,
+            assinaturaRealizacao: currentTripSignature
+          }}
+          vehicle={vehicle}
+          driver={driver}
+          currentKm={currentKm}
+          currentCoordinates={{
+            lat: currentLat,
+            lng: currentLng,
+            address: `${routeConfig.rodovia} Km ${currentKm} - ${activeWaypoint.label}`
+          }}
+          onSaveSignature={handleSaveSignature}
+        />
+      )}
     </div>
   );
 };

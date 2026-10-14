@@ -158,14 +158,14 @@ export const INITIAL_DRIVERS: Driver[] = [
   },
   {
     id: 'drv-3',
-    nome: 'Roberto Dias Rezende',
-    matricula: '52.109-1',
+    nome: 'Renato Guimarães',
+    matricula: '51.490-1',
     cnh: '05192830192',
     cnhCategoria: 'C',
     cnhValidade: '2026-11-05',
-    status: 'disponivel',
+    status: 'em_viagem',
     telefone: '(45) 99104-5820',
-    email: 'roberto.rezende@tjpr.jus.br',
+    email: 'renato.guimaraes@tjpr.jus.br',
     comarca: 'Cascavel',
     totalViagens: 215,
     mediaAvaliacao: 4.88,
@@ -186,6 +186,22 @@ export const INITIAL_DRIVERS: Driver[] = [
     totalViagens: 180,
     mediaAvaliacao: 5.0,
     cursoDirecaoDefensivaValidade: '2028-01-20',
+  },
+  {
+    id: 'drv-5',
+    nome: 'Marcelo Ramos Soares',
+    matricula: '42.319-4',
+    cnh: '04128930194',
+    cnhCategoria: 'D',
+    cnhValidade: '2028-03-12',
+    status: 'disponivel',
+    telefone: '(41) 99720-3184',
+    email: 'marcelo.ramos@tjpr.jus.br',
+    comarca: 'Curitiba - Palácio da Justiça',
+    totalViagens: 310,
+    mediaAvaliacao: 4.96,
+    cursoDirecaoDefensivaValidade: '2027-09-10',
+    veiculoPrefixoAtual: 'TJ-405',
   },
 ];
 
@@ -764,6 +780,15 @@ export const INITIAL_MAINTENANCES: Maintenance[] = [
 ];
 
 export const INITIAL_NOTIFICATIONS: NotificationItem[] = [
+  {
+    id: 'notif-coord-1',
+    titulo: 'Atividade Concluída: Assinatura do Solicitante Coletada (Tablet)',
+    mensagem: 'O solicitante Dr. Roberto atestou via tablet corporativo o encerramento do deslocamento da Ordem TJ-208 (Curitiba -> Ponta Grossa). Autenticação biométrica e carimbo NTP.br registrados. Chamado pronto para homologação e encerramento exclusivo da Coordenação.',
+    dataHora: 'Hoje às 15:32',
+    lida: false,
+    tipo: 'assinatura_solicitante',
+    link: 'chamados',
+  },
   {
     id: 'notif-1',
     titulo: 'Nova Viagem Atribuída para Hoje',

@@ -22,8 +22,10 @@ import {
   OfficialDocument, 
   DocumentCategory, 
   Vehicle, 
-  Driver 
+  Driver,
+  Role 
 } from '../../types';
+import { isDriverRole } from '../../services/accessControl';
 import { DocumentPreviewModal } from './DocumentPreviewModal';
 import { UploadDocumentModal } from './UploadDocumentModal';
 
@@ -33,6 +35,8 @@ interface DocumentosViewProps {
   drivers: Driver[];
   onAddDocument: (newDoc: OfficialDocument) => void;
   onUpdateDocument?: (updatedDoc: OfficialDocument) => void;
+  currentRole?: Role;
+  restrictedDriver?: Driver;
 }
 
 export const DocumentosView: React.FC<DocumentosViewProps> = ({
@@ -41,7 +45,29 @@ export const DocumentosView: React.FC<DocumentosViewProps> = ({
   drivers,
   onAddDocument,
   onUpdateDocument,
+  currentRole = 'administrador',
+  restrictedDriver,
 }) => {
+  const isDriver = isDriverRole(currentRole);
+  const driverPrefixo = restrictedDriver?.veiculoPrefixoAtual || 'TJ-104';
+  const assignedVehicle = vehicles.find(v => v.prefixo === driverPrefixo);
+
+  // Escopo de documentos: Para o motorista, exibe apenas os seus documentos oficiais e do veículo conduzido
+  const baseDocuments = isDriver && restrictedDriver
+    ? documents.filter(doc => {
+        const isDriverDoc = doc.categoria === 'motorista' && (
+          doc.motoristaId === restrictedDriver.id ||
+          (doc.motoristaNome && doc.motoristaNome.toLowerCase().includes(restrictedDriver.nome.split(' ')[0].toLowerCase()))
+        );
+        const isVehicleDoc = doc.categoria === 'carro' && (
+          doc.veiculoPrefixo === driverPrefixo ||
+          (assignedVehicle && doc.veiculoId === assignedVehicle.id)
+        );
+        const isPermit = doc.subtipo === 'autorizacao_trafego_especial';
+        return isDriverDoc || isVehicleDoc || isPermit;
+      })
+    : documents;
+
   const [activeCategory, setActiveCategory] = useState<'todos' | DocumentCategory>('todos');
   const [searchTerm, setSearchTerm] = useState('');
   const [validityFilter, setValidityFilter] = useState<'todos' | 'valido' | 'a_vencer' | 'vencido' | 'permanente'>('todos');
@@ -54,15 +80,15 @@ export const DocumentosView: React.FC<DocumentosViewProps> = ({
   const [isUploadOpen, setIsUploadOpen] = useState(false);
 
   // Stats
-  const totalDocs = documents.length;
-  const docsCarro = documents.filter(d => d.categoria === 'carro').length;
-  const docsMotorista = documents.filter(d => d.categoria === 'motorista').length;
-  const docsDemais = documents.filter(d => d.categoria === 'demais_situacoes').length;
-  const docsAVencer = documents.filter(d => d.statusValidade === 'a_vencer').length;
-  const docsVencidos = documents.filter(d => d.statusValidade === 'vencido').length;
+  const totalDocs = baseDocuments.length;
+  const docsCarro = baseDocuments.filter(d => d.categoria === 'carro').length;
+  const docsMotorista = baseDocuments.filter(d => d.categoria === 'motorista').length;
+  const docsDemais = baseDocuments.filter(d => d.categoria === 'demais_situacoes').length;
+  const docsAVencer = baseDocuments.filter(d => d.statusValidade === 'a_vencer').length;
+  const docsVencidos = baseDocuments.filter(d => d.statusValidade === 'vencido').length;
 
   // Filtered documents
-  const filteredDocs = documents.filter(doc => {
+  const filteredDocs = baseDocuments.filter(doc => {
     const matchesCategory = activeCategory === 'todos' || doc.categoria === activeCategory;
     const matchesValidity = validityFilter === 'todos' || doc.statusValidade === validityFilter;
     const matchesVehicle = selectedVehicleFilter === 'todos' || doc.veiculoId === selectedVehicleFilter;
@@ -93,27 +119,29 @@ export const DocumentosView: React.FC<DocumentosViewProps> = ({
           <div className="space-y-1">
             <div className="flex items-center gap-2">
               <span className="text-[10px] uppercase font-bold tracking-widest bg-amber-400/20 text-amber-300 px-2 py-0.5 rounded border border-amber-300/30 font-mono">
-                CENTRAL DE DOCUMENTAÇÃO TJPR
+                {isDriver ? 'DOCUMENTAÇÃO OFICIAL DO CONDUTOR' : 'CENTRAL DE DOCUMENTAÇÃO TJPR'}
               </span>
               <span className="text-xs text-blue-200">
-                Arquivo Digital Unificado • Conformidade & Auditoria
+                {isDriver ? 'Porte Obrigatório Digital & Habilitação' : 'Arquivo Digital Unificado • Conformidade & Auditoria'}
               </span>
             </div>
             <h2 className="text-2xl font-black text-white tracking-tight flex items-center gap-2.5">
               <FileText className="w-6 h-6 text-[#C4A052]" />
-              Gestão de Documentos Oficiais
+              {isDriver ? 'Documentos Oficiais do Condutor' : 'Gestão de Documentos Oficiais'}
             </h2>
             <p className="text-xs text-slate-200 max-w-2xl leading-relaxed">
-              Repositório digital para prontuários de condutores, CRLV e seguros dos veículos da frota, autorizações de tráfego, portarias administrativas e termos de sinistro.
+              {isDriver && restrictedDriver
+                ? `Prontuário funcional e habilitação de ${restrictedDriver.nome} (Matrícula ${restrictedDriver.matricula}), além de CRLV-e e apólice de seguro do veículo oficial ${driverPrefixo}.`
+                : 'Repositório digital para prontuários de condutores, CRLV e seguros dos veículos da frota, autorizações de tráfego, portarias administrativas e termos de sinistro.'}
             </p>
           </div>
 
           <button
             onClick={() => setIsUploadOpen(true)}
-            className="px-4 py-2.5 rounded-xl bg-[#C4A052] hover:bg-[#B08D41] text-[#002B49] text-xs font-black flex items-center gap-2 transition-all shadow-md self-start md:self-center"
+            className="px-4 py-2.5 rounded-xl bg-[#C4A052] hover:bg-[#B08D41] text-[#002B49] text-xs font-black flex items-center gap-2 transition-all shadow-md self-start md:self-center cursor-pointer"
           >
             <Plus className="w-4 h-4 stroke-[3]" />
-            Novo Upload de Documento
+            {isDriver ? 'Anexar Certificado / CNH' : 'Novo Upload de Documento'}
           </button>
         </div>
 

@@ -73,6 +73,15 @@ export const DriverPortal: React.FC<DriverPortalProps> = ({
     return true;
   });
 
+  // Iniciais do motorista
+  const driverInitials = currentDriver.nome
+    .split(' ')
+    .filter(Boolean)
+    .map((part) => part[0])
+    .slice(0, 2)
+    .join('')
+    .toUpperCase();
+
   return (
     <div className="space-y-6">
       
@@ -84,7 +93,7 @@ export const DriverPortal: React.FC<DriverPortalProps> = ({
           <div className="flex items-start gap-4">
             <div className="relative">
               <div className="w-14 h-14 rounded-xl bg-[#002B49] text-white flex items-center justify-center font-bold text-lg shadow-md border-2 border-[#C4A052]">
-                CS
+                {driverInitials}
               </div>
               <div className="absolute -bottom-1 -right-1 w-4 h-4 bg-emerald-500 rounded-full border-2 border-white" title="Disponível" />
             </div>

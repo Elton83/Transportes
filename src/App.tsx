@@ -58,6 +58,7 @@ import { MeuBeneficioView } from './components/beneficio/MeuBeneficioView';
 import { RelatoriosView } from './components/reports/RelatoriosView';
 import { ExecutiveFleetDashboard } from './components/dashboard/ExecutiveFleetDashboard';
 import { CoordinatorPortal } from './components/coordinator/CoordinatorPortal';
+import { TripSignatureModal } from './components/dashboard/TripSignatureModal';
 import { NewChamadoModal } from './components/coordinator/NewChamadoModal';
 import { 
   INITIAL_WORKSHOPS, 
@@ -69,13 +70,21 @@ import {
   INITIAL_TEAMS_CONFIG, 
   INITIAL_TEAMS_LOGS 
 } from './data/teamsData';
-import { 
-  TeamsIntegrationConfig, 
-  TeamsDispatchLog 
-} from './types';
+import { TeamsIntegrationConfig, TeamsDispatchLog, WhatsAppReservationLog, SigaSolicitationData, DriverScheduleItem } from './types';
 import { dispatchTripToTeams } from './services/teamsService';
 import { TeamsExtractModal } from './components/teams/TeamsExtractModal';
 import { TeamsConfigModal } from './components/teams/TeamsConfigModal';
+import { WhatsAppReservationModal } from './components/whatsapp/WhatsAppReservationModal';
+import { SigaSolicitationModal } from './components/siga/SigaSolicitationModal';
+import { INITIAL_WHATSAPP_LOGS } from './services/whatsappService';
+import { INITIAL_DRIVER_SCHEDULES } from './data/scheduleData';
+import { 
+  isTabAllowedForRole, 
+  isDriverRole, 
+  getAllowedTabsForRole 
+} from './services/accessControl';
+import { AccessRestrictedView } from './components/common/AccessRestrictedView';
+import { DriverSessionBar } from './components/common/DriverSessionBar';
 
 export default function App() {
   // Estado principal de navegação e perfis (Iniciando no Dashboard com os 4 indicadores solicitados)
@@ -106,8 +115,19 @@ export default function App() {
   const [isSidebarCollapsed, setIsSidebarCollapsed] = useState<boolean>(false);
   const [isMobileSidebarOpen, setIsMobileSidebarOpen] = useState<boolean>(false);
 
-  // Motorista logado na sessão
-  const currentDriver = drivers[0]; // Carlos Eduardo Silveira (Matrícula TJPR 48.912-3)
+  // Motorista ativo na sessão (dinâmico com seletor para teste e simulação de condutores)
+  const [selectedDriverId, setSelectedDriverId] = useState<string>(INITIAL_DRIVERS[0]?.id || 'drv-1');
+  const currentDriver = drivers.find((d) => d.id === selectedDriverId) || drivers[0];
+  const currentDriverAssignedVehicle = vehicles.find((v) => v.prefixo === currentDriver.veiculoPrefixoAtual) || vehicles[0];
+
+  // Gestão de transição de perfis com verificação estrita de permissões (RBAC)
+  const handleRoleChange = (newRole: Role) => {
+    setCurrentRole(newRole);
+    const allowed = getAllowedTabsForRole(newRole);
+    if (!allowed.includes(activeNavTab)) {
+      setActiveNavTab(allowed[0]);
+    }
+  };
 
   // Modais
   const [checklistTrip, setChecklistTrip] = useState<Trip | null>(null);
@@ -116,9 +136,24 @@ export default function App() {
   const [tripLogTrip, setTripLogTrip] = useState<Trip | null>(null);
   const [quickFuelOpen, setQuickFuelOpen] = useState(false);
   const [officialOrderTrip, setOfficialOrderTrip] = useState<Trip | null>(null);
+  const [signatureModalTrip, setSignatureModalTrip] = useState<Trip | null>(null);
   const [newVehicleModalOpen, setNewVehicleModalOpen] = useState(false);
   const [newMaintenanceModalOpen, setNewMaintenanceModalOpen] = useState(false);
   const [newChamadoModalOpen, setNewChamadoModalOpen] = useState(false);
+
+  // Integração com WhatsApp (Envio de detalhes da reserva para o solicitante)
+  const [whatsappReservationTrip, setWhatsappReservationTrip] = useState<{
+    trip: Trip;
+    vehicle?: Vehicle;
+    driver?: Driver;
+  } | null>(null);
+  const [whatsappLogs, setWhatsappLogs] = useState<WhatsAppReservationLog[]>(INITIAL_WHATSAPP_LOGS);
+
+  // Integração com o SIGA TJPR (Abertura de solicitações integradas)
+  const [sigaModalOpen, setSigaModalOpen] = useState<boolean>(false);
+
+  // Escala de Motoristas
+  const [driverSchedules, setDriverSchedules] = useState<DriverScheduleItem[]>(INITIAL_DRIVER_SCHEDULES);
 
   // Banner informativo temporário
   const [toastMessage, setToastMessage] = useState<string | null>(null);
@@ -126,6 +161,146 @@ export default function App() {
   const showToast = (msg: string) => {
     setToastMessage(msg);
     setTimeout(() => setToastMessage(null), 4500);
+  };
+
+  // Confirmação e registro de envio de reserva via WhatsApp
+  const handleConfirmWhatsAppDispatch = (log: WhatsAppReservationLog) => {
+    setWhatsappLogs((prev) => [log, ...prev]);
+    setTrips((prev) =>
+      prev.map((t) =>
+        t.id === log.tripId
+          ? {
+              ...t,
+              whatsappNotified: true,
+              whatsappDispatchDate: log.dataEnvio,
+              whatsappTelefoneDestino: log.solicitanteTelefone,
+            }
+          : t
+      )
+    );
+    showToast(`Confirmação de reserva enviada para ${log.solicitanteNome} no WhatsApp!`);
+    setNotifications((prev) => [
+      {
+        id: `notif-wpp-${Date.now()}`,
+        titulo: 'WhatsApp: Reserva Transmitida',
+        mensagem: `Dados do veículo ${log.veiculoPrefixo} (${log.placa}) e motorista ${log.motoristaNome} enviados ao solicitante ${log.solicitanteNome}.`,
+        dataHora: `Hoje às ${new Date().toTimeString().split(' ')[0].substring(0, 5)}`,
+        lida: false,
+        tipo: 'viagem',
+      },
+      ...prev,
+    ]);
+  };
+
+  // Submissão de solicitação pelo SIGA (Abertura Integrada)
+  const handleSubmitSigaSolicitation = (solicitationData: SigaSolicitationData) => {
+    const randomCode = `TRP-2026-${Math.floor(100 + Math.random() * 900)}`;
+    const now = new Date();
+    const formattedDate = `${now.toISOString().split('T')[0]} ${now.toTimeString().split(' ')[0].substring(0, 5)}`;
+
+    // Localiza veículo adequado disponível
+    const suitableVehicle = vehicles.find(
+      (v) => v.status === 'disponivel' && v.tipo.includes(solicitationData.tipoVeiculoSugerido.split(' ')[0])
+    ) || vehicles.find((v) => v.status === 'disponivel') || vehicles[0];
+
+    // Localiza motorista adequado
+    const suitableDriver = drivers.find((d) => d.status === 'disponivel') || drivers[0];
+
+    const newTrip: Trip = {
+      id: `trip-${Date.now()}`,
+      codigo: randomCode,
+      processoSei: solicitationData.processoSei || '0021940-52.2026.8.16.6000',
+      sigaProtocolo: solicitationData.protocoloSiga,
+      sigaStatus: 'integrado',
+      sigaTipoDemanda: solicitationData.tipoDemanda,
+      solicitanteNome: solicitationData.solicitanteNome,
+      solicitanteCargo: solicitationData.solicitanteCargo,
+      solicitanteVara: solicitationData.solicitanteLotacao,
+      finalidade: solicitationData.finalidade,
+      origem: solicitationData.origem,
+      destino: solicitationData.destino,
+      comarca: solicitationData.solicitanteComarca,
+      dataSaida: solicitationData.dataSaida,
+      horaSaida: solicitationData.horaSaida,
+      dataRetornoPrevista: solicitationData.dataRetornoPrevista,
+      horaRetornoPrevista: solicitationData.horaRetornoPrevista,
+      status: 'aprovada',
+      veiculoId: suitableVehicle.id,
+      veiculoPrefixo: suitableVehicle.prefixo,
+      motoristaId: suitableDriver.id,
+      motoristaNome: suitableDriver.nome,
+      passageiros: solicitationData.nomesPassageiros.length > 0 ? solicitationData.nomesPassageiros : [solicitationData.solicitanteNome],
+      kmInicial: suitableVehicle.kmAtual,
+      diarioBordo: [],
+      dataCriacao: formattedDate,
+      observacoes: solicitationData.observacoes,
+    };
+
+    setTrips((prev) => [newTrip, ...prev]);
+
+    // Cria chamado correlato com dados do SIGA
+    const chamadoCode = `CHA-2026-${Math.floor(100 + Math.random() * 900)}`;
+    const newChamado: Chamado = {
+      id: `cham-${Date.now()}`,
+      codigo: chamadoCode,
+      titulo: `Solicitação SIGA ${solicitationData.protocoloSiga} - ${solicitationData.tipoDemanda}`,
+      descricao: `Demanda protocolada no SIGA: ${solicitationData.finalidade}. Trajeto: ${solicitationData.origem} -> ${solicitationData.destino}.`,
+      tipo: 'solicitacao_veiculo',
+      prioridade: solicitationData.prioridadeSiga === 'urgente' ? 'urgente' : 'alta',
+      status: 'em_atendimento',
+      dataAbertura: formattedDate,
+      solicitanteNome: solicitationData.solicitanteNome,
+      solicitanteCargo: solicitationData.solicitanteCargo,
+      solicitanteMatricula: solicitationData.solicitanteMatricula,
+      comarca: solicitationData.solicitanteComarca,
+      veiculoPrefixo: suitableVehicle.prefixo,
+      veiculoId: suitableVehicle.id,
+      veiculoModelo: suitableVehicle.modelo,
+      veiculoPlaca: suitableVehicle.placa,
+      motoristaId: suitableDriver.id,
+      motoristaNome: suitableDriver.nome,
+      motoristaTelefone: suitableDriver.telefone,
+      processoSei: solicitationData.processoSei,
+      prazoSugerido: `${solicitationData.dataSaida} ${solicitationData.horaSaida}`,
+      tripIdVinculada: newTrip.id,
+      respostas: [
+        {
+          id: `resp-${Date.now()}`,
+          autor: 'SIGA WebService TJPR',
+          cargo: 'Sistema Integrado de Gestão Administrativa',
+          dataHora: formattedDate,
+          mensagem: `Solicitação protocolada no SIGA sob protocolo ${solicitationData.protocoloSiga}. Recursos alocados: Veículo ${suitableVehicle.prefixo} (${suitableVehicle.modelo}) e Motorista ${suitableDriver.nome}.`,
+          isAdmin: true,
+        },
+      ],
+    };
+    setChamados((prev) => [newChamado, ...prev]);
+
+    // Notificação
+    setNotifications((prev) => [
+      {
+        id: `notif-${Date.now()}`,
+        titulo: `Demanda Protocolada no SIGA: ${solicitationData.protocoloSiga}`,
+        mensagem: `${solicitationData.solicitanteNome} solicitou transporte para ${solicitationData.destino}. Alocado veículo ${suitableVehicle.prefixo} e motorista ${suitableDriver.nome}.`,
+        dataHora: `Hoje às ${now.toTimeString().split(' ')[0].substring(0, 5)}`,
+        lida: false,
+        tipo: 'chamado',
+      },
+      ...prev,
+    ]);
+
+    showToast(`Solicitação ${solicitationData.protocoloSiga} protocolada no SIGA com sucesso!`);
+
+    // Se optou por WhatsApp imediato, abre modal de confirmação do WhatsApp
+    if (solicitationData.enviarWhatsAppImediato) {
+      setTimeout(() => {
+        setWhatsappReservationTrip({
+          trip: newTrip,
+          vehicle: suitableVehicle,
+          driver: suitableDriver,
+        });
+      }, 500);
+    }
   };
 
   // Gestão de Chamados e Apoio TJPR
@@ -220,6 +395,88 @@ export default function App() {
       })
     );
     showToast(`Mensagem enviada no chamado.`);
+  };
+
+  // Requisitos 2.1 e 2.2: Direcionar motorista e veículo para o chamado em aberto (Coordenação)
+  const handleAssignDriverAndVehicle = (
+    chamadoId: string,
+    driverId: string,
+    vehicleId: string,
+    instrucoes?: string
+  ) => {
+    const selectedDriver = drivers.find((d) => d.id === driverId);
+    const selectedVehicle = vehicles.find((v) => v.id === vehicleId);
+
+    const now = new Date();
+    const formattedDate = `${now.toISOString().split('T')[0]} ${now.toTimeString().split(' ')[0].substring(0, 5)}`;
+
+    setChamados((prev) =>
+      prev.map((c) => {
+        if (c.id === chamadoId) {
+          const despachoMsg = `Coordenação de Frotas TJPR direcionou os recursos para atendimento:\n• Motorista Designado: ${selectedDriver?.nome || 'Motorista Oficial'} (Matrícula: ${selectedDriver?.matricula || '---'} | CNH: ${selectedDriver?.cnhCategoria || 'D'})\n• Veículo Designado: ${selectedVehicle?.prefixo || '---'} - ${selectedVehicle?.modelo || '---'} (Placa: ${selectedVehicle?.placa || '---'})\n${instrucoes ? `• Instruções: "${instrucoes}"` : ''}`;
+
+          return {
+            ...c,
+            status: 'em_atendimento',
+            motoristaId: selectedDriver?.id,
+            motoristaNome: selectedDriver?.nome,
+            motoristaTelefone: selectedDriver?.telefone,
+            veiculoId: selectedVehicle?.id,
+            veiculoPrefixo: selectedVehicle?.prefixo,
+            veiculoModelo: selectedVehicle?.modelo,
+            veiculoPlaca: selectedVehicle?.placa,
+            respostas: [
+              ...c.respostas,
+              {
+                id: `resp-${Date.now()}`,
+                dataHora: formattedDate,
+                autor: 'Coordenação Regional de Transportes',
+                cargo: 'Coordenadora Regional',
+                mensagem: despachoMsg,
+                isAdmin: true,
+              },
+            ],
+          };
+        }
+        return c;
+      })
+    );
+
+    showToast(`Motorista (${selectedDriver?.nome}) e Veículo (${selectedVehicle?.prefixo}) direcionados com sucesso!`);
+  };
+
+  // Requisito 3: Somente o coordenador pode encerrar o chamado
+  const handleCloseChamadoByCoordinator = (chamadoId: string, justificativa: string) => {
+    const now = new Date();
+    const formattedDate = `${now.toISOString().split('T')[0]} ${now.toTimeString().split(' ')[0].substring(0, 5)}`;
+
+    setChamados((prev) =>
+      prev.map((c) => {
+        if (c.id === chamadoId) {
+          return {
+            ...c,
+            status: 'concluido',
+            encerradoPor: 'Coordenação Regional de Transportes TJPR',
+            dataEncerramento: formattedDate,
+            justificativaEncerramento: justificativa,
+            respostas: [
+              ...c.respostas,
+              {
+                id: `resp-${Date.now()}`,
+                dataHora: formattedDate,
+                autor: 'Coordenação Regional de Transportes',
+                cargo: 'Coordenadora Regional',
+                mensagem: `CHAMADO ENCERRADO E HOMOLOGADO OFICIALMENTE PELA COORDENAÇÃO.\nParecer do Coordenador: "${justificativa}"`,
+                isAdmin: true,
+              },
+            ],
+          };
+        }
+        return c;
+      })
+    );
+
+    showToast(`Chamado encerrado e homologado oficialmente pela Coordenação!`);
   };
 
   // Sincronização da API Meu Benefício
@@ -584,22 +841,72 @@ export default function App() {
     );
   };
 
+  // Requisito 4: O coordenador deve receber a notificação de atividade concluída (assinatura do solicitante)
   const handleSaveTripSignature = (tripId: string, sigData: TripSignatureData) => {
     setTrips((prev) =>
       prev.map((t) => (t.id === tripId ? { ...t, assinaturaRealizacao: sigData } : t))
     );
-    showToast(`Termo de Realização da Viagem homologado com assinatura digital!`);
+
+    const now = new Date();
+    const formattedTime = now.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' });
+
+    // 4. Notificação prioritária para a Coordenação de Transportes
+    const coordNotif: NotificationItem = {
+      id: `notif-coord-${Date.now()}`,
+      titulo: 'Atividade Concluída: Assinatura do Solicitante (Tablet)',
+      mensagem: `O solicitante ${sigData.passageiroNome} assinou via tablet corporativo o encerramento do deslocamento (${sigData.veiculoModelo} ${sigData.placa} - Destino: ${sigData.destino}). Atesto eletrônico registrado com Hash ${sigData.hashAutenticidade || 'TJPR-OK'}. Pronto para homologação e encerramento da Coordenação.`,
+      dataHora: `Hoje às ${formattedTime}`,
+      lida: false,
+      tipo: 'assinatura_solicitante',
+      link: 'chamados',
+    };
+    setNotifications((prev) => [coordNotif, ...prev]);
+
+    // Vincular e atualizar qualquer chamado correspondente da comarca/veículo
+    setChamados((prev) =>
+      prev.map((c) => {
+        const matchesVeiculo = 
+          (c.veiculoPrefixo && sigData.placa && c.veiculoPrefixo.includes(sigData.placa)) ||
+          (c.veiculoPlaca && c.veiculoPlaca === sigData.placa) ||
+          (c.veiculoPrefixo && sigData.veiculoModelo && c.veiculoPrefixo.toLowerCase().includes(sigData.veiculoModelo.toLowerCase()));
+        const matchesTrip = c.tripIdVinculada === tripId;
+        const matchesSolicitante = c.status === 'em_atendimento' && c.solicitanteNome.toLowerCase().includes(sigData.passageiroNome.toLowerCase());
+
+        if (matchesVeiculo || matchesTrip || matchesSolicitante) {
+          return {
+            ...c,
+            atividadeConcluida: true,
+            assinaturaSolicitanteData: `${sigData.data} às ${sigData.horaRetorno || formattedTime}`,
+            assinaturaSolicitanteHash: sigData.hashAutenticidade,
+            respostas: [
+              ...c.respostas,
+              {
+                id: `resp-sig-${Date.now()}`,
+                autor: 'Sistema SIGPAT (Tablet do Solicitante)',
+                cargo: 'Certificação Digital',
+                dataHora: `${sigData.data} ${sigData.horaRetorno || formattedTime}`,
+                mensagem: `Atividade Concluída: O solicitante ${sigData.passageiroNome} concluiu o deslocamento e atestou via tablet com rubrica digital e carimbo de tempo. Demanda pronta para encerramento exclusivo pelo Coordenador.`,
+                isAdmin: true,
+              },
+            ],
+          };
+        }
+        return c;
+      })
+    );
+
+    showToast(`Termo de Realização homologado! Coordenador notificado da atividade concluída com assinatura do solicitante.`);
   };
 
   return (
     <div className="min-h-screen bg-[#F4F6F8] text-slate-800 font-sans flex selection:bg-[#002B49] selection:text-white">
       
-      {/* Menu Lateral à Esquerda (Sidebar Institucional TJPR) */}
+      {/* Menu Lateral à Esquerda (Sidebar Institucional TJPR com RBAC) */}
       <Sidebar
         activeNavTab={activeNavTab}
         onNavTabChange={setActiveNavTab}
         currentRole={currentRole}
-        onRoleChange={setCurrentRole}
+        onRoleChange={handleRoleChange}
         selectedComarca={selectedComarca}
         maintenancesCount={maintenances.length}
         documentsCount={documents.length}
@@ -613,11 +920,20 @@ export default function App() {
         onQuickFuel={() => setQuickFuelOpen(true)}
         onQuickNewTrip={() => {
           setActiveNavTab('operacoes');
-          setCurrentRole('solicitante');
+          handleRoleChange('solicitante');
         }}
         onQuickNewChamado={() => setNewChamadoModalOpen(true)}
+        onOpenSigaSolicitation={() => setSigaModalOpen(true)}
+        onOpenWhatsAppReservation={() => {
+          const targetTrip = trips.find((t) => t.status === 'em_andamento') || trips[0];
+          const targetVeh = vehicles.find((v) => v.id === targetTrip.veiculoId || v.prefixo === targetTrip.veiculoPrefixo);
+          const targetDrv = drivers.find((d) => d.id === targetTrip.motoristaId);
+          setWhatsappReservationTrip({ trip: targetTrip, vehicle: targetVeh, driver: targetDrv });
+        }}
         totalVehicles={vehicles.length}
         activeTripsCount={trips.filter((t) => t.status === 'em_andamento').length}
+        currentDriver={currentDriver}
+        assignedVehicle={currentDriverAssignedVehicle}
       />
 
       {/* Conteúdo Principal à Direita */}
@@ -626,7 +942,7 @@ export default function App() {
         {/* 1. Header Institucional TJPR com Seletor de Perfis e Menus Oficinas/Documentos */}
         <Header
           currentRole={currentRole}
-          onRoleChange={setCurrentRole}
+          onRoleChange={handleRoleChange}
           activeNavTab={activeNavTab}
           onNavTabChange={setActiveNavTab}
           notifications={notifications}
@@ -639,6 +955,27 @@ export default function App() {
           onOpenMobileSidebar={() => setIsMobileSidebarOpen(true)}
           isSidebarCollapsed={isSidebarCollapsed}
           onToggleSidebar={() => setIsSidebarCollapsed((prev) => !prev)}
+          onOpenSigaSolicitation={() => setSigaModalOpen(true)}
+          onOpenWhatsAppReservation={() => {
+            const targetTrip = trips.find((t) => t.status === 'em_andamento') || trips[0];
+            const targetVeh = vehicles.find((v) => v.id === targetTrip.veiculoId || v.prefixo === targetTrip.veiculoPrefixo);
+            const targetDrv = drivers.find((d) => d.id === targetTrip.motoristaId);
+            setWhatsappReservationTrip({ trip: targetTrip, vehicle: targetVeh, driver: targetDrv });
+          }}
+          currentDriver={currentDriver}
+          drivers={drivers}
+          onSelectDriver={(drv) => setSelectedDriverId(drv.id)}
+        />
+
+        {/* Barra de Sessão do Condutor Oficial TJPR (quando em perfil restrito) */}
+        <DriverSessionBar
+          currentRole={currentRole}
+          currentDriver={currentDriver}
+          drivers={drivers}
+          assignedVehicle={currentDriverAssignedVehicle}
+          onSelectDriver={(drv) => setSelectedDriverId(drv.id)}
+          activeNavTab={activeNavTab}
+          onNavTabChange={(tab) => setActiveNavTab(tab)}
         />
 
       {/* 2. Barra de Contexto Institucional / Identidade TJPR */}
@@ -684,65 +1021,122 @@ export default function App() {
         </div>
       )}
 
-      {/* 4. Conteúdo Principal conforme a Aba Ativa */}
+      {/* 4. Conteúdo Principal conforme a Aba Ativa e RBAC */}
       <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 sm:py-8 flex-1 w-full">
         
-        {/* ABA 0: Dashboard Geral da Frota (4 Indicadores Centrais Requisitados) */}
-        {activeNavTab === 'dashboard' && (
-          <ExecutiveFleetDashboard
-            vehicles={vehicles}
-            drivers={drivers}
-            trips={trips}
-            fuelLogs={fuelLogs}
-            selectedComarca={selectedComarca}
-            onOpenTripDetails={(trip) => setTripLogTrip(trip)}
-            onOpenOfficialOrder={(trip) => setOfficialOrderTrip(trip)}
-            onSaveTripSignature={handleSaveTripSignature}
-            onScheduleNewTrip={() => {
-              setActiveNavTab('operacoes');
-              setCurrentRole('solicitante');
-            }}
-            onRegisterNewVehicle={() => setNewVehicleModalOpen(true)}
+        {/* Verificação de Permissão: Se o perfil não tiver acesso à aba solicitada, exibe tela de bloqueio com navegação segura */}
+        {!isTabAllowedForRole(currentRole, activeNavTab) ? (
+          <AccessRestrictedView
+            currentRole={currentRole}
+            attemptedTab={activeNavTab}
+            onNavigateToAllowedTab={(tab) => setActiveNavTab(tab)}
+            onRoleChange={handleRoleChange}
           />
-        )}
-
-        {/* ABA 1: Operações & Viagens (Com padrões de acesso: Operador, Administrador, Coordenador e Solicitante) */}
-        {activeNavTab === 'operacoes' && (
+        ) : (
           <>
-            {/* Visualização 1: Operador (Motorista) - Página Inicial & Diário de Bordo */}
-            {(currentRole === 'operador' || currentRole === 'motorista') && (
-              <DriverPortal
-                currentDriver={currentDriver}
-                trips={trips}
-                vehicles={vehicles}
-                fuelLogs={fuelLogs}
-                onStartTripClick={handleStartTripClick}
-                onFinishTripClick={handleFinishTripClick}
-                onOpenTripLog={(trip) => setTripLogTrip(trip)}
-                onOpenOfficialOrder={(trip) => setOfficialOrderTrip(trip)}
-                onOpenQuickFuel={() => setQuickFuelOpen(true)}
-              />
-            )}
-
-            {/* Visualização 2: Administrador da Frota (SIGPAT Transportes TJPR) */}
-            {(currentRole === 'administrador' || currentRole === 'gestor') && (
-              <ManagerDashboard
+            {/* ABA 0: Dashboard Geral da Frota (4 Indicadores Centrais Requisitados + Escala de Motoristas) */}
+            {activeNavTab === 'dashboard' && (
+              <ExecutiveFleetDashboard
                 vehicles={vehicles}
                 drivers={drivers}
                 trips={trips}
                 fuelLogs={fuelLogs}
-                maintenances={maintenances}
-                onApproveTrip={handleApproveTrip}
-                onRejectTrip={handleRejectTrip}
+                selectedComarca={selectedComarca}
+                driverSchedules={driverSchedules}
+                chamados={chamados}
+                onOpenTripDetails={(trip) => setTripLogTrip(trip)}
                 onOpenOfficialOrder={(trip) => setOfficialOrderTrip(trip)}
-                onOpenNewVehicleModal={() => setNewVehicleModalOpen(true)}
-                onOpenNewMaintenanceModal={() => setNewMaintenanceModalOpen(true)}
-                onUpdateVehicleStatus={handleUpdateVehicleStatus}
+                onSaveTripSignature={handleSaveTripSignature}
+                onOpenWhatsAppReservation={(trip, vehicle, driver) => {
+                  setWhatsappReservationTrip({ trip, vehicle, driver });
+                }}
+                onOpenSigaSolicitation={() => setSigaModalOpen(true)}
+                onNavigateToChamados={() => setActiveNavTab('chamados')}
+                onOpenNewChamadoModal={() => setNewChamadoModalOpen(true)}
+                onScheduleNewTrip={() => {
+                  setActiveNavTab('operacoes');
+                  handleRoleChange('solicitante');
+                }}
+                onRegisterNewVehicle={() => setNewVehicleModalOpen(true)}
               />
             )}
 
-            {/* Visualização 3: Coordenador Regional (Acompanhamento Diário, Chamados e Relatórios) */}
-            {currentRole === 'coordenador' && (
+            {/* ABA 1: Operações & Viagens (Suas Demandas para o Motorista) */}
+            {activeNavTab === 'operacoes' && (
+              <>
+                {/* Visualização 1: Operador (Motorista) - Suas Demandas & Diário de Bordo */}
+                {(currentRole === 'operador' || currentRole === 'motorista') && (
+                  <DriverPortal
+                    currentDriver={currentDriver}
+                    trips={trips}
+                    vehicles={vehicles}
+                    fuelLogs={fuelLogs}
+                    onStartTripClick={handleStartTripClick}
+                    onFinishTripClick={handleFinishTripClick}
+                    onOpenTripLog={(trip) => setTripLogTrip(trip)}
+                    onOpenOfficialOrder={(trip) => setOfficialOrderTrip(trip)}
+                    onOpenQuickFuel={() => setQuickFuelOpen(true)}
+                  />
+                )}
+
+                {/* Visualização 2: Administrador da Frota (SIGPAT Transportes TJPR) */}
+                {(currentRole === 'administrador' || currentRole === 'gestor') && (
+                  <ManagerDashboard
+                    vehicles={vehicles}
+                    drivers={drivers}
+                    trips={trips}
+                    fuelLogs={fuelLogs}
+                    maintenances={maintenances}
+                    onApproveTrip={handleApproveTrip}
+                    onRejectTrip={handleRejectTrip}
+                    onOpenOfficialOrder={(trip) => setOfficialOrderTrip(trip)}
+                    onOpenNewVehicleModal={() => setNewVehicleModalOpen(true)}
+                    onOpenNewMaintenanceModal={() => setNewMaintenanceModalOpen(true)}
+                    onUpdateVehicleStatus={handleUpdateVehicleStatus}
+                  />
+                )}
+
+                {/* Visualização 3: Coordenador Regional (Acompanhamento Diário, Chamados e Relatórios) */}
+                {currentRole === 'coordenador' && (
+                  <CoordinatorPortal
+                    currentRole={currentRole}
+                    selectedComarca={selectedComarca}
+                    trips={trips}
+                    vehicles={vehicles}
+                    drivers={drivers}
+                    chamados={chamados}
+                    notifications={notifications}
+                    onOpenNewChamadoModal={() => setNewChamadoModalOpen(true)}
+                    onUpdateChamadoStatus={handleUpdateChamadoStatus}
+                    onAssignDriverAndVehicle={handleAssignDriverAndVehicle}
+                    onCloseChamadoByCoordinator={handleCloseChamadoByCoordinator}
+                    onAddChamadoResposta={handleAddChamadoResposta}
+                    onNavigateToRelatorios={() => setActiveNavTab('relatorios')}
+                    onOpenTripDetails={(trip) => setTripLogTrip(trip)}
+                    onOpenTripSignature={(trip) => setSignatureModalTrip(trip)}
+                    onOpenWhatsAppReservation={(trip, vehicle, driver) => {
+                      setWhatsappReservationTrip({ trip, vehicle, driver });
+                    }}
+                    onOpenSigaSolicitation={() => setSigaModalOpen(true)}
+                  />
+                )}
+
+                {/* Visualização 4: Portal do Solicitante (Magistrados & Servidores) */}
+                {currentRole === 'solicitante' && (
+                  <SolicitationPortal
+                    trips={trips}
+                    onCreateTrip={handleCreateTrip}
+                    onOpenOfficialOrder={(trip) => setOfficialOrderTrip(trip)}
+                    onOpenTeamsExtract={handleOpenTeamsExtract}
+                    onOpenTeamsConfig={() => setTeamsConfigModalOpen(true)}
+                    teamsConfig={teamsConfig}
+                  />
+                )}
+              </>
+            )}
+
+            {/* ABA: Central de Chamados & Apoio Logístico */}
+            {activeNavTab === 'chamados' && (
               <CoordinatorPortal
                 currentRole={currentRole}
                 selectedComarca={selectedComarca}
@@ -750,108 +1144,89 @@ export default function App() {
                 vehicles={vehicles}
                 drivers={drivers}
                 chamados={chamados}
+                notifications={notifications}
                 onOpenNewChamadoModal={() => setNewChamadoModalOpen(true)}
                 onUpdateChamadoStatus={handleUpdateChamadoStatus}
+                onAssignDriverAndVehicle={handleAssignDriverAndVehicle}
+                onCloseChamadoByCoordinator={handleCloseChamadoByCoordinator}
                 onAddChamadoResposta={handleAddChamadoResposta}
                 onNavigateToRelatorios={() => setActiveNavTab('relatorios')}
                 onOpenTripDetails={(trip) => setTripLogTrip(trip)}
+                onOpenTripSignature={(trip) => setSignatureModalTrip(trip)}
+                onOpenTeamsExtract={handleOpenTeamsExtract}
+                onOpenTeamsConfig={() => setTeamsConfigModalOpen(true)}
               />
             )}
 
-            {/* Visualização 4: Portal do Solicitante (Magistrados & Servidores) */}
-            {currentRole === 'solicitante' && (
-              <SolicitationPortal
+            {/* ABA 2: Menu Oficinas & Manutenções (Restrito ao veículo do condutor quando motorista) */}
+            {activeNavTab === 'oficinas' && (
+              <OficinasView
+                maintenances={maintenances}
+                workshops={workshops}
+                vehicles={vehicles}
+                onUpdateMaintenance={handleUpdateMaintenance}
+                onAddMaintenance={handleAddMaintenanceFull}
+                onUploadInvoice={handleUploadInvoice}
+                onOpenNewMaintenanceModal={() => setNewMaintenanceModalOpen(true)}
+                currentRole={currentRole}
+                restrictedDriver={currentDriver}
+              />
+            )}
+
+            {/* ABA 3: Menu Abastecer (Controle de Abastecimentos e Cartão Frota) */}
+            {activeNavTab === 'abastecer' && (
+              <AbastecimentosView
+                fuelLogs={fuelLogs}
+                vehicles={vehicles}
+                drivers={drivers}
+                selectedComarca={selectedComarca}
+                onOpenNewFuelModal={() => setQuickFuelOpen(true)}
+              />
+            )}
+
+            {/* ABA 4: Menu Meu Benefício / Cartão do Benefício (Restrito ao cartão do condutor quando motorista) */}
+            {activeNavTab === 'meu_beneficio' && (
+              <MeuBeneficioView
+                transactions={meuBeneficioTransactions}
+                apiConfig={meuBeneficioApiConfig}
+                vehicles={vehicles}
+                selectedComarca={selectedComarca}
+                onSyncApi={handleSyncMeuBeneficioApi}
+                onAuditTransaction={handleAuditMeuBeneficioTransaction}
+                currentRole={currentRole}
+                restrictedDriver={currentDriver}
+                onOpenQuickFuel={() => setQuickFuelOpen(true)}
+              />
+            )}
+
+            {/* ABA 5: Menu Documentos (Restrito a CNH do condutor e CRLV/Seguro do veículo quando motorista) */}
+            {activeNavTab === 'documentos' && (
+              <DocumentosView
+                documents={documents}
+                vehicles={vehicles}
+                drivers={drivers}
+                onAddDocument={handleAddDocument}
+                onUpdateDocument={handleUpdateDocument}
+                currentRole={currentRole}
+                restrictedDriver={currentDriver}
+              />
+            )}
+
+            {/* ABA 6: Menu Relatórios (Relatório Oficial, Prestação de Contas e Auditoria) */}
+            {activeNavTab === 'relatorios' && (
+              <RelatoriosView
+                vehicles={vehicles}
                 trips={trips}
-                onCreateTrip={handleCreateTrip}
-                onOpenOfficialOrder={(trip) => setOfficialOrderTrip(trip)}
-                onOpenTeamsExtract={handleOpenTeamsExtract}
-                onOpenTeamsConfig={() => setTeamsConfigModalOpen(true)}
-                teamsConfig={teamsConfig}
+                maintenances={maintenances}
+                fuelLogs={fuelLogs}
+                drivers={drivers}
+                documents={documents}
+                meuBeneficioTransactions={meuBeneficioTransactions}
+                selectedComarca={selectedComarca}
               />
             )}
           </>
         )}
-
-        {/* ABA: Central de Chamados & Apoio Logístico (Requisitado: Abrir chamados, tramitações e suporte) */}
-        {activeNavTab === 'chamados' && (
-          <CoordinatorPortal
-            currentRole={currentRole}
-            selectedComarca={selectedComarca}
-            trips={trips}
-            vehicles={vehicles}
-            drivers={drivers}
-            chamados={chamados}
-            onOpenNewChamadoModal={() => setNewChamadoModalOpen(true)}
-            onUpdateChamadoStatus={handleUpdateChamadoStatus}
-            onAddChamadoResposta={handleAddChamadoResposta}
-            onNavigateToRelatorios={() => setActiveNavTab('relatorios')}
-            onOpenTripDetails={(trip) => setTripLogTrip(trip)}
-            onOpenTeamsExtract={handleOpenTeamsExtract}
-            onOpenTeamsConfig={() => setTeamsConfigModalOpen(true)}
-          />
-        )}
-
-        {/* ABA 2: Menu Oficinas (Requisitado: Manutenção, Inspeção, Laudos, Uploads de Notas) */}
-        {activeNavTab === 'oficinas' && (
-          <OficinasView
-            maintenances={maintenances}
-            workshops={workshops}
-            vehicles={vehicles}
-            onUpdateMaintenance={handleUpdateMaintenance}
-            onAddMaintenance={handleAddMaintenanceFull}
-            onUploadInvoice={handleUploadInvoice}
-            onOpenNewMaintenanceModal={() => setNewMaintenanceModalOpen(true)}
-          />
-        )}
-
-        {/* ABA 3: Menu Abastecer (Requisitado: Controle de Abastecimentos e Cartão Frota) */}
-        {activeNavTab === 'abastecer' && (
-          <AbastecimentosView
-            fuelLogs={fuelLogs}
-            vehicles={vehicles}
-            drivers={drivers}
-            selectedComarca={selectedComarca}
-            onOpenNewFuelModal={() => setQuickFuelOpen(true)}
-          />
-        )}
-
-        {/* ABA 4: Menu Meu Benefício (Requisitado: Verificação de Abastecimento, Pedágio e Demais Custas via API) */}
-        {activeNavTab === 'meu_beneficio' && (
-          <MeuBeneficioView
-            transactions={meuBeneficioTransactions}
-            apiConfig={meuBeneficioApiConfig}
-            vehicles={vehicles}
-            selectedComarca={selectedComarca}
-            onSyncApi={handleSyncMeuBeneficioApi}
-            onAuditTransaction={handleAuditMeuBeneficioTransaction}
-          />
-        )}
-
-        {/* ABA 5: Menu Documentos (Requisitado: Documentação de Carro, Motorista e Demais Situações) */}
-        {activeNavTab === 'documentos' && (
-          <DocumentosView
-            documents={documents}
-            vehicles={vehicles}
-            drivers={drivers}
-            onAddDocument={handleAddDocument}
-            onUpdateDocument={handleUpdateDocument}
-          />
-        )}
-
-        {/* ABA 6: Menu Relatórios (Requisitado: Item obrigatório no menu - Relatório Oficial, Prestação de Contas e Auditoria) */}
-        {activeNavTab === 'relatorios' && (
-          <RelatoriosView
-            vehicles={vehicles}
-            trips={trips}
-            maintenances={maintenances}
-            fuelLogs={fuelLogs}
-            drivers={drivers}
-            documents={documents}
-            meuBeneficioTransactions={meuBeneficioTransactions}
-            selectedComarca={selectedComarca}
-          />
-        )}
-
       </main>
 
       {/* 5. Modais Interativos */}
@@ -915,6 +1290,18 @@ export default function App() {
         />
       )}
 
+      {/* Modal de Assinatura e Comprovante de Viagem (Disponível para Coordenador e Gestão) */}
+      {signatureModalTrip && (
+        <TripSignatureModal
+          isOpen={true}
+          onClose={() => setSignatureModalTrip(null)}
+          trip={signatureModalTrip}
+          vehicle={vehicles.find(v => v.id === signatureModalTrip.veiculoId || v.prefixo === signatureModalTrip.veiculoPrefixo)}
+          driver={drivers.find(d => d.id === signatureModalTrip.motoristaId || d.nome === signatureModalTrip.motoristaNome)}
+          onSaveSignature={handleSaveTripSignature}
+        />
+      )}
+
       {/* Modal de Abertura de Novo Chamado (Coordenador & Apoio da Frota) */}
       {newChamadoModalOpen && (
         <NewChamadoModal
@@ -956,6 +1343,28 @@ export default function App() {
           }}
           onOpenExtract={handleOpenTeamsExtract}
           onClose={() => setTeamsConfigModalOpen(false)}
+        />
+      )}
+
+      {/* Modal de Integração WhatsApp - Envio de Informações da Reserva do Carro para o Solicitante */}
+      {whatsappReservationTrip && (
+        <WhatsAppReservationModal
+          isOpen={true}
+          trip={whatsappReservationTrip.trip}
+          vehicle={whatsappReservationTrip.vehicle}
+          driver={whatsappReservationTrip.driver}
+          onConfirmDispatch={handleConfirmWhatsAppDispatch}
+          onClose={() => setWhatsappReservationTrip(null)}
+        />
+      )}
+
+      {/* Modal de Integração com o SIGA - Abertura Integrada de Solicitação */}
+      {sigaModalOpen && (
+        <SigaSolicitationModal
+          isOpen={true}
+          defaultComarca={selectedComarca}
+          onSubmitSigaSolicitation={handleSubmitSigaSolicitation}
+          onClose={() => setSigaModalOpen(false)}
         />
       )}
 

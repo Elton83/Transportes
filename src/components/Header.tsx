@@ -16,9 +16,17 @@ import {
   Fuel,
   CreditCard,
   BarChart3,
-  LifeBuoy
+  LifeBuoy,
+  MessageCircle,
+  FileCheck2,
+  Lock
 } from 'lucide-react';
-import { NotificationItem, Role } from '../types';
+import { Driver, NotificationItem, Role } from '../types';
+import { 
+  getAllowedTabsForRole, 
+  isDriverRole, 
+  getTabLabelForRole 
+} from '../services/accessControl';
 
 export type MainNavTab = 'dashboard' | 'operacoes' | 'chamados' | 'oficinas' | 'abastecer' | 'meu_beneficio' | 'documentos' | 'relatorios';
 
@@ -37,6 +45,11 @@ interface HeaderProps {
   onOpenMobileSidebar?: () => void;
   isSidebarCollapsed?: boolean;
   onToggleSidebar?: () => void;
+  onOpenSigaSolicitation?: () => void;
+  onOpenWhatsAppReservation?: () => void;
+  currentDriver?: Driver;
+  drivers?: Driver[];
+  onSelectDriver?: (driver: Driver) => void;
 }
 
 export const Header: React.FC<HeaderProps> = ({
@@ -54,9 +67,15 @@ export const Header: React.FC<HeaderProps> = ({
   onOpenMobileSidebar,
   isSidebarCollapsed,
   onToggleSidebar,
+  onOpenSigaSolicitation,
+  onOpenWhatsAppReservation,
+  currentDriver,
+  drivers = [],
+  onSelectDriver,
 }) => {
   const [showNotifications, setShowNotifications] = useState(false);
   const unreadCount = notifications.filter(n => !n.lida).length;
+  const isDriver = isDriverRole(currentRole);
 
   const comarcas = [
     'Todas as Comarcas',
@@ -68,6 +87,16 @@ export const Header: React.FC<HeaderProps> = ({
     'Foz do Iguaçu',
     'Ponta Grossa',
   ];
+
+  const handleRoleSelect = (newRole: Role) => {
+    onRoleChange(newRole);
+    const allowed = getAllowedTabsForRole(newRole);
+    if (!allowed.includes(activeNavTab)) {
+      onNavTabChange(allowed[0]);
+    }
+  };
+
+  const { label: activeTabLabel } = getTabLabelForRole(activeNavTab, currentRole);
 
   return (
     <header className="bg-[#002B49] text-white shadow-md border-b-4 border-[#C4A052] sticky top-0 z-40">
@@ -138,23 +167,14 @@ export const Header: React.FC<HeaderProps> = ({
                 {activeNavTab === 'meu_beneficio' && <CreditCard className="w-3.5 h-3.5" />}
                 {activeNavTab === 'documentos' && <FolderLock className="w-3.5 h-3.5" />}
                 {activeNavTab === 'relatorios' && <BarChart3 className="w-3.5 h-3.5" />}
-                <span>
-                  {activeNavTab === 'dashboard' && 'Dashboard Frota'}
-                  {activeNavTab === 'operacoes' && 'Operações & Viagens'}
-                  {activeNavTab === 'chamados' && 'Chamados & Suporte'}
-                  {activeNavTab === 'oficinas' && 'Oficinas & Manutenções'}
-                  {activeNavTab === 'abastecer' && 'Abastecer & Combustível'}
-                  {activeNavTab === 'meu_beneficio' && 'API Meu Benefício (Custas)'}
-                  {activeNavTab === 'documentos' && 'Documentos Oficiais'}
-                  {activeNavTab === 'relatorios' && 'Relatórios & Auditoria'}
-                </span>
+                <span>{activeTabLabel}</span>
               </span>
             </div>
           </div>
 
-          {/* Central: Seletor Rápido de Padrões de Acesso (Administrador, Operador, Coordenador) */}
+          {/* Central: Seletor Rápido de Padrões de Acesso (RBAC) */}
           <div className="hidden xl:flex items-center bg-[#001D33] p-1 rounded-xl border border-white/10 shadow-inner">
-            <span className="text-[11px] text-slate-300 px-2 font-bold uppercase tracking-wider flex items-center gap-1">
+            <span className="text-[10px] text-slate-300 px-2 font-bold uppercase tracking-wider flex items-center gap-1">
               <Shield className="w-3 h-3 text-[#C4A052]" />
               Acesso:
             </span>
@@ -162,9 +182,9 @@ export const Header: React.FC<HeaderProps> = ({
             <button
               id="role-btn-admin"
               type="button"
-              onClick={() => onRoleChange('administrador')}
-              title="Acesso total à frota, aprovações, parametrizações e controle geral"
-              className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold transition-all ${
+              onClick={() => handleRoleSelect('administrador')}
+              title="Acesso irrestrito a todos os módulos, parametrizações e auditoria estadual"
+              className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold transition-all cursor-pointer ${
                 currentRole === 'administrador' || currentRole === 'gestor'
                   ? 'bg-[#0084C7] text-white shadow-md'
                   : 'text-slate-300 hover:text-white hover:bg-white/5'
@@ -175,26 +195,11 @@ export const Header: React.FC<HeaderProps> = ({
             </button>
 
             <button
-              id="role-btn-operador"
-              type="button"
-              onClick={() => onRoleChange('operador')}
-              title="Acesso operacional do motorista: checklist, diário de bordo e abastecimento"
-              className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold transition-all ${
-                currentRole === 'operador' || currentRole === 'motorista'
-                  ? 'bg-[#0084C7] text-white shadow-md'
-                  : 'text-slate-300 hover:text-white hover:bg-white/5'
-              }`}
-            >
-              <Car className="w-3.5 h-3.5" />
-              Operador (Motorista)
-            </button>
-
-            <button
               id="role-btn-coordenador"
               type="button"
-              onClick={() => onRoleChange('coordenador')}
-              title="Acesso do coordenador: ver relatórios, abrir chamados e acompanhamento diário"
-              className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold transition-all ${
+              onClick={() => handleRoleSelect('coordenador')}
+              title="Acesso regional do coordenador: relatórios, chamados e escala da comarca"
+              className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold transition-all cursor-pointer ${
                 currentRole === 'coordenador'
                   ? 'bg-[#0084C7] text-white shadow-md'
                   : 'text-slate-300 hover:text-white hover:bg-white/5'
@@ -203,26 +208,90 @@ export const Header: React.FC<HeaderProps> = ({
               <LifeBuoy className="w-3.5 h-3.5" />
               Coordenador
             </button>
+
+            <button
+              id="role-btn-operador"
+              type="button"
+              onClick={() => handleRoleSelect('motorista')}
+              title="Acesso estrito do motorista: demandas, documento oficial, manutenção e cartão benefício"
+              className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold transition-all cursor-pointer ${
+                isDriver
+                  ? 'bg-amber-500 text-slate-950 font-bold shadow-md'
+                  : 'text-slate-300 hover:text-white hover:bg-white/5'
+              }`}
+            >
+              <Car className="w-3.5 h-3.5" />
+              Motorista
+              <span className="text-[9px] bg-black/20 text-white px-1 rounded font-mono">Restrito</span>
+            </button>
+
+            <button
+              id="role-btn-solicitante"
+              type="button"
+              onClick={() => handleRoleSelect('solicitante')}
+              title="Portal de solicitação de viagens e acompanhamento SIGA"
+              className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold transition-all cursor-pointer ${
+                currentRole === 'solicitante'
+                  ? 'bg-[#0084C7] text-white shadow-md'
+                  : 'text-slate-300 hover:text-white hover:bg-white/5'
+              }`}
+            >
+              <FileText className="w-3.5 h-3.5" />
+              Solicitante
+            </button>
           </div>
 
           {/* Lado Direito: Filtro de Comarca, Notificações e Usuário */}
-          <div className="flex items-center gap-3">
-            {/* Comarca Dropdown */}
-            <div className="hidden lg:flex items-center gap-1.5 bg-white/10 px-2.5 py-1.5 rounded-md border border-white/15 text-xs">
-              <MapPin className="w-3.5 h-3.5 text-amber-300" />
-              <select
-                aria-label="Selecionar Comarca do TJPR"
-                value={selectedComarca}
-                onChange={(e) => onComarcaChange(e.target.value)}
-                className="bg-transparent text-white text-xs focus:outline-none cursor-pointer pr-2"
+          <div className="flex items-center gap-2 sm:gap-3">
+            {/* Botões Rápidos SIGA / WhatsApp (se não for condutor restrito) */}
+            {!isDriver && onOpenSigaSolicitation && (
+              <button
+                type="button"
+                onClick={onOpenSigaSolicitation}
+                className="hidden md:flex items-center gap-1.5 bg-[#001729] hover:bg-[#00223d] text-amber-300 px-2.5 py-1.5 rounded-lg border border-amber-400/30 text-xs font-semibold transition-colors cursor-pointer"
+                title="Abertura de Solicitação com o SIGA TJPR"
               >
-                {comarcas.map((c) => (
-                  <option key={c} value={c} className="bg-[#002B49] text-white">
-                    {c}
-                  </option>
-                ))}
-              </select>
-            </div>
+                <FileCheck2 className="w-3.5 h-3.5" />
+                <span>SIGA</span>
+              </button>
+            )}
+
+            {!isDriver && onOpenWhatsAppReservation && (
+              <button
+                type="button"
+                onClick={onOpenWhatsAppReservation}
+                className="hidden md:flex items-center gap-1.5 bg-emerald-900/60 hover:bg-emerald-800 text-emerald-200 px-2.5 py-1.5 rounded-lg border border-emerald-500/40 text-xs font-semibold transition-colors cursor-pointer"
+                title="Disparar confirmação de reserva via WhatsApp"
+              >
+                <MessageCircle className="w-3.5 h-3.5 text-[#25D366]" />
+                <span className="hidden xl:inline">WhatsApp</span>
+              </button>
+            )}
+
+            {/* Comarca Dropdown (se não for condutor restrito) */}
+            {!isDriver ? (
+              <div className="hidden lg:flex items-center gap-1.5 bg-white/10 px-2.5 py-1.5 rounded-md border border-white/15 text-xs">
+                <MapPin className="w-3.5 h-3.5 text-amber-300" />
+                <select
+                  aria-label="Selecionar Comarca do TJPR"
+                  value={selectedComarca}
+                  onChange={(e) => onComarcaChange(e.target.value)}
+                  className="bg-transparent text-white text-xs focus:outline-none cursor-pointer pr-2"
+                >
+                  {comarcas.map((c) => (
+                    <option key={c} value={c} className="bg-[#002B49] text-white">
+                      {c}
+                    </option>
+                  ))}
+                </select>
+              </div>
+            ) : (
+              // Badge de Lotação do Motorista
+              <div className="hidden lg:flex items-center gap-1.5 bg-amber-400/10 px-2.5 py-1.5 rounded-md border border-amber-400/25 text-xs text-amber-200">
+                <MapPin className="w-3.5 h-3.5 text-amber-300" />
+                <span>{currentDriver?.comarca || selectedComarca}</span>
+              </div>
+            )}
 
             {/* Notificações Sino */}
             <div className="relative">
@@ -295,28 +364,38 @@ export const Header: React.FC<HeaderProps> = ({
               )}
             </div>
 
-            {/* Avatar / Usuário TJPR */}
+            {/* Avatar / Usuário TJPR com Seletor Rápido de Condutor */}
             <div className="flex items-center gap-2.5 pl-2 border-l border-white/15">
-              <div className="w-9 h-9 rounded-full bg-gradient-to-br from-amber-400 to-amber-600 flex items-center justify-center font-bold text-slate-900 text-xs shadow">
-                {currentRole === 'operador' || currentRole === 'motorista'
-                  ? 'OP'
+              <div className={`w-9 h-9 rounded-full flex items-center justify-center font-bold text-xs shadow ${
+                isDriver 
+                  ? 'bg-amber-400 text-slate-950 ring-2 ring-amber-300/50' 
+                  : 'bg-gradient-to-br from-[#0084C7] to-[#005a8e] text-white'
+              }`}>
+                {isDriver
+                  ? 'MO'
                   : currentRole === 'coordenador'
                   ? 'CO'
+                  : currentRole === 'solicitante'
+                  ? 'SO'
                   : 'AD'}
               </div>
               <div className="hidden sm:block text-left">
                 <p className="text-xs font-semibold text-white leading-tight">
-                  {currentRole === 'operador' || currentRole === 'motorista'
-                    ? 'Carlos E. Silveira'
+                  {isDriver
+                    ? currentDriver?.nome || 'Carlos E. Silveira'
                     : currentRole === 'coordenador'
                     ? 'Juliana Mendes'
+                    : currentRole === 'solicitante'
+                    ? 'Dr. Roberto Magalhães'
                     : 'Dr. Marcelo Ramos'}
                 </p>
                 <p className="text-[10px] text-blue-200">
-                  {currentRole === 'operador' || currentRole === 'motorista'
-                    ? 'Operador (Condutor Oficial)'
+                  {isDriver
+                    ? `Motorista • Matrícula ${currentDriver?.matricula || '48.912-3'}`
                     : currentRole === 'coordenador'
                     ? 'Coordenadora Regional TJPR'
+                    : currentRole === 'solicitante'
+                    ? 'Juiz de Direito • Solicitante'
                     : 'Administrador da Frota (SIGPAT)'}
                 </p>
               </div>
