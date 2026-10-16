@@ -7,28 +7,42 @@ import {
   MapPin, 
   Shield, 
   UserCheck, 
-  X,
-  FileText,
-  Wrench,
-  FolderLock,
-  LayoutDashboard,
-  Menu,
-  Fuel,
-  CreditCard,
-  BarChart3,
-  LifeBuoy,
-  MessageCircle,
-  FileCheck2,
-  Lock
+  X, 
+  FileText, 
+  Wrench, 
+  FolderLock, 
+  LayoutDashboard, 
+  Menu, 
+  Fuel, 
+  CreditCard, 
+  BarChart3, 
+  LifeBuoy, 
+  MessageCircle, 
+  FileCheck2, 
+  Lock,
+  Sparkles,
+  ExternalLink,
+  Compass,
+  UserPlus
 } from 'lucide-react';
-import { Driver, NotificationItem, Role } from '../types';
+import { Driver, NotificationItem, Role, Vehicle } from '../types';
 import { 
   getAllowedTabsForRole, 
   isDriverRole, 
-  getTabLabelForRole 
+  getTabLabelForRole,
+  ROLE_CONFIGS
 } from '../services/accessControl';
 
-export type MainNavTab = 'dashboard' | 'operacoes' | 'chamados' | 'oficinas' | 'abastecer' | 'meu_beneficio' | 'documentos' | 'relatorios';
+export type MainNavTab = 
+  | 'dashboard' 
+  | 'operacoes' 
+  | 'chamados' 
+  | 'oficinas' 
+  | 'abastecer' 
+  | 'meu_beneficio' 
+  | 'documentos' 
+  | 'relatorios'
+  | 'visitante';
 
 interface HeaderProps {
   currentRole: Role;
@@ -39,6 +53,7 @@ interface HeaderProps {
   onMarkNotificationRead: (id: string) => void;
   selectedComarca: string;
   onComarcaChange: (comarca: string) => void;
+  totalVehicles?: number;
   maintenancesCount?: number;
   documentsCount?: number;
   chamadosCount?: number;
@@ -50,6 +65,7 @@ interface HeaderProps {
   currentDriver?: Driver;
   drivers?: Driver[];
   onSelectDriver?: (driver: Driver) => void;
+  assignedVehicle?: Vehicle;
 }
 
 export const Header: React.FC<HeaderProps> = ({
@@ -61,6 +77,7 @@ export const Header: React.FC<HeaderProps> = ({
   onMarkNotificationRead,
   selectedComarca,
   onComarcaChange,
+  totalVehicles = 250,
   maintenancesCount = 6,
   documentsCount = 8,
   chamadosCount = 3,
@@ -72,6 +89,7 @@ export const Header: React.FC<HeaderProps> = ({
   currentDriver,
   drivers = [],
   onSelectDriver,
+  assignedVehicle,
 }) => {
   const [showNotifications, setShowNotifications] = useState(false);
   const unreadCount = notifications.filter(n => !n.lida).length;
@@ -86,6 +104,8 @@ export const Header: React.FC<HeaderProps> = ({
     'Cascavel',
     'Foz do Iguaçu',
     'Ponta Grossa',
+    'Guarapuava',
+    'Toledo'
   ];
 
   const handleRoleSelect = (newRole: Role) => {
@@ -96,187 +116,210 @@ export const Header: React.FC<HeaderProps> = ({
     }
   };
 
-  const { label: activeTabLabel } = getTabLabelForRole(activeNavTab, currentRole);
+  const allowedTabs = getAllowedTabsForRole(currentRole);
+
+  // Mapeamento dos ícones para cada aba
+  const tabIcons: Record<MainNavTab, typeof LayoutDashboard> = {
+    dashboard: LayoutDashboard,
+    operacoes: Car,
+    chamados: LifeBuoy,
+    oficinas: Wrench,
+    abastecer: Fuel,
+    meu_beneficio: CreditCard,
+    documentos: FolderLock,
+    relatorios: BarChart3,
+    visitante: Compass,
+  };
+
+  // Contadores para as abas
+  const getTabBadge = (tab: MainNavTab): string | undefined => {
+    if (tab === 'dashboard') return `${totalVehicles}`;
+    if (tab === 'oficinas' && maintenancesCount > 0) return `${maintenancesCount}`;
+    if (tab === 'chamados' && chamadosCount > 0) return `${chamadosCount}`;
+    if (tab === 'documentos' && documentsCount > 0) return `${documentsCount}`;
+    return undefined;
+  };
 
   return (
-    <header className="bg-[#002B49] text-white shadow-md border-b-4 border-[#C4A052] sticky top-0 z-40">
-      {/* Top Bar Institucional TJPR */}
-      <div className="w-full px-4 sm:px-6 lg:px-8">
-        <div className="flex items-center justify-between h-16 sm:h-20 gap-4">
+    <header className="bg-[#002B49] text-white shadow-lg border-b-2 border-[#C4A052] sticky top-0 z-40">
+      
+      {/* ------------------------------------------------------------- */}
+      {/* LINHA 1: IDENTIDADE TJPR, SELETOR DE PERFIS E USUÁRIO         */}
+      {/* ------------------------------------------------------------- */}
+      <div className="w-full px-3 sm:px-6 lg:px-8">
+        <div className="flex items-center justify-between h-14 sm:h-16 gap-3">
           
-          {/* Logo / Brasão TJPR e Título do Sistema com Botão do Menu Lateral */}
-          <div className="flex items-center gap-3">
-            {/* Botão Menu Lateral Mobile */}
+          {/* LADO ESQUERDO: Botão Sidebar, Brasão TJPR e Título */}
+          <div className="flex items-center gap-2.5 sm:gap-3 shrink-0">
             {onOpenMobileSidebar && (
               <button
                 type="button"
                 onClick={onOpenMobileSidebar}
-                className="lg:hidden p-2 rounded-xl text-amber-400 hover:text-white hover:bg-white/10 transition-colors shrink-0"
+                className="lg:hidden p-1.5 rounded-lg text-amber-400 hover:text-white hover:bg-white/10 transition-colors cursor-pointer"
                 title="Abrir Menu Lateral"
                 aria-label="Abrir Menu Lateral"
-              >
-                <Menu className="w-6 h-6" />
-              </button>
-            )}
-
-            {/* Botão Recolher/Expandir Menu Lateral Desktop */}
-            {onToggleSidebar && (
-              <button
-                type="button"
-                onClick={onToggleSidebar}
-                className="hidden lg:flex p-2 rounded-xl text-amber-400 hover:text-white hover:bg-white/10 transition-colors shrink-0"
-                title={isSidebarCollapsed ? "Expandir Menu Lateral" : "Recolher Menu Lateral"}
-                aria-label="Alternar Menu Lateral"
               >
                 <Menu className="w-5 h-5" />
               </button>
             )}
 
-            <div className="flex items-center justify-center w-10 h-10 sm:w-12 sm:h-12 rounded-lg bg-white/10 border border-white/20 shadow-inner flex-shrink-0">
-              {/* Símbolo Institucional Judiciário / Brasão TJPR estilizado */}
+            {onToggleSidebar && (
+              <button
+                type="button"
+                onClick={onToggleSidebar}
+                className="hidden lg:flex p-1.5 rounded-lg text-amber-400 hover:text-white hover:bg-white/10 transition-colors cursor-pointer"
+                title={isSidebarCollapsed ? "Expandir Menu Lateral" : "Recolher Menu Lateral"}
+                aria-label="Alternar Menu Lateral"
+              >
+                <Menu className="w-4 h-4" />
+              </button>
+            )}
+
+            {/* Brasão TJPR */}
+            <div className="flex items-center justify-center w-9 h-9 sm:w-10 sm:h-10 rounded-lg bg-white/10 border border-white/20 shadow-inner shrink-0">
               <div className="relative flex flex-col items-center justify-center">
-                <Shield className="w-5 h-5 sm:w-7 sm:h-7 text-[#C4A052]" />
-                <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 font-serif font-black text-[8px] sm:text-[9px] text-white tracking-widest">
+                <Shield className="w-5 h-5 sm:w-6 sm:h-6 text-[#C4A052]" />
+                <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 font-serif font-black text-[7px] sm:text-[8px] text-white tracking-widest">
                   TJPR
                 </div>
               </div>
             </div>
 
             <div>
-              <div className="flex items-center gap-2">
-                <span className="text-[10px] uppercase tracking-wider font-semibold text-blue-200">
-                  Tribunal de Justiça do Estado do Paraná
+              <div className="flex items-center gap-1.5">
+                <span className="text-[10px] uppercase tracking-wider font-semibold text-blue-200 hidden sm:inline">
+                  Tribunal de Justiça do Paraná
                 </span>
-                <span className="hidden sm:inline-block text-[9px] bg-white/15 px-1.5 py-0.5 rounded text-amber-200 border border-amber-300/30 font-mono">
-                  PROJUDI / SEI
+                <span className="text-[9px] bg-amber-400/20 text-amber-300 px-1.5 py-0.2 rounded border border-amber-300/30 font-mono font-bold">
+                  Frota: {totalVehicles} Veículos
                 </span>
               </div>
-              <h1 className="text-base sm:text-lg font-bold tracking-tight text-white flex items-center gap-2">
-                SIGPAT <span className="text-blue-300 font-normal hidden md:inline">| Gestão de Transportes</span>
+              <h1 className="text-sm sm:text-base font-bold tracking-tight text-white flex items-center gap-1.5">
+                SIGPAT <span className="text-blue-200 font-normal hidden md:inline">| Transportes Oficiais</span>
               </h1>
             </div>
+          </div>
 
-            {/* Badge do Módulo Ativo */}
-            <div className="hidden 2xl:flex items-center gap-2 pl-3 border-l border-white/15">
-              <span className="px-2.5 py-1 bg-white/10 border border-white/20 rounded-lg text-xs font-semibold text-amber-300 flex items-center gap-1.5">
-                {activeNavTab === 'dashboard' && <LayoutDashboard className="w-3.5 h-3.5" />}
-                {activeNavTab === 'operacoes' && <Car className="w-3.5 h-3.5" />}
-                {activeNavTab === 'chamados' && <LifeBuoy className="w-3.5 h-3.5" />}
-                {activeNavTab === 'oficinas' && <Wrench className="w-3.5 h-3.5" />}
-                {activeNavTab === 'abastecer' && <Fuel className="w-3.5 h-3.5" />}
-                {activeNavTab === 'meu_beneficio' && <CreditCard className="w-3.5 h-3.5" />}
-                {activeNavTab === 'documentos' && <FolderLock className="w-3.5 h-3.5" />}
-                {activeNavTab === 'relatorios' && <BarChart3 className="w-3.5 h-3.5" />}
-                <span>{activeTabLabel}</span>
+          {/* CENTRO: SELETOR DE PERFIS (RBAC) - SEMPRE VISÍVEL */}
+          <div className="flex items-center">
+            {/* Versão Desktop (Botões Segmentados) */}
+            <div className="hidden md:flex items-center bg-[#001D33] p-1 rounded-xl border border-white/15 shadow-inner">
+              <span className="text-[10px] text-slate-300 px-2 font-bold uppercase tracking-wider flex items-center gap-1">
+                <Shield className="w-3 h-3 text-[#C4A052]" />
+                Perfil:
               </span>
+              
+              <button
+                id="role-btn-admin"
+                type="button"
+                onClick={() => handleRoleSelect('administrador')}
+                className={`flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-xs font-semibold transition-all cursor-pointer ${
+                  currentRole === 'administrador' || currentRole === 'gestor'
+                    ? 'bg-[#0084C7] text-white shadow-sm'
+                    : 'text-slate-300 hover:text-white hover:bg-white/5'
+                }`}
+                title="Acesso completo ao sistema e à frota inteira (250 veículos)"
+              >
+                <UserCheck className="w-3.5 h-3.5" />
+                <span>Administrador</span>
+              </button>
+
+              <button
+                id="role-btn-coordenador"
+                type="button"
+                onClick={() => handleRoleSelect('coordenador')}
+                className={`flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-xs font-semibold transition-all cursor-pointer ${
+                  currentRole === 'coordenador'
+                    ? 'bg-[#0084C7] text-white shadow-sm'
+                    : 'text-slate-300 hover:text-white hover:bg-white/5'
+                }`}
+                title="Acesso regional da comarca e chamados de apoio"
+              >
+                <LifeBuoy className="w-3.5 h-3.5" />
+                <span>Coordenador</span>
+              </button>
+
+              <button
+                id="role-btn-operador"
+                type="button"
+                onClick={() => handleRoleSelect('motorista')}
+                className={`flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-xs font-bold transition-all cursor-pointer ${
+                  isDriver
+                    ? 'bg-amber-400 text-slate-950 shadow-sm'
+                    : 'text-amber-300 hover:text-white hover:bg-amber-400/10'
+                }`}
+                title="Acesso estrito do condutor: 4 módulos autorizados"
+              >
+                <Car className="w-3.5 h-3.5" />
+                <span>Motorista</span>
+                <span className={`text-[9px] px-1 rounded font-mono ${isDriver ? 'bg-black/20 text-slate-950' : 'bg-amber-400/20 text-amber-300'}`}>
+                  Restrito
+                </span>
+              </button>
+
+              <button
+                id="role-btn-solicitante"
+                type="button"
+                onClick={() => handleRoleSelect('solicitante')}
+                className={`flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-xs font-semibold transition-all cursor-pointer ${
+                  currentRole === 'solicitante'
+                    ? 'bg-[#0084C7] text-white shadow-sm'
+                    : 'text-slate-300 hover:text-white hover:bg-white/5'
+                }`}
+                title="Portal de requisição e acompanhamento de reservas"
+              >
+                <FileText className="w-3.5 h-3.5" />
+                <span>Solicitante</span>
+              </button>
+
+              <button
+                id="role-btn-visitante"
+                type="button"
+                onClick={() => handleRoleSelect('visitante')}
+                className={`flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-xs font-bold transition-all cursor-pointer ${
+                  currentRole === 'visitante'
+                    ? 'bg-emerald-600 text-white shadow-sm ring-1 ring-emerald-300'
+                    : 'text-emerald-300 hover:text-white hover:bg-emerald-500/10'
+                }`}
+                title="Portal do Visitante: Solicitação rápida de viagem e reserva de carro"
+              >
+                <Compass className="w-3.5 h-3.5" />
+                <span>Visitante</span>
+                <span className={`text-[9px] px-1 rounded font-mono ${currentRole === 'visitante' ? 'bg-black/20 text-white' : 'bg-emerald-400/20 text-emerald-300'}`}>
+                  Público
+                </span>
+              </button>
+            </div>
+
+            {/* Versão Mobile (Select Compacto Estilizado) */}
+            <div className="flex md:hidden items-center bg-[#001D33] px-2 py-1 rounded-lg border border-white/20 text-xs">
+              <Shield className="w-3 h-3 text-[#C4A052] mr-1.5" />
+              <select
+                aria-label="Selecionar Perfil de Acesso"
+                value={isDriver ? 'motorista' : currentRole}
+                onChange={(e) => handleRoleSelect(e.target.value as Role)}
+                className="bg-transparent text-white font-semibold text-xs focus:outline-none cursor-pointer pr-1"
+              >
+                <option value="administrador" className="bg-[#002B49] text-white">Administrador (Total)</option>
+                <option value="coordenador" className="bg-[#002B49] text-white">Coordenador (Comarca)</option>
+                <option value="motorista" className="bg-[#002B49] text-white">Motorista (Restrito)</option>
+                <option value="solicitante" className="bg-[#002B49] text-white">Solicitante (SIGA)</option>
+                <option value="visitante" className="bg-[#002B49] text-white">Visitante (Solicitação Rápida)</option>
+              </select>
             </div>
           </div>
 
-          {/* Central: Seletor Rápido de Padrões de Acesso (RBAC) */}
-          <div className="hidden xl:flex items-center bg-[#001D33] p-1 rounded-xl border border-white/10 shadow-inner">
-            <span className="text-[10px] text-slate-300 px-2 font-bold uppercase tracking-wider flex items-center gap-1">
-              <Shield className="w-3 h-3 text-[#C4A052]" />
-              Acesso:
-            </span>
-            
-            <button
-              id="role-btn-admin"
-              type="button"
-              onClick={() => handleRoleSelect('administrador')}
-              title="Acesso irrestrito a todos os módulos, parametrizações e auditoria estadual"
-              className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold transition-all cursor-pointer ${
-                currentRole === 'administrador' || currentRole === 'gestor'
-                  ? 'bg-[#0084C7] text-white shadow-md'
-                  : 'text-slate-300 hover:text-white hover:bg-white/5'
-              }`}
-            >
-              <UserCheck className="w-3.5 h-3.5" />
-              Administrador
-            </button>
-
-            <button
-              id="role-btn-coordenador"
-              type="button"
-              onClick={() => handleRoleSelect('coordenador')}
-              title="Acesso regional do coordenador: relatórios, chamados e escala da comarca"
-              className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold transition-all cursor-pointer ${
-                currentRole === 'coordenador'
-                  ? 'bg-[#0084C7] text-white shadow-md'
-                  : 'text-slate-300 hover:text-white hover:bg-white/5'
-              }`}
-            >
-              <LifeBuoy className="w-3.5 h-3.5" />
-              Coordenador
-            </button>
-
-            <button
-              id="role-btn-operador"
-              type="button"
-              onClick={() => handleRoleSelect('motorista')}
-              title="Acesso estrito do motorista: demandas, documento oficial, manutenção e cartão benefício"
-              className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold transition-all cursor-pointer ${
-                isDriver
-                  ? 'bg-amber-500 text-slate-950 font-bold shadow-md'
-                  : 'text-slate-300 hover:text-white hover:bg-white/5'
-              }`}
-            >
-              <Car className="w-3.5 h-3.5" />
-              Motorista
-              <span className="text-[9px] bg-black/20 text-white px-1 rounded font-mono">Restrito</span>
-            </button>
-
-            <button
-              id="role-btn-solicitante"
-              type="button"
-              onClick={() => handleRoleSelect('solicitante')}
-              title="Portal de solicitação de viagens e acompanhamento SIGA"
-              className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold transition-all cursor-pointer ${
-                currentRole === 'solicitante'
-                  ? 'bg-[#0084C7] text-white shadow-md'
-                  : 'text-slate-300 hover:text-white hover:bg-white/5'
-              }`}
-            >
-              <FileText className="w-3.5 h-3.5" />
-              Solicitante
-            </button>
-          </div>
-
-          {/* Lado Direito: Filtro de Comarca, Notificações e Usuário */}
-          <div className="flex items-center gap-2 sm:gap-3">
-            {/* Botões Rápidos SIGA / WhatsApp (se não for condutor restrito) */}
-            {!isDriver && onOpenSigaSolicitation && (
-              <button
-                type="button"
-                onClick={onOpenSigaSolicitation}
-                className="hidden md:flex items-center gap-1.5 bg-[#001729] hover:bg-[#00223d] text-amber-300 px-2.5 py-1.5 rounded-lg border border-amber-400/30 text-xs font-semibold transition-colors cursor-pointer"
-                title="Abertura de Solicitação com o SIGA TJPR"
-              >
-                <FileCheck2 className="w-3.5 h-3.5" />
-                <span>SIGA</span>
-              </button>
-            )}
-
-            {!isDriver && onOpenWhatsAppReservation && (
-              <button
-                type="button"
-                onClick={onOpenWhatsAppReservation}
-                className="hidden md:flex items-center gap-1.5 bg-emerald-900/60 hover:bg-emerald-800 text-emerald-200 px-2.5 py-1.5 rounded-lg border border-emerald-500/40 text-xs font-semibold transition-colors cursor-pointer"
-                title="Disparar confirmação de reserva via WhatsApp"
-              >
-                <MessageCircle className="w-3.5 h-3.5 text-[#25D366]" />
-                <span className="hidden xl:inline">WhatsApp</span>
-              </button>
-            )}
-
-            {/* Comarca Dropdown (se não for condutor restrito) */}
+          {/* LADO DIREITO: Comarca, Notificações e Perfil */}
+          <div className="flex items-center gap-2 sm:gap-2.5 shrink-0">
+            {/* Comarca Dropdown (visível em telas médias ou superiores) */}
             {!isDriver ? (
-              <div className="hidden lg:flex items-center gap-1.5 bg-white/10 px-2.5 py-1.5 rounded-md border border-white/15 text-xs">
+              <div className="hidden lg:flex items-center gap-1.5 bg-white/10 px-2 py-1 rounded-lg border border-white/15 text-xs">
                 <MapPin className="w-3.5 h-3.5 text-amber-300" />
                 <select
                   aria-label="Selecionar Comarca do TJPR"
                   value={selectedComarca}
                   onChange={(e) => onComarcaChange(e.target.value)}
-                  className="bg-transparent text-white text-xs focus:outline-none cursor-pointer pr-2"
+                  className="bg-transparent text-white text-xs focus:outline-none cursor-pointer pr-1 max-w-[140px]"
                 >
                   {comarcas.map((c) => (
                     <option key={c} value={c} className="bg-[#002B49] text-white">
@@ -286,24 +329,23 @@ export const Header: React.FC<HeaderProps> = ({
                 </select>
               </div>
             ) : (
-              // Badge de Lotação do Motorista
-              <div className="hidden lg:flex items-center gap-1.5 bg-amber-400/10 px-2.5 py-1.5 rounded-md border border-amber-400/25 text-xs text-amber-200">
-                <MapPin className="w-3.5 h-3.5 text-amber-300" />
-                <span>{currentDriver?.comarca || selectedComarca}</span>
+              <div className="hidden lg:flex items-center gap-1.5 bg-amber-400/15 px-2.5 py-1 rounded-lg border border-amber-400/30 text-xs text-amber-200">
+                <MapPin className="w-3 h-3 text-amber-300" />
+                <span>{currentDriver?.comarca.split(' - ')[0] || 'Curitiba'}</span>
               </div>
             )}
 
-            {/* Notificações Sino */}
+            {/* Notificações */}
             <div className="relative">
               <button
                 id="header-notif-btn"
                 aria-label="Abrir notificações do sistema"
                 onClick={() => setShowNotifications(!showNotifications)}
-                className="relative p-2 rounded-lg text-slate-200 hover:text-white hover:bg-white/10 transition-colors"
+                className="relative p-1.5 rounded-lg text-slate-200 hover:text-white hover:bg-white/10 transition-colors cursor-pointer"
               >
-                <Bell className="w-5 h-5" />
+                <Bell className="w-4 h-4 sm:w-5 sm:h-5" />
                 {unreadCount > 0 && (
-                  <span className="absolute top-1 right-1 flex items-center justify-center min-w-4 h-4 px-1 text-[10px] font-bold text-white bg-red-600 rounded-full animate-pulse">
+                  <span className="absolute top-0.5 right-0.5 flex items-center justify-center min-w-4 h-4 px-1 text-[10px] font-bold text-white bg-red-600 rounded-full animate-pulse">
                     {unreadCount}
                   </span>
                 )}
@@ -311,49 +353,49 @@ export const Header: React.FC<HeaderProps> = ({
 
               {/* Menu de Notificações Popover */}
               {showNotifications && (
-                <div className="absolute right-0 mt-2 w-80 sm:w-96 bg-white text-slate-800 rounded-lg shadow-2xl border border-slate-200 z-50 overflow-hidden">
-                  <div className="flex items-center justify-between p-3.5 bg-slate-50 border-b border-slate-200">
-                    <div className="flex items-center gap-2">
+                <div className="absolute right-0 mt-2 w-72 sm:w-80 bg-white text-slate-800 rounded-xl shadow-2xl border border-slate-200 z-50 overflow-hidden animate-in fade-in-50 zoom-in-95">
+                  <div className="flex items-center justify-between p-3 bg-slate-50 border-b border-slate-200">
+                    <div className="flex items-center gap-1.5">
                       <Bell className="w-4 h-4 text-[#002B49]" />
-                      <h3 className="font-semibold text-xs text-slate-900 uppercase tracking-wide">
-                        Notificações Institucionais
+                      <h3 className="font-bold text-xs text-slate-900 uppercase tracking-wide">
+                        Notificações TJPR
                       </h3>
                     </div>
                     <button
                       onClick={() => setShowNotifications(false)}
-                      className="text-slate-400 hover:text-slate-600 p-1"
+                      className="text-slate-400 hover:text-slate-600 p-0.5 cursor-pointer"
                     >
                       <X className="w-4 h-4" />
                     </button>
                   </div>
 
-                  <div className="max-h-72 overflow-y-auto divide-y divide-slate-100">
+                  <div className="max-h-64 overflow-y-auto divide-y divide-slate-100">
                     {notifications.length === 0 ? (
-                      <div className="p-6 text-center text-xs text-slate-400">
+                      <div className="p-4 text-center text-xs text-slate-400">
                         Nenhuma notificação no momento.
                       </div>
                     ) : (
                       notifications.map((n) => (
                         <div
                           key={n.id}
-                          className={`p-3 text-xs transition-colors ${
+                          className={`p-2.5 text-xs transition-colors ${
                             n.lida ? 'bg-white opacity-70' : 'bg-blue-50/70 hover:bg-blue-50'
                           }`}
                         >
-                          <div className="flex justify-between items-start mb-1">
+                          <div className="flex justify-between items-start mb-0.5">
                             <span className="font-bold text-[#002B49]">{n.titulo}</span>
                             <span className="text-[10px] text-slate-400">{n.dataHora.split(' ')[1]}</span>
                           </div>
-                          <p className="text-slate-600 text-[11px] leading-relaxed mb-2">
+                          <p className="text-slate-600 text-[11px] leading-relaxed mb-1.5">
                             {n.mensagem}
                           </p>
                           {!n.lida && (
                             <button
                               onClick={() => onMarkNotificationRead(n.id)}
-                              className="inline-flex items-center gap-1 text-[10px] font-semibold text-[#0084C7] hover:underline"
+                              className="inline-flex items-center gap-1 text-[10px] font-semibold text-[#0084C7] hover:underline cursor-pointer"
                             >
                               <CheckCircle2 className="w-3 h-3" />
-                              Marcar como lida
+                              Marcar lida
                             </button>
                           )}
                         </div>
@@ -364,11 +406,13 @@ export const Header: React.FC<HeaderProps> = ({
               )}
             </div>
 
-            {/* Avatar / Usuário TJPR com Seletor Rápido de Condutor */}
-            <div className="flex items-center gap-2.5 pl-2 border-l border-white/15">
-              <div className={`w-9 h-9 rounded-full flex items-center justify-center font-bold text-xs shadow ${
+            {/* Usuário / Avatar */}
+            <div className="flex items-center gap-2 pl-1.5 border-l border-white/20">
+              <div className={`w-8 h-8 rounded-full flex items-center justify-center font-bold text-xs shadow-sm ${
                 isDriver 
-                  ? 'bg-amber-400 text-slate-950 ring-2 ring-amber-300/50' 
+                  ? 'bg-amber-400 text-slate-950 font-mono ring-2 ring-amber-300/40' 
+                  : currentRole === 'visitante'
+                  ? 'bg-emerald-500 text-white font-mono ring-2 ring-emerald-300/40'
                   : 'bg-gradient-to-br from-[#0084C7] to-[#005a8e] text-white'
               }`}>
                 {isDriver
@@ -377,26 +421,32 @@ export const Header: React.FC<HeaderProps> = ({
                   ? 'CO'
                   : currentRole === 'solicitante'
                   ? 'SO'
+                  : currentRole === 'visitante'
+                  ? 'VI'
                   : 'AD'}
               </div>
-              <div className="hidden sm:block text-left">
-                <p className="text-xs font-semibold text-white leading-tight">
+              <div className="hidden xl:block text-left">
+                <p className="text-xs font-semibold text-white leading-tight truncate max-w-[130px]">
                   {isDriver
-                    ? currentDriver?.nome || 'Carlos E. Silveira'
+                    ? currentDriver?.nome || 'Carlos Silveira'
                     : currentRole === 'coordenador'
                     ? 'Juliana Mendes'
                     : currentRole === 'solicitante'
                     ? 'Dr. Roberto Magalhães'
+                    : currentRole === 'visitante'
+                    ? 'Visitante / Solicitante'
                     : 'Dr. Marcelo Ramos'}
                 </p>
-                <p className="text-[10px] text-blue-200">
+                <p className="text-[10px] text-blue-200 truncate max-w-[130px]">
                   {isDriver
-                    ? `Motorista • Matrícula ${currentDriver?.matricula || '48.912-3'}`
+                    ? `Matr. ${currentDriver?.matricula || '48.912-3'}`
                     : currentRole === 'coordenador'
-                    ? 'Coordenadora Regional TJPR'
+                    ? 'Coordenação TJPR'
                     : currentRole === 'solicitante'
-                    ? 'Juiz de Direito • Solicitante'
-                    : 'Administrador da Frota (SIGPAT)'}
+                    ? 'Magistrado Solicitante'
+                    : currentRole === 'visitante'
+                    ? 'Solicitação Rápida'
+                    : 'Gestor Geral SIGPAT'}
                 </p>
               </div>
             </div>
@@ -405,6 +455,171 @@ export const Header: React.FC<HeaderProps> = ({
 
         </div>
       </div>
+
+      {/* ------------------------------------------------------------- */}
+      {/* LINHA 2: BARRA DE NAVEGAÇÃO HORIZONTAL PRINCIPAL              */}
+      {/* (Exibe diretamente os módulos do perfil, sem nada escondido)  */}
+      {/* ------------------------------------------------------------- */}
+      <div className={`w-full border-t border-white/10 ${isDriver ? 'bg-[#00223A]' : 'bg-[#001F35]'}`}>
+        <div className="w-full px-3 sm:px-6 lg:px-8">
+          <div className="flex items-center justify-between gap-3 py-2 overflow-x-auto scrollbar-none">
+            
+            {/* LADO ESQUERDO: Abas Autorizadas do Perfil */}
+            <nav className="flex items-center gap-1.5 sm:gap-2 shrink-0" aria-label="Módulos do Sistema">
+              
+              {/* Se for Motorista, exibe os 4 módulos essenciais em destaque */}
+              {isDriver ? (
+                <>
+                  <div className="hidden sm:flex items-center gap-1.5 px-2 py-1 rounded bg-amber-400/10 border border-amber-400/20 text-[10px] font-bold text-amber-300 uppercase tracking-wider mr-1">
+                    <Car className="w-3 h-3 text-amber-300" />
+                    <span>Módulos do Condutor:</span>
+                  </div>
+
+                  {[
+                    { id: 'operacoes' as MainNavTab, label: '1. Minhas Demandas', desc: 'Viagens e Ordens', icon: Car },
+                    { id: 'documentos' as MainNavTab, label: '2. Documento Oficial', desc: 'CRLV-e e CNH', icon: FolderLock },
+                    { id: 'oficinas' as MainNavTab, label: '3. Manutenção', desc: 'Revisões do Veículo', icon: Wrench },
+                    { id: 'meu_beneficio' as MainNavTab, label: '4. Cartão do Benefício', desc: 'Combustível e Saldo', icon: CreditCard },
+                  ].map((tab) => {
+                    const Icon = tab.icon;
+                    const isActive = activeNavTab === tab.id;
+                    return (
+                      <button
+                        key={tab.id}
+                        type="button"
+                        onClick={() => onNavTabChange(tab.id)}
+                        className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold whitespace-nowrap transition-all cursor-pointer ${
+                          isActive
+                            ? 'bg-amber-400 text-slate-950 font-bold shadow-sm ring-1 ring-amber-300'
+                            : 'bg-white/5 hover:bg-white/15 text-slate-200 hover:text-white border border-white/10'
+                        }`}
+                      >
+                        <Icon className={`w-3.5 h-3.5 ${isActive ? 'text-slate-950' : 'text-amber-300'}`} />
+                        <span>{tab.label}</span>
+                      </button>
+                    );
+                  })}
+                </>
+              ) : (
+                /* Para Administrador / Coordenador / Solicitante: Exibe todos os módulos permitidos */
+                allowedTabs.map((tabId) => {
+                  const Icon = tabIcons[tabId] || LayoutDashboard;
+                  const isActive = activeNavTab === tabId;
+                  const { label } = getTabLabelForRole(tabId, currentRole);
+                  const badge = getTabBadge(tabId);
+
+                  return (
+                    <button
+                      key={tabId}
+                      type="button"
+                      onClick={() => onNavTabChange(tabId)}
+                      className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold whitespace-nowrap transition-all cursor-pointer ${
+                        isActive
+                          ? 'bg-[#0084C7] text-white shadow-sm font-bold'
+                          : 'text-slate-300 hover:text-white hover:bg-white/10'
+                      }`}
+                    >
+                      <Icon className={`w-3.5 h-3.5 ${isActive ? 'text-white' : 'text-blue-300'}`} />
+                      <span>{label}</span>
+                      {badge && (
+                        <span className={`text-[10px] px-1.5 py-0.2 rounded-full font-mono font-bold ${
+                          isActive ? 'bg-white/20 text-white' : 'bg-white/10 text-blue-200'
+                        }`}>
+                          {badge}
+                        </span>
+                      )}
+                    </button>
+                  );
+                })
+              )}
+            </nav>
+
+            {/* LADO DIREITO: Identificação do Condutor Ativo ou Atalhos Rápidos */}
+            <div className="flex items-center gap-2 shrink-0">
+              {isDriver ? (
+                /* Contexto do Motorista Selecionado */
+                <div className="flex items-center gap-2 bg-amber-400/10 border border-amber-400/20 px-2.5 py-1 rounded-lg text-xs">
+                  <span className="text-[11px] text-amber-200 font-medium hidden md:inline">
+                    Simular Condutor:
+                  </span>
+                  {onSelectDriver && drivers.length > 0 ? (
+                    <div className="relative inline-flex items-center">
+                      <select
+                        aria-label="Condutor ativo da simulação"
+                        value={currentDriver?.id || drivers[0]?.id}
+                        onChange={(e) => {
+                          const found = drivers.find((d) => d.id === e.target.value);
+                          if (found) onSelectDriver(found);
+                        }}
+                        className="bg-white/10 hover:bg-white/15 border border-amber-400/40 text-amber-200 font-semibold text-xs rounded pl-2 pr-6 py-0.5 cursor-pointer focus:outline-none appearance-none"
+                      >
+                        {drivers.map((drv) => (
+                          <option key={drv.id} value={drv.id} className="bg-[#002B49] text-white">
+                            {drv.nome.split(' ')[0]} ({drv.veiculoPrefixoAtual || 'TJ-104'})
+                          </option>
+                        ))}
+                      </select>
+                      <ChevronDown className="w-3 h-3 text-amber-300 absolute right-1.5 pointer-events-none" />
+                    </div>
+                  ) : (
+                    <strong className="text-amber-300 font-mono">{currentDriver?.nome}</strong>
+                  )}
+
+                  <span className="text-[10px] bg-amber-400 text-slate-950 px-1.5 py-0.5 rounded font-mono font-bold">
+                    {assignedVehicle?.prefixo || currentDriver?.veiculoPrefixoAtual || 'TJ-104'}
+                  </span>
+                </div>
+              ) : (
+                /* Atalhos Rápidos para Gestor/Admin */
+                <div className="flex items-center gap-2">
+                  {onOpenSigaSolicitation && (
+                    <button
+                      type="button"
+                      onClick={onOpenSigaSolicitation}
+                      className="hidden sm:flex items-center gap-1 px-2.5 py-1 bg-white/10 hover:bg-white/15 text-amber-300 rounded-lg text-xs font-semibold border border-amber-400/30 transition-colors cursor-pointer"
+                      title="Abertura de Solicitação Integrada ao SIGA TJPR"
+                    >
+                      <FileCheck2 className="w-3.5 h-3.5" />
+                      <span>SIGA</span>
+                    </button>
+                  )}
+
+                  {onOpenWhatsAppReservation && (
+                    <button
+                      type="button"
+                      onClick={onOpenWhatsAppReservation}
+                      className="hidden md:flex items-center gap-1 px-2.5 py-1 bg-emerald-900/60 hover:bg-emerald-800 text-emerald-200 rounded-lg text-xs font-semibold border border-emerald-500/40 transition-colors cursor-pointer"
+                      title="Disparar confirmação de reserva via WhatsApp"
+                    >
+                      <MessageCircle className="w-3.5 h-3.5 text-emerald-400" />
+                      <span>WhatsApp</span>
+                    </button>
+                  )}
+
+                  <button
+                    type="button"
+                    onClick={() => {
+                      onRoleChange('visitante');
+                      onNavTabChange('visitante');
+                    }}
+                    className={`flex items-center gap-1.5 px-3 py-1 rounded-lg text-xs font-bold transition-all cursor-pointer ${
+                      currentRole === 'visitante'
+                        ? 'bg-emerald-500 text-white shadow-xs'
+                        : 'bg-emerald-500/20 hover:bg-emerald-500/30 text-emerald-300 border border-emerald-400/40'
+                    }`}
+                    title="Abrir Formulário Rápido de Solicitação de Viagem e Reserva para o Visitante"
+                  >
+                    <Compass className="w-3.5 h-3.5 text-emerald-300" />
+                    <span>Portal Visitante</span>
+                  </button>
+                </div>
+              )}
+            </div>
+
+          </div>
+        </div>
+      </div>
+
     </header>
   );
 };

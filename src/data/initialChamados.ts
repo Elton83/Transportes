@@ -29,6 +29,32 @@ export const INITIAL_CHAMADOS: Chamado[] = [
     ]
   },
   {
+    id: 'cham-vis-1',
+    codigo: 'CHA-2026-0052',
+    titulo: 'Solicitação de Viagem c/ Motorista (Portal do Visitante) - Fórum de Londrina',
+    descricao: 'DEMANDA PROTOCOLADA NO PORTAL DO VISITANTE TJPR:\n• Solicitante: Dra. Beatriz Montenegro (Magistrado Convidado)\n• Documento: 031.442.819-04 | WhatsApp: (41) 99123-8844 | E-mail: beatriz.montenegro@tjpr.jus.br\n• Tipo: Viagem com Motorista Oficial\n• Trajeto: Saída de "Palácio da Justiça - Centro Cívico, Curitiba" -> Destino: "Fórum da Comarca de Londrina"\n• Partida: 2026-09-22 às 08:00 | Retorno: 2026-09-22 às 19:00\n• Finalidade: Audiência Judicial (2 passageiros)\n• Categoria Pretendida: Sedan Executivo\n• Observações: "Acompanhamento de processo com pauta concentrada na 1ª Vara da Fazenda Pública."',
+    tipo: 'solicitacao_veiculo',
+    prioridade: 'alta',
+    status: 'aberto',
+    dataAbertura: '2026-09-19 11:30',
+    solicitanteNome: 'Dra. Beatriz Montenegro',
+    solicitanteCargo: 'Visitante / Magistrado Convidado',
+    solicitanteMatricula: '031.442.819-04',
+    comarca: 'Curitiba - Sede Administrativa',
+    prazoSugerido: '2026-09-22 08:00',
+    processoSei: 'VIS-0314428.8.16.6000',
+    respostas: [
+      {
+        id: 'resp-vis-1',
+        autor: 'Sistema SIGPAT (Portal do Visitante)',
+        cargo: 'Protocolo Eletrônico TJPR',
+        dataHora: '2026-09-19 11:30',
+        mensagem: 'Demanda protocolada sob nº CHA-2026-0052 via Portal do Visitante. Entrada direta na fila de chamados em aberto da Coordenação de Frotas de Curitiba - Sede Administrativa. Aguardando direcionamento de motorista e veículo.',
+        isAdmin: false,
+      }
+    ]
+  },
+  {
     id: 'cham-2',
     codigo: 'CHA-2026-0038',
     titulo: 'Solicitação de Van de Apoio para Mutirão Cível da Comarca',

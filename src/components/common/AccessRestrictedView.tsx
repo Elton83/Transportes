@@ -28,6 +28,7 @@ export const AccessRestrictedView: React.FC<AccessRestrictedViewProps> = ({
     meu_beneficio: 'API Meu Benefício (Gestão Corporativa)',
     documentos: 'Documentos Oficiais',
     relatorios: 'Relatórios Executivos & Auditoria',
+    visitante: 'Portal do Visitante (Solicitação Rápida)',
   };
 
   return (

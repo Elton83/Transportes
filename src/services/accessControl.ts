@@ -35,6 +35,7 @@ export const ROLE_CONFIGS: Record<Role, RoleConfig> = {
       'meu_beneficio',
       'documentos',
       'relatorios',
+      'visitante',
     ],
     canViewGlobalFleet: true,
     canApproveTrips: true,
@@ -59,6 +60,7 @@ export const ROLE_CONFIGS: Record<Role, RoleConfig> = {
       'meu_beneficio',
       'documentos',
       'relatorios',
+      'visitante',
     ],
     canViewGlobalFleet: true,
     canApproveTrips: true,
@@ -80,6 +82,7 @@ export const ROLE_CONFIGS: Record<Role, RoleConfig> = {
       'chamados',
       'documentos',
       'relatorios',
+      'visitante',
     ],
     canViewGlobalFleet: false,
     canApproveTrips: true,
@@ -140,6 +143,24 @@ export const ROLE_CONFIGS: Record<Role, RoleConfig> = {
     allowedTabs: [
       'operacoes',
       'chamados',
+      'visitante',
+    ],
+    canViewGlobalFleet: false,
+    canApproveTrips: false,
+    canAuditFinance: false,
+    canManageSettings: false,
+    isRestrictedDriver: false,
+  },
+  visitante: {
+    role: 'visitante',
+    label: 'Visitante (Público)',
+    shortLabel: 'Visitante',
+    badgeLabel: 'Solicitação Rápida',
+    sub: 'Viagem & Reserva de Carro',
+    description: 'Interface simplificada para solicitação ágil de viagens e reservas institucionais.',
+    color: 'emerald',
+    allowedTabs: [
+      'visitante',
     ],
     canViewGlobalFleet: false,
     canApproveTrips: false,
@@ -218,6 +239,11 @@ export function getTabLabelForRole(tab: MainNavTab, role: Role): { label: string
       return {
         label: 'Relatórios',
         description: 'Prestação de contas e auditoria',
+      };
+    case 'visitante':
+      return {
+        label: 'Portal do Visitante',
+        description: 'Solicitação rápida de viagem ou reserva de carro',
       };
     default:
       return { label: tab, description: '' };

@@ -38,7 +38,8 @@ import {
   MeuBeneficioApiConfig,
   MeuBeneficioStatusAuditoria,
   Chamado,
-  ChamadoStatus
+  ChamadoStatus,
+  VisitorSolicitationData
 } from './types';
 import { Header, MainNavTab } from './components/Header';
 import { Sidebar } from './components/Sidebar';
@@ -58,6 +59,7 @@ import { MeuBeneficioView } from './components/beneficio/MeuBeneficioView';
 import { RelatoriosView } from './components/reports/RelatoriosView';
 import { ExecutiveFleetDashboard } from './components/dashboard/ExecutiveFleetDashboard';
 import { CoordinatorPortal } from './components/coordinator/CoordinatorPortal';
+import { VisitorPortal } from './components/visitor/VisitorPortal';
 import { TripSignatureModal } from './components/dashboard/TripSignatureModal';
 import { NewChamadoModal } from './components/coordinator/NewChamadoModal';
 import { 
@@ -768,6 +770,95 @@ export default function App() {
     setSelectedTeamsLog(matchedLog);
   };
 
+  // Requisito Visitante: Interface simples, intuitiva e rápida que cai diretamente na lista de chamados aberto do Coordenador
+  const handleVisitorSolicitation = (solicitation: VisitorSolicitationData) => {
+    const nextChamNum = 42 + chamados.length + 1;
+    const nextTripNum = 850 + trips.length + 1;
+    const now = new Date();
+    const formattedDate = `${now.toISOString().split('T')[0]} ${now.toTimeString().split(' ')[0].substring(0, 5)}`;
+    const chamadoCodigo = `CHA-2026-00${nextChamNum}`;
+    const tripCodigo = `TRP-2026-0${nextTripNum}`;
+    const tripId = `trip-vis-${Date.now()}`;
+    const chamadoId = `cham-vis-${Date.now()}`;
+
+    // 1. Criar a Trip correspondente com status 'solicitada'
+    const newTrip: Trip = {
+      id: tripId,
+      codigo: tripCodigo,
+      status: 'solicitada',
+      origem: solicitation.origem,
+      destino: solicitation.destino,
+      dataSaida: solicitation.dataSaida,
+      horaSaida: solicitation.horaSaida,
+      dataRetornoPrevista: solicitation.dataRetorno,
+      horaRetornoPrevista: solicitation.horaRetorno,
+      solicitanteNome: solicitation.solicitanteNome,
+      solicitanteCargo: `Visitante / ${solicitation.orgaoOuVinculo}`,
+      solicitanteVara: `Portal do Visitante TJPR • ${solicitation.orgaoOuVinculo}`,
+      comarca: solicitation.comarca,
+      finalidade: `${solicitation.tipoServico === 'com_motorista' ? '[Viagem c/ Motorista]' : '[Reserva de Carro]'} ${solicitation.finalidade || 'Deslocamento Institucional TJPR'}`,
+      passageiros: [
+        solicitation.solicitanteNome,
+        ...(solicitation.demaisPassageiros && solicitation.demaisPassageiros.length > 0
+          ? solicitation.demaisPassageiros
+          : (solicitation.passageirosQtd > 1 ? [`+ ${solicitation.passageirosQtd - 1} acompanhante(s)`] : []))
+      ],
+      diarioBordo: [],
+      dataCriacao: formattedDate,
+      observacoes: `WhatsApp: ${solicitation.telefone} | E-mail: ${solicitation.email} | Doc: ${solicitation.documentoOuCpf}${solicitation.demaisPassageiros && solicitation.demaisPassageiros.length > 0 ? ` | Demais Passageiros: ${solicitation.demaisPassageiros.join('; ')}` : ''}${solicitation.observacoes ? ` | Observações: ${solicitation.observacoes}` : ''}`,
+      processoSei: `VIS-${solicitation.documentoOuCpf.replace(/\D/g, '').substring(0, 7) || '2026'}.8.16.6000`,
+    };
+
+    // 2. Criar o Chamado Oficial com status 'aberto' (cai na lista de chamados abertos da Coordenação)
+    const newChamado: Chamado = {
+      id: chamadoId,
+      codigo: chamadoCodigo,
+      titulo: solicitation.tipoServico === 'com_motorista'
+        ? `Solicitação de Viagem c/ Motorista (Portal do Visitante) - ${solicitation.destino}`
+        : `Reserva de Veículo Oficial (Portal do Visitante) - ${solicitation.destino}`,
+      descricao: `DEMANDA PROTOCOLADA VIA KEYCLOAK / PORTAL DO VISITANTE TJPR:\n• Solicitante Autenticado: ${solicitation.solicitanteNome} (${solicitation.orgaoOuVinculo})\n• Documento: ${solicitation.documentoOuCpf} | WhatsApp: ${solicitation.telefone} | E-mail: ${solicitation.email}\n• Tipo de Atendimento: ${solicitation.tipoServico === 'com_motorista' ? 'Viagem com Motorista Oficial' : 'Reserva de Carro (Direção Própria)'}\n• Trajeto: Saída de "${solicitation.origem}" -> Destino: "${solicitation.destino}"\n• Partida: ${solicitation.dataSaida} às ${solicitation.horaSaida} | Retorno: ${solicitation.dataRetorno} às ${solicitation.horaRetorno}\n• Total de Passageiros: ${solicitation.passageirosQtd} pessoa(s)${solicitation.demaisPassageiros && solicitation.demaisPassageiros.length > 0 ? `\n• Demais Passageiros Identificados: ${solicitation.demaisPassageiros.join(', ')}` : ''}\n• Categoria Pretendida: ${solicitation.categoriaVeiculoPreferida || 'Sedan Executivo'}${solicitation.observacoes ? `\n• Observações: "${solicitation.observacoes}"` : ''}`,
+      tipo: 'solicitacao_veiculo',
+      prioridade: 'alta',
+      status: 'aberto', // CAI DIRETAMENTE NA LISTA DE CHAMADOS ABERTO DO COORDENADOR
+      dataAbertura: formattedDate,
+      solicitanteNome: solicitation.solicitanteNome,
+      solicitanteCargo: `Visitante / ${solicitation.orgaoOuVinculo}`,
+      solicitanteMatricula: solicitation.documentoOuCpf,
+      comarca: solicitation.comarca,
+      prazoSugerido: `${solicitation.dataSaida} ${solicitation.horaSaida}`,
+      tripIdVinculada: tripId,
+      processoSei: newTrip.processoSei,
+      respostas: [
+        {
+          id: `resp-${Date.now()}`,
+          autor: 'Sistema SIGPAT (Portal do Visitante)',
+          cargo: 'Protocolo Eletrônico TJPR',
+          dataHora: formattedDate,
+          mensagem: `Demanda protocolada sob nº ${chamadoCodigo}. Entrada direta na fila de chamados em aberto da Coordenação de Frotas de ${solicitation.comarca}. Aguardando direcionamento de motorista e veículo.`,
+          isAdmin: false,
+        },
+      ],
+    };
+
+    setTrips((prev) => [newTrip, ...prev]);
+    setChamados((prev) => [newChamado, ...prev]);
+
+    // 3. Notificação no sistema para o coordenador
+    const coordNotif: NotificationItem = {
+      id: `notif-vis-${Date.now()}`,
+      titulo: `Novo Chamado em Aberto: ${chamadoCodigo} (Portal do Visitante)`,
+      mensagem: `${solicitation.solicitanteNome} (${solicitation.orgaoOuVinculo}) solicitou transporte para "${solicitation.destino}". Aberto para direcionamento do coordenador.`,
+      dataHora: `Hoje às ${now.toTimeString().split(' ')[0].substring(0, 5)}`,
+      lida: false,
+      tipo: 'viagem',
+      link: 'chamados',
+    };
+    setNotifications((prev) => [coordNotif, ...prev]);
+
+    showToast(`Solicitação ${chamadoCodigo} protocolada! Caiu diretamente na lista de chamados abertos da Coordenação.`);
+    return { chamadoCodigo, tripCodigo };
+  };
+
   // Salvar Novo Veículo na Frota
   const handleSaveVehicle = (newVeh: Vehicle) => {
     setVehicles((prev) => [newVeh, ...prev]);
@@ -965,51 +1056,38 @@ export default function App() {
           currentDriver={currentDriver}
           drivers={drivers}
           onSelectDriver={(drv) => setSelectedDriverId(drv.id)}
-        />
-
-        {/* Barra de Sessão do Condutor Oficial TJPR (quando em perfil restrito) */}
-        <DriverSessionBar
-          currentRole={currentRole}
-          currentDriver={currentDriver}
-          drivers={drivers}
+          totalVehicles={vehicles.length}
           assignedVehicle={currentDriverAssignedVehicle}
-          onSelectDriver={(drv) => setSelectedDriverId(drv.id)}
-          activeNavTab={activeNavTab}
-          onNavTabChange={(tab) => setActiveNavTab(tab)}
         />
 
-      {/* 2. Barra de Contexto Institucional / Identidade TJPR */}
-      <div className="bg-[#EBF2F7] border-b border-slate-200 py-2.5 px-4 sm:px-6 lg:px-8 text-xs">
-        <div className="max-w-7xl mx-auto flex flex-col sm:flex-row sm:items-center justify-between gap-2">
-          
-          <div className="flex items-center gap-2 text-slate-700">
+      {/* 2. Barra de Contexto e Status Institucional TJPR (Leve, Moderna e Sem Peso Visual) */}
+      <div className="bg-slate-50/90 border-b border-slate-200/80 py-2 px-4 sm:px-6 lg:px-8 text-xs text-slate-500">
+        <div className="max-w-7xl mx-auto flex items-center justify-between gap-2">
+          <div className="flex items-center gap-2 flex-wrap">
             <span className="font-semibold text-[#002B49] flex items-center gap-1">
               <Shield className="w-3.5 h-3.5 text-[#C4A052]" />
               Poder Judiciário do Estado do Paraná
             </span>
-            <span className="text-slate-400">•</span>
+            <span className="text-slate-300">/</span>
+            <span className="text-slate-700 font-medium font-mono text-[11px]">
+              Frota: {vehicles.length} Veículos Oficiais
+            </span>
+            <span className="text-slate-300">/</span>
             <span className="text-slate-600">
-              {activeNavTab === 'dashboard' && 'Dashboard Executivo da Frota Oficial (Total da Frota, Carros em Uso, Viagens do Dia e Agendamentos)'}
-              {activeNavTab === 'chamados' && 'Central de Chamados & Apoio Logístico TJPR (Abertura de Demandas, Protocolos SEI e Tramitações)'}
-              {activeNavTab === 'oficinas' && 'Módulo de Oficinas Credenciadas & Manutenção Veicular (Laudos, Vistoria e Notas Fiscais)'}
-              {activeNavTab === 'abastecer' && 'Gestão de Abastecimentos & Cartão Frota Ticket Log (Lançamentos, Odômetro e Prestação de Contas)'}
-              {activeNavTab === 'meu_beneficio' && 'Auditoria & Conciliação API Meu Benefício (Abastecimentos, Pedágios Eletrônicos e Custas de Viagem)'}
-              {activeNavTab === 'documentos' && 'Central de Documentos Oficiais (Veículos, Condutores, Seguros e Atos TJPR)'}
-              {activeNavTab === 'relatorios' && 'Central de Relatórios Oficiais & Prestação de Contas (SEI, TCE-PR e Custas da Frota)'}
-              {activeNavTab === 'operacoes' && (currentRole === 'operador' || currentRole === 'motorista') && 'Módulo de Operação do Condutor / Motorista Oficial TJPR'}
-              {activeNavTab === 'operacoes' && (currentRole === 'administrador' || currentRole === 'gestor') && 'SIGPAT - Sistema Integrado de Gestão Patrimonial e Transportes (Administrador)'}
-              {activeNavTab === 'operacoes' && currentRole === 'coordenador' && 'Acompanhamento do Dia a Dia e Operação Regional na Comarca'}
-              {activeNavTab === 'operacoes' && currentRole === 'solicitante' && 'Portal de Requisição de Veículos Oficiais (Magistratura e Servidores)'}
+              {currentRole === 'motorista' || currentRole === 'operador' ? (
+                <span className="text-amber-800 font-semibold bg-amber-100/60 px-1.5 py-0.5 rounded border border-amber-300/40">
+                  Portal do Condutor • Acesso Restrito aos 4 Módulos
+                </span>
+              ) : (
+                <span>SIGPAT Transportes • Monitoramento em Tempo Real</span>
+              )}
             </span>
           </div>
 
-          <div className="flex items-center gap-3 text-slate-500">
-            <span className="flex items-center gap-1 font-mono text-[11px]">
-              <span className="w-2 h-2 rounded-full bg-emerald-500" />
-              Sistemas TJPR Integrados: SEI, PROJUDI, Vistoria ECV e Cartão Frota
-            </span>
+          <div className="hidden sm:flex items-center gap-2 text-slate-500 font-mono text-[11px]">
+            <span className="w-2 h-2 rounded-full bg-emerald-500" />
+            <span>SEI • PROJUDI • Ticket Log Conectados</span>
           </div>
-
         </div>
       </div>
 
@@ -1223,6 +1301,30 @@ export default function App() {
                 documents={documents}
                 meuBeneficioTransactions={meuBeneficioTransactions}
                 selectedComarca={selectedComarca}
+              />
+            )}
+
+            {/* ABA 7: Portal do Visitante (Solicitação Rápida de Viagem e Reserva) */}
+            {(activeNavTab === 'visitante' || currentRole === 'visitante') && (
+              <VisitorPortal
+                comarcas={[
+                  'Curitiba - Sede Administrativa',
+                  'Curitiba - Palácio da Justiça',
+                  'Londrina',
+                  'Maringá',
+                  'Cascavel',
+                  'Foz do Iguaçu',
+                  'Ponta Grossa',
+                  'Guarapuava',
+                  'Toledo'
+                ]}
+                onSubmitSolicitation={handleVisitorSolicitation}
+                onNavigateToCoordinator={() => {
+                  handleRoleChange('coordenador');
+                  setActiveNavTab('chamados');
+                  showToast('Alternado para Coordenação: solicitação do visitante aberta no topo da lista de chamados!');
+                }}
+                recentChamados={chamados}
               />
             )}
           </>

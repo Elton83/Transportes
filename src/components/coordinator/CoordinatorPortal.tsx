@@ -36,7 +36,9 @@ import {
   AlertTriangle,
   Award,
   MessageCircle,
-  FileCheck2
+  FileCheck2,
+  Compass,
+  Key
 } from 'lucide-react';
 import { 
   Chamado, 
@@ -127,10 +129,22 @@ export const CoordinatorPortal: React.FC<CoordinatorPortalProps> = ({
     (t) => selectedComarca === 'Todas as Comarcas' || t.origem.includes(selectedComarca.split(' - ')[0]) || t.destino.includes(selectedComarca.split(' - ')[0])
   );
 
+  // Helper para identificar se o chamado é originado do Portal do Visitante
+  const isVisitorSolicitation = (c: Chamado) => 
+    c.solicitanteCargo?.toLowerCase().includes('visitante') || 
+    c.titulo?.toLowerCase().includes('portal do visitante') ||
+    c.codigo?.includes('VIS') ||
+    c.titulo?.toLowerCase().includes('(portal do visitante)');
+
   // Filtragem dos Chamados
   const filteredChamados = chamados.filter((c) => {
     const matchComarca = selectedComarca === 'Todas as Comarcas' || c.comarca === selectedComarca;
-    const matchStatus = chamadoFilterStatus === 'todos' || c.status === chamadoFilterStatus;
+    const isVisitor = isVisitorSolicitation(c);
+    const matchStatus = chamadoFilterStatus === 'todos' 
+      ? true 
+      : chamadoFilterStatus === 'visitante'
+        ? isVisitor
+        : c.status === chamadoFilterStatus;
     const matchText = chamadoSearch === '' || 
       c.codigo.toLowerCase().includes(chamadoSearch.toLowerCase()) ||
       c.titulo.toLowerCase().includes(chamadoSearch.toLowerCase()) ||
@@ -146,6 +160,8 @@ export const CoordinatorPortal: React.FC<CoordinatorPortalProps> = ({
   const countEmAtendimento = totalChamadosComarca.filter(c => c.status === 'em_atendimento').length;
   const countConcluidos = totalChamadosComarca.filter(c => c.status === 'concluido').length;
   const countComAssinatura = totalChamadosComarca.filter(c => c.atividadeConcluida).length;
+  const countVisitantes = totalChamadosComarca.filter(isVisitorSolicitation).length;
+  const countVisitantesAbertos = totalChamadosComarca.filter(c => c.status === 'aberto' && isVisitorSolicitation(c)).length;
 
   // 4. Notificações do Coordenador com Atividades Concluídas e Assinatura do Solicitante
   const completedActivityNotifications = notifications.filter(
@@ -512,6 +528,43 @@ export const CoordinatorPortal: React.FC<CoordinatorPortalProps> = ({
 
           </div>
 
+          {/* BANNER DE ALERTA: SOLICITAÇÕES DO PORTAL DO VISITANTE EM ABERTO */}
+          {countVisitantesAbertos > 0 && (
+            <div className="bg-gradient-to-r from-emerald-50 via-teal-50 to-emerald-50 border-2 border-emerald-400/60 rounded-2xl p-4 flex flex-col sm:flex-row sm:items-center justify-between gap-3 shadow-xs animate-in fade-in">
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-10 rounded-xl bg-emerald-600 text-white flex items-center justify-center shrink-0 shadow-xs">
+                  <Compass className="w-5 h-5" />
+                </div>
+                <div>
+                  <div className="flex items-center gap-2">
+                    <span className="text-[10px] font-extrabold uppercase tracking-wider bg-emerald-200/80 text-emerald-900 px-2 py-0.5 rounded border border-emerald-300">
+                      Portal do Visitante • {countVisitantesAbertos} {countVisitantesAbertos === 1 ? 'Demanda Aberta' : 'Demandas Abertas'}
+                    </span>
+                    <span className="text-xs font-bold text-emerald-800">
+                      Entrada Direta na Fila da Coordenação
+                    </span>
+                  </div>
+                  <p className="text-xs text-slate-700 mt-0.5">
+                    Solicitações de viagem e reserva de carro submetidas por visitantes aguardam direcionamento imediato de motorista e veículo.
+                  </p>
+                </div>
+              </div>
+
+              <button
+                type="button"
+                onClick={() => {
+                  setChamadoFilterStatus('visitante');
+                  setChamadoSearch('');
+                }}
+                className="px-4 py-2 rounded-xl bg-emerald-700 hover:bg-emerald-800 text-white font-bold text-xs flex items-center justify-center gap-1.5 transition-all shrink-0 cursor-pointer shadow-xs hover:scale-[1.02]"
+              >
+                <Compass className="w-3.5 h-3.5" />
+                <span>Ver Solicitações de Visitantes</span>
+                <ArrowRight className="w-3.5 h-3.5" />
+              </button>
+            </div>
+          )}
+
           {/* BARRA DE FILTROS E BUSCA */}
           <div className="bg-white rounded-2xl p-4 shadow-xs border border-slate-200 flex flex-col md:flex-row items-center justify-between gap-3">
             
@@ -577,6 +630,26 @@ export const CoordinatorPortal: React.FC<CoordinatorPortalProps> = ({
                   {totalChamadosComarca.length}
                 </span>
               </button>
+
+              {/* Botão de Filtro Específico: Demandas de Visitantes */}
+              <button
+                type="button"
+                onClick={() => setChamadoFilterStatus('visitante')}
+                className={`px-3 py-1.5 rounded-xl text-xs font-bold flex items-center gap-1.5 transition-all cursor-pointer ${
+                  chamadoFilterStatus === 'visitante'
+                    ? 'bg-emerald-700 text-white shadow-xs ring-2 ring-emerald-300'
+                    : 'bg-emerald-50 text-emerald-800 hover:bg-emerald-100 border border-emerald-200'
+                }`}
+                title="Filtrar chamados de viagem e reserva abertos via Portal do Visitante"
+              >
+                <Compass className="w-3.5 h-3.5 text-emerald-500" />
+                <span>Portal do Visitante</span>
+                <span className={`px-1.5 py-0.2 rounded-full text-[10px] font-mono ${
+                  chamadoFilterStatus === 'visitante' ? 'bg-white/20 text-white' : 'bg-emerald-200/80 text-emerald-900 font-bold'
+                }`}>
+                  {countVisitantes}
+                </span>
+              </button>
             </div>
 
             {/* Campo de Busca Textual */}
@@ -624,13 +697,16 @@ export const CoordinatorPortal: React.FC<CoordinatorPortalProps> = ({
                 const isEmAtendimento = chamado.status === 'em_atendimento';
                 const isConcluido = chamado.status === 'concluido';
                 const canClose = currentRole === 'coordenador';
+                const isVisitor = isVisitorSolicitation(chamado);
 
                 return (
                   <div
                     key={chamado.id}
                     className={`bg-white rounded-2xl p-5 shadow-xs border transition-all ${
                       isOpen
-                        ? 'border-red-200 bg-red-50/20'
+                        ? isVisitor
+                          ? 'border-emerald-300 bg-emerald-50/20 ring-1 ring-emerald-400/20'
+                          : 'border-red-200 bg-red-50/20'
                         : isSelected
                           ? 'border-[#002B49] ring-2 ring-[#002B49]/10'
                           : 'border-slate-200 hover:border-slate-300'
@@ -643,6 +719,14 @@ export const CoordinatorPortal: React.FC<CoordinatorPortalProps> = ({
                           <span className="font-mono font-bold text-xs text-[#002B49] bg-blue-50 px-2.5 py-0.5 rounded-md border border-blue-200">
                             {chamado.codigo}
                           </span>
+
+                          {/* Badge de Demanda do Visitante */}
+                          {isVisitor && (
+                            <span className="px-2.5 py-0.5 rounded-full text-[10px] font-extrabold bg-emerald-100 text-emerald-950 border border-emerald-300 flex items-center gap-1 shadow-2xs">
+                              <Compass className="w-3 h-3 text-emerald-600" />
+                              <span>Portal do Visitante • {chamado.titulo.toLowerCase().includes('reserva') ? 'Reserva de Carro' : 'Viagem c/ Condutor'}</span>
+                            </span>
+                          )}
 
                           {/* Prioridades */}
                           {chamado.prioridade === 'urgente' && (
@@ -764,9 +848,16 @@ export const CoordinatorPortal: React.FC<CoordinatorPortalProps> = ({
                       {/* Solicitante / Gabinete */}
                       <div>
                         <span className="text-[10px] text-slate-400 font-bold uppercase tracking-wider block mb-1">
-                          Solicitante da Comarca
+                          {isVisitor ? 'Visitante • Protocolo Público' : 'Solicitante da Comarca'}
                         </span>
-                        <strong className="text-slate-800 block text-xs">{chamado.solicitanteNome}</strong>
+                        <div className="flex items-center gap-1.5">
+                          <strong className="text-slate-800 block text-xs truncate">{chamado.solicitanteNome}</strong>
+                          {isVisitor && (
+                            <span className="text-[9px] bg-emerald-100 text-emerald-800 font-bold px-1.5 py-0.2 rounded shrink-0">
+                              Visitante
+                            </span>
+                          )}
+                        </div>
                         <span className="text-[10px] text-slate-500 block truncate">
                           {chamado.solicitanteCargo} • {chamado.comarca}
                         </span>

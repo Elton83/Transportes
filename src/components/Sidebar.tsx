@@ -20,7 +20,8 @@ import {
   MessageCircle,
   FileCheck2,
   Lock,
-  SlidersHorizontal
+  SlidersHorizontal,
+  Compass
 } from 'lucide-react';
 import { MainNavTab } from './Header';
 import { Role, Driver, Vehicle } from '../types';
@@ -79,7 +80,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
   onQuickNewChamado,
   onOpenSigaSolicitation,
   onOpenWhatsAppReservation,
-  totalVehicles = 48,
+  totalVehicles = 250,
   activeTripsCount = 7,
   currentDriver,
   assignedVehicle,
@@ -128,6 +129,11 @@ export const Sidebar: React.FC<SidebarProps> = ({
       icon: BarChart3,
       badge: undefined,
     },
+    {
+      id: 'visitante' as MainNavTab,
+      icon: Compass,
+      badge: undefined,
+    },
   ];
 
   // Filtro de Segurança por Papel (RBAC):
@@ -168,6 +174,12 @@ export const Sidebar: React.FC<SidebarProps> = ({
       label: 'Solicitante',
       sub: 'Solicitação de Veículos',
       icon: FileText,
+    },
+    {
+      role: 'visitante',
+      label: 'Visitante (Público)',
+      sub: 'Solicitação Rápida',
+      icon: Compass,
     },
   ];
 
@@ -496,6 +508,8 @@ export const Sidebar: React.FC<SidebarProps> = ({
               ? 'CO'
               : currentRole === 'solicitante'
               ? 'SO'
+              : currentRole === 'visitante'
+              ? 'VI'
               : 'AD'}
           </div>
 
@@ -508,6 +522,8 @@ export const Sidebar: React.FC<SidebarProps> = ({
                   ? 'Juliana Mendes'
                   : currentRole === 'solicitante'
                   ? 'Dr. Roberto Magalhães'
+                  : currentRole === 'visitante'
+                  ? 'Visitante Institucional'
                   : 'Dr. Marcelo Ramos'}
               </p>
               <p className="text-[10px] text-blue-300 truncate">
@@ -517,6 +533,8 @@ export const Sidebar: React.FC<SidebarProps> = ({
                   ? 'Coordenadora Regional'
                   : currentRole === 'solicitante'
                   ? 'Juiz de Direito • Solicitante'
+                  : currentRole === 'visitante'
+                  ? 'Solicitante Externo'
                   : 'Administrador da Frota SIGPAT'}
               </p>
             </div>

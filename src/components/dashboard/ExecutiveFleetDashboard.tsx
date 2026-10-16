@@ -105,6 +105,11 @@ export const ExecutiveFleetDashboard: React.FC<ExecutiveFleetDashboardProps> = (
     driver?: Driver;
   } | null>(null);
 
+  // Paginação e filtro de status para os 250 veículos
+  const [fleetPage, setFleetPage] = useState<number>(1);
+  const [fleetStatusFilter, setFleetStatusFilter] = useState<'todos' | 'disponivel' | 'em_viagem' | 'manutencao'>('todos');
+  const FLEET_PER_PAGE = 24;
+
   // Estado para o Termo de Realização da Viagem com Assinatura
   const [signatureModalTrip, setSignatureModalTrip] = useState<Trip | null>(null);
 
@@ -1321,59 +1326,211 @@ export const ExecutiveFleetDashboard: React.FC<ExecutiveFleetDashboardProps> = (
       {/* ------------------------------------------------------------- */}
       {activeFocus === 'frota' && (
         <div className="bg-white rounded-xl border border-slate-200/90 p-5 shadow-2xs space-y-4">
-          <div className="flex items-center justify-between border-b border-slate-100 pb-3">
+          {/* Header e Ações do Inventário */}
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-slate-100 pb-3">
             <div>
-              <h2 className="text-base font-bold text-slate-900">
-                Inventário Completo da Frota ({totalVehiclesCount} veículos)
+              <div className="flex items-center gap-2">
+                <span className="text-[10px] uppercase font-bold tracking-wider px-2 py-0.5 rounded bg-blue-100 text-[#002B49] font-mono">
+                  Frota TJPR • 250 Veículos
+                </span>
+                <span className="text-xs text-slate-500">
+                  ({filteredVehicles.length} no filtro atual)
+                </span>
+              </div>
+              <h2 className="text-base font-bold text-slate-900 mt-0.5">
+                Inventário Oficial da Frota Automotiva
               </h2>
               <p className="text-xs text-slate-500">
-                Veículos patrimoniados no TJPR, odômetros e status de oficina.
+                Veículos patrimoniados no TJPR, controle de odômetros, status operacional e revisão.
               </p>
             </div>
+
             {onRegisterNewVehicle && (
               <button
                 onClick={onRegisterNewVehicle}
-                className="px-3 py-1.5 bg-[#002B49] text-white rounded-lg text-xs font-semibold flex items-center gap-1"
+                className="px-3 py-1.5 bg-[#002B49] hover:bg-[#003b66] text-white rounded-lg text-xs font-semibold flex items-center gap-1.5 shadow-sm transition-colors cursor-pointer shrink-0"
               >
-                <Plus className="w-3.5 h-3.5" />
+                <Plus className="w-3.5 h-3.5 text-[#C4A052]" />
                 <span>Cadastrar Veículo</span>
               </button>
             )}
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3.5">
-            {filteredVehicles.map((vehicle) => {
-              const isEmViagem = vehicle.status === 'em_viagem' || trips.some(
-                (t) => t.status === 'em_andamento' && (t.veiculoId === vehicle.id || t.veiculoPrefixo === vehicle.prefixo)
-              );
+          {/* Filtros Rápidos de Status da Frota */}
+          {(() => {
+            const statusFiltered = filteredVehicles.filter((v) => {
+              if (fleetStatusFilter === 'todos') return true;
+              if (fleetStatusFilter === 'disponivel') return v.status === 'disponivel';
+              if (fleetStatusFilter === 'em_viagem') {
+                return v.status === 'em_viagem' || trips.some(t => t.status === 'em_andamento' && (t.veiculoId === v.id || t.veiculoPrefixo === v.prefixo));
+              }
+              if (fleetStatusFilter === 'manutencao') return v.status === 'manutencao';
+              return true;
+            });
 
-              return (
-                <div key={vehicle.id} className="border border-slate-200 rounded-xl p-4 bg-white space-y-2">
-                  <div className="flex items-start justify-between">
-                    <div>
-                      <span className="font-mono text-xs font-bold text-[#002B49] bg-slate-100 px-2 py-0.5 rounded">
-                        {vehicle.prefixo}
-                      </span>
-                      <span className="text-xs text-slate-400 font-mono ml-2">{vehicle.placa}</span>
-                    </div>
-                    <span className={`text-[10px] font-semibold px-2 py-0.5 rounded-full ${
-                      isEmViagem ? 'bg-sky-50 text-sky-800' : vehicle.status === 'disponivel' ? 'bg-emerald-50 text-emerald-800' : 'bg-amber-50 text-amber-800'
-                    }`}>
-                      {isEmViagem ? 'Em Trânsito' : vehicle.status === 'disponivel' ? 'Disponível' : 'Oficina'}
-                    </span>
+            const totalPages = Math.ceil(statusFiltered.length / FLEET_PER_PAGE) || 1;
+            const currentPage = Math.min(fleetPage, totalPages);
+            const startIndex = (currentPage - 1) * FLEET_PER_PAGE;
+            const paginated = statusFiltered.slice(startIndex, startIndex + FLEET_PER_PAGE);
+
+            return (
+              <>
+                <div className="flex flex-wrap items-center justify-between gap-2.5 pt-1">
+                  <div className="flex items-center gap-1.5 flex-wrap">
+                    <button
+                      type="button"
+                      onClick={() => { setFleetStatusFilter('todos'); setFleetPage(1); }}
+                      className={`px-3 py-1 rounded-lg text-xs font-semibold transition-all cursor-pointer ${
+                        fleetStatusFilter === 'todos'
+                          ? 'bg-[#002B49] text-white shadow-xs'
+                          : 'bg-slate-100 hover:bg-slate-200 text-slate-700'
+                      }`}
+                    >
+                      Todos ({filteredVehicles.length})
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => { setFleetStatusFilter('disponivel'); setFleetPage(1); }}
+                      className={`px-3 py-1 rounded-lg text-xs font-semibold transition-all cursor-pointer ${
+                        fleetStatusFilter === 'disponivel'
+                          ? 'bg-emerald-700 text-white shadow-xs'
+                          : 'bg-emerald-50 hover:bg-emerald-100 text-emerald-800'
+                      }`}
+                    >
+                      Disponíveis ({availableVehiclesCount})
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => { setFleetStatusFilter('em_viagem'); setFleetPage(1); }}
+                      className={`px-3 py-1 rounded-lg text-xs font-semibold transition-all cursor-pointer ${
+                        fleetStatusFilter === 'em_viagem'
+                          ? 'bg-sky-700 text-white shadow-xs'
+                          : 'bg-sky-50 hover:bg-sky-100 text-sky-800'
+                      }`}
+                    >
+                      Em Trânsito ({inUseCount})
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => { setFleetStatusFilter('manutencao'); setFleetPage(1); }}
+                      className={`px-3 py-1 rounded-lg text-xs font-semibold transition-all cursor-pointer ${
+                        fleetStatusFilter === 'manutencao'
+                          ? 'bg-amber-700 text-white shadow-xs'
+                          : 'bg-amber-50 hover:bg-amber-100 text-amber-800'
+                      }`}
+                    >
+                      Em Oficina ({maintenanceVehiclesCount})
+                    </button>
                   </div>
 
-                  <h3 className="text-xs font-bold text-slate-900">{vehicle.modelo}</h3>
-                  <p className="text-[11px] text-slate-500">{vehicle.tipo} · {vehicle.comarca.split(' - ')[0]}</p>
-
-                  <div className="pt-2 border-t border-slate-100 flex items-center justify-between text-[11px] text-slate-500 font-mono">
-                    <span>{vehicle.kmAtual.toLocaleString('pt-BR')} km</span>
-                    <span>{vehicle.combustivelTipo}</span>
-                  </div>
+                  <span className="text-xs text-slate-500 font-mono">
+                    Página {currentPage} de {totalPages} • ({statusFiltered.length} veículos)
+                  </span>
                 </div>
-              );
-            })}
-          </div>
+
+                {/* Grid dos Veículos Paginados */}
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3">
+                  {paginated.map((vehicle) => {
+                    const isEmViagem = vehicle.status === 'em_viagem' || trips.some(
+                      (t) => t.status === 'em_andamento' && (t.veiculoId === vehicle.id || t.veiculoPrefixo === vehicle.prefixo)
+                    );
+
+                    return (
+                      <div key={vehicle.id} className="border border-slate-200/90 hover:border-[#002B49]/40 rounded-xl p-3.5 bg-white shadow-2xs hover:shadow-xs transition-all space-y-2">
+                        <div className="flex items-start justify-between">
+                          <div>
+                            <span className="font-mono text-xs font-bold text-[#002B49] bg-slate-100 px-2 py-0.5 rounded border border-slate-200">
+                              {vehicle.prefixo}
+                            </span>
+                            <span className="text-xs text-slate-400 font-mono ml-2">{vehicle.placa}</span>
+                          </div>
+                          <span className={`text-[10px] font-semibold px-2 py-0.5 rounded-full ${
+                            isEmViagem ? 'bg-sky-50 text-sky-800 border border-sky-200' : vehicle.status === 'disponivel' ? 'bg-emerald-50 text-emerald-800 border border-emerald-200' : 'bg-amber-50 text-amber-800 border border-amber-200'
+                          }`}>
+                            {isEmViagem ? 'Em Trânsito' : vehicle.status === 'disponivel' ? 'Disponível' : 'Oficina'}
+                          </span>
+                        </div>
+
+                        <div>
+                          <h3 className="text-xs font-bold text-slate-900 truncate" title={vehicle.modelo}>{vehicle.modelo}</h3>
+                          <p className="text-[11px] text-slate-500 truncate">{vehicle.tipo} · {vehicle.comarca.split(' - ')[0]}</p>
+                        </div>
+
+                        <div className="pt-2 border-t border-slate-100 flex items-center justify-between text-[11px] text-slate-500 font-mono">
+                          <span>{vehicle.kmAtual.toLocaleString('pt-BR')} km</span>
+                          <span className="text-emerald-700 font-semibold">{vehicle.nivelCombustivel}% tanque</span>
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+
+                {/* Paginação Footer */}
+                {totalPages > 1 && (
+                  <div className="flex items-center justify-between pt-3 border-t border-slate-100 text-xs">
+                    <span className="text-slate-500">
+                      Exibindo {startIndex + 1}–{Math.min(startIndex + FLEET_PER_PAGE, statusFiltered.length)} de {statusFiltered.length} veículos da frota
+                    </span>
+                    <div className="flex items-center gap-1.5">
+                      <button
+                        type="button"
+                        disabled={currentPage <= 1}
+                        onClick={() => setFleetPage((p) => Math.max(1, p - 1))}
+                        className="px-2.5 py-1 rounded bg-slate-100 hover:bg-slate-200 disabled:opacity-40 text-slate-700 font-semibold cursor-pointer disabled:cursor-not-allowed"
+                      >
+                        &larr; Anterior
+                      </button>
+                      
+                      <div className="flex items-center gap-1">
+                        {Array.from({ length: Math.min(5, totalPages) }, (_, i) => {
+                          const pageNum = i + 1;
+                          return (
+                            <button
+                              key={pageNum}
+                              type="button"
+                              onClick={() => setFleetPage(pageNum)}
+                              className={`w-7 h-7 rounded text-xs font-bold transition-colors cursor-pointer ${
+                                currentPage === pageNum
+                                  ? 'bg-[#002B49] text-white'
+                                  : 'bg-slate-100 hover:bg-slate-200 text-slate-700'
+                              }`}
+                            >
+                              {pageNum}
+                            </button>
+                          );
+                        })}
+                        {totalPages > 5 && (
+                          <>
+                            <span className="px-1 text-slate-400">...</span>
+                            <button
+                              type="button"
+                              onClick={() => setFleetPage(totalPages)}
+                              className={`w-7 h-7 rounded text-xs font-bold transition-colors cursor-pointer ${
+                                currentPage === totalPages
+                                  ? 'bg-[#002B49] text-white'
+                                  : 'bg-slate-100 hover:bg-slate-200 text-slate-700'
+                              }`}
+                            >
+                              {totalPages}
+                            </button>
+                          </>
+                        )}
+                      </div>
+
+                      <button
+                        type="button"
+                        disabled={currentPage >= totalPages}
+                        onClick={() => setFleetPage((p) => Math.min(totalPages, p + 1))}
+                        className="px-2.5 py-1 rounded bg-slate-100 hover:bg-slate-200 disabled:opacity-40 text-slate-700 font-semibold cursor-pointer disabled:cursor-not-allowed"
+                      >
+                        Próximo &rarr;
+                      </button>
+                    </div>
+                  </div>
+                )}
+              </>
+            );
+          })()}
         </div>
       )}
 

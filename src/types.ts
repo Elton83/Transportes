@@ -1,10 +1,11 @@
 export type Role = 
   | 'administrador' 
   | 'operador' 
-  | 'coordenador'
+  | 'coordenador' 
   | 'gestor' 
   | 'motorista' 
-  | 'solicitante';
+  | 'solicitante'
+  | 'visitante';
 
 export type ChamadoStatus = 'aberto' | 'em_atendimento' | 'concluido' | 'cancelado';
 export type ChamadoPrioridade = 'baixa' | 'media' | 'alta' | 'urgente';
@@ -569,4 +570,25 @@ export interface MeuBeneficioApiConfig {
   totalTransacoesHoje: number;
   valorTotalHoje: number;
   divergenciasDetectadas: number;
+}
+
+export interface VisitorSolicitationData {
+  tipoServico: 'com_motorista' | 'reserva_veiculo';
+  solicitanteNome: string;
+  documentoOuCpf: string;
+  telefone: string;
+  email: string;
+  orgaoOuVinculo: string;
+  comarca: string;
+  origem: string;
+  destino: string;
+  dataSaida: string;
+  horaSaida: string;
+  dataRetorno: string;
+  horaRetorno: string;
+  finalidade?: string;
+  passageirosQtd: number;
+  demaisPassageiros?: string[];
+  categoriaVeiculoPreferida?: string;
+  observacoes?: string;
 }
