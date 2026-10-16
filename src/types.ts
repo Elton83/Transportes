@@ -592,3 +592,67 @@ export interface VisitorSolicitationData {
   categoriaVeiculoPreferida?: string;
   observacoes?: string;
 }
+
+// =========================================================
+// MÓDULO DE GESTÃO DE CONTRATOS, FORNECEDORES & SEGUROS TJPR
+// =========================================================
+export type ContratoCategoria = 
+  | 'fornecedor_manutencao'   // Oficinas credenciadas, peças e mecânica
+  | 'seguro_frota'            // Apólices da frota, coberturas e sinistros
+  | 'combustivel_pedagio'     // Meu Benefício, cartões e tags automáticas
+  | 'telemetria_rastreamento' // GPS, rastreamento 24h e bloqueadores
+  | 'locacao_apoio'           // Locações eventuais de apoio
+  | 'higienizacao_lavagem';   // Lavação ecológica e conservação
+
+export type ContratoStatus = 'vigente' | 'em_renovacao' | 'vencendo' | 'encerrado';
+
+export interface ContratoHistoricoPagamento {
+  id: string;
+  mesReferencia: string;
+  valor: number;
+  dataPagamento: string;
+  notaFiscal: string;
+  status: 'pago' | 'em_liquidacao' | 'glosado';
+  observacoes?: string;
+}
+
+export interface ContratoOcorrencia {
+  id: string;
+  data: string;
+  tipo: 'glosa' | 'notificacao' | 'advertencia' | 'elogio';
+  descricao: string;
+  registradoPor: string;
+  status: 'resolvido' | 'em_analise';
+}
+
+export interface Contrato {
+  id: string;
+  numeroContrato: string;     // Ex: Contrato TJPR nº 018/2024
+  termoAditivo?: string;       // Ex: 2º Termo Aditivo de Prorrogação
+  processoSei: string;         // Ex: 0029410-88.2024.8.16.6000
+  categoria: ContratoCategoria;
+  fornecedorNome: string;      // Ex: Porto Seguro Cia de Seguros Gerais
+  fornecedorCnpj: string;      // Ex: 61.198.164/0001-60
+  fornecedorContato: string;   // Contato do preposto (Tel/Email)
+  objeto: string;              // Descrição do objeto do contrato
+  valorTotalAnual: number;     // Valor total do contrato
+  valorExecutado: number;      // Valor já medido/pago
+  saldoRestante: number;       // Saldo a executar
+  dataInicio: string;          // YYYY-MM-DD
+  dataTermino: string;         // YYYY-MM-DD
+  diasRestantes: number;
+  status: ContratoStatus;
+  gestorContratoNome: string;
+  gestorContratoMatricula: string;
+  fiscalContratoNome: string;
+  fiscalContratoMatricula: string;
+  comarcasAtendidas: string[];
+  apoliceNumero?: string;
+  seguradora?: string;
+  coberturaSeguro?: string;
+  franquia?: number;
+  historicoPagamentos: ContratoHistoricoPagamento[];
+  ocorrencias?: ContratoOcorrencia[];
+  anexos?: { titulo: string; tamanho: string; dataUpload: string }[];
+}
+

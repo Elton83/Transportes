@@ -21,13 +21,14 @@ export const AccessRestrictedView: React.FC<AccessRestrictedViewProps> = ({
 
   const tabLabels: Record<MainNavTab, string> = {
     dashboard: 'Dashboard Geral da Frota',
-    operacoes: 'Operações & Viagens',
+    operacoes: 'Diário de Bordo Oficial',
     chamados: 'Central de Chamados TJPR',
     oficinas: 'Oficinas & Gestão de Contratos',
     abastecer: 'Auditoria Geral de Abastecimentos',
     meu_beneficio: 'API Meu Benefício (Gestão Corporativa)',
     documentos: 'Documentos Oficiais',
     relatorios: 'Relatórios Executivos & Auditoria',
+    contratos: 'Contratos & Serviços Oficiais',
     visitante: 'Portal do Visitante (Solicitação Rápida)',
   };
 

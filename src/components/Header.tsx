@@ -23,7 +23,8 @@ import {
   Sparkles,
   ExternalLink,
   Compass,
-  UserPlus
+  UserPlus,
+  FileSignature
 } from 'lucide-react';
 import { Driver, NotificationItem, Role, Vehicle } from '../types';
 import { 
@@ -42,6 +43,7 @@ export type MainNavTab =
   | 'meu_beneficio' 
   | 'documentos' 
   | 'relatorios'
+  | 'contratos'
   | 'visitante';
 
 interface HeaderProps {
@@ -128,6 +130,7 @@ export const Header: React.FC<HeaderProps> = ({
     meu_beneficio: CreditCard,
     documentos: FolderLock,
     relatorios: BarChart3,
+    contratos: FileSignature,
     visitante: Compass,
   };
 
@@ -455,171 +458,7 @@ export const Header: React.FC<HeaderProps> = ({
 
         </div>
       </div>
-
-      {/* ------------------------------------------------------------- */}
-      {/* LINHA 2: BARRA DE NAVEGAÇÃO HORIZONTAL PRINCIPAL              */}
-      {/* (Exibe diretamente os módulos do perfil, sem nada escondido)  */}
-      {/* ------------------------------------------------------------- */}
-      <div className={`w-full border-t border-white/10 ${isDriver ? 'bg-[#00223A]' : 'bg-[#001F35]'}`}>
-        <div className="w-full px-3 sm:px-6 lg:px-8">
-          <div className="flex items-center justify-between gap-3 py-2 overflow-x-auto scrollbar-none">
-            
-            {/* LADO ESQUERDO: Abas Autorizadas do Perfil */}
-            <nav className="flex items-center gap-1.5 sm:gap-2 shrink-0" aria-label="Módulos do Sistema">
-              
-              {/* Se for Motorista, exibe os 4 módulos essenciais em destaque */}
-              {isDriver ? (
-                <>
-                  <div className="hidden sm:flex items-center gap-1.5 px-2 py-1 rounded bg-amber-400/10 border border-amber-400/20 text-[10px] font-bold text-amber-300 uppercase tracking-wider mr-1">
-                    <Car className="w-3 h-3 text-amber-300" />
-                    <span>Módulos do Condutor:</span>
-                  </div>
-
-                  {[
-                    { id: 'operacoes' as MainNavTab, label: '1. Minhas Demandas', desc: 'Viagens e Ordens', icon: Car },
-                    { id: 'documentos' as MainNavTab, label: '2. Documento Oficial', desc: 'CRLV-e e CNH', icon: FolderLock },
-                    { id: 'oficinas' as MainNavTab, label: '3. Manutenção', desc: 'Revisões do Veículo', icon: Wrench },
-                    { id: 'meu_beneficio' as MainNavTab, label: '4. Cartão do Benefício', desc: 'Combustível e Saldo', icon: CreditCard },
-                  ].map((tab) => {
-                    const Icon = tab.icon;
-                    const isActive = activeNavTab === tab.id;
-                    return (
-                      <button
-                        key={tab.id}
-                        type="button"
-                        onClick={() => onNavTabChange(tab.id)}
-                        className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold whitespace-nowrap transition-all cursor-pointer ${
-                          isActive
-                            ? 'bg-amber-400 text-slate-950 font-bold shadow-sm ring-1 ring-amber-300'
-                            : 'bg-white/5 hover:bg-white/15 text-slate-200 hover:text-white border border-white/10'
-                        }`}
-                      >
-                        <Icon className={`w-3.5 h-3.5 ${isActive ? 'text-slate-950' : 'text-amber-300'}`} />
-                        <span>{tab.label}</span>
-                      </button>
-                    );
-                  })}
-                </>
-              ) : (
-                /* Para Administrador / Coordenador / Solicitante: Exibe todos os módulos permitidos */
-                allowedTabs.map((tabId) => {
-                  const Icon = tabIcons[tabId] || LayoutDashboard;
-                  const isActive = activeNavTab === tabId;
-                  const { label } = getTabLabelForRole(tabId, currentRole);
-                  const badge = getTabBadge(tabId);
-
-                  return (
-                    <button
-                      key={tabId}
-                      type="button"
-                      onClick={() => onNavTabChange(tabId)}
-                      className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold whitespace-nowrap transition-all cursor-pointer ${
-                        isActive
-                          ? 'bg-[#0084C7] text-white shadow-sm font-bold'
-                          : 'text-slate-300 hover:text-white hover:bg-white/10'
-                      }`}
-                    >
-                      <Icon className={`w-3.5 h-3.5 ${isActive ? 'text-white' : 'text-blue-300'}`} />
-                      <span>{label}</span>
-                      {badge && (
-                        <span className={`text-[10px] px-1.5 py-0.2 rounded-full font-mono font-bold ${
-                          isActive ? 'bg-white/20 text-white' : 'bg-white/10 text-blue-200'
-                        }`}>
-                          {badge}
-                        </span>
-                      )}
-                    </button>
-                  );
-                })
-              )}
-            </nav>
-
-            {/* LADO DIREITO: Identificação do Condutor Ativo ou Atalhos Rápidos */}
-            <div className="flex items-center gap-2 shrink-0">
-              {isDriver ? (
-                /* Contexto do Motorista Selecionado */
-                <div className="flex items-center gap-2 bg-amber-400/10 border border-amber-400/20 px-2.5 py-1 rounded-lg text-xs">
-                  <span className="text-[11px] text-amber-200 font-medium hidden md:inline">
-                    Simular Condutor:
-                  </span>
-                  {onSelectDriver && drivers.length > 0 ? (
-                    <div className="relative inline-flex items-center">
-                      <select
-                        aria-label="Condutor ativo da simulação"
-                        value={currentDriver?.id || drivers[0]?.id}
-                        onChange={(e) => {
-                          const found = drivers.find((d) => d.id === e.target.value);
-                          if (found) onSelectDriver(found);
-                        }}
-                        className="bg-white/10 hover:bg-white/15 border border-amber-400/40 text-amber-200 font-semibold text-xs rounded pl-2 pr-6 py-0.5 cursor-pointer focus:outline-none appearance-none"
-                      >
-                        {drivers.map((drv) => (
-                          <option key={drv.id} value={drv.id} className="bg-[#002B49] text-white">
-                            {drv.nome.split(' ')[0]} ({drv.veiculoPrefixoAtual || 'TJ-104'})
-                          </option>
-                        ))}
-                      </select>
-                      <ChevronDown className="w-3 h-3 text-amber-300 absolute right-1.5 pointer-events-none" />
-                    </div>
-                  ) : (
-                    <strong className="text-amber-300 font-mono">{currentDriver?.nome}</strong>
-                  )}
-
-                  <span className="text-[10px] bg-amber-400 text-slate-950 px-1.5 py-0.5 rounded font-mono font-bold">
-                    {assignedVehicle?.prefixo || currentDriver?.veiculoPrefixoAtual || 'TJ-104'}
-                  </span>
-                </div>
-              ) : (
-                /* Atalhos Rápidos para Gestor/Admin */
-                <div className="flex items-center gap-2">
-                  {onOpenSigaSolicitation && (
-                    <button
-                      type="button"
-                      onClick={onOpenSigaSolicitation}
-                      className="hidden sm:flex items-center gap-1 px-2.5 py-1 bg-white/10 hover:bg-white/15 text-amber-300 rounded-lg text-xs font-semibold border border-amber-400/30 transition-colors cursor-pointer"
-                      title="Abertura de Solicitação Integrada ao SIGA TJPR"
-                    >
-                      <FileCheck2 className="w-3.5 h-3.5" />
-                      <span>SIGA</span>
-                    </button>
-                  )}
-
-                  {onOpenWhatsAppReservation && (
-                    <button
-                      type="button"
-                      onClick={onOpenWhatsAppReservation}
-                      className="hidden md:flex items-center gap-1 px-2.5 py-1 bg-emerald-900/60 hover:bg-emerald-800 text-emerald-200 rounded-lg text-xs font-semibold border border-emerald-500/40 transition-colors cursor-pointer"
-                      title="Disparar confirmação de reserva via WhatsApp"
-                    >
-                      <MessageCircle className="w-3.5 h-3.5 text-emerald-400" />
-                      <span>WhatsApp</span>
-                    </button>
-                  )}
-
-                  <button
-                    type="button"
-                    onClick={() => {
-                      onRoleChange('visitante');
-                      onNavTabChange('visitante');
-                    }}
-                    className={`flex items-center gap-1.5 px-3 py-1 rounded-lg text-xs font-bold transition-all cursor-pointer ${
-                      currentRole === 'visitante'
-                        ? 'bg-emerald-500 text-white shadow-xs'
-                        : 'bg-emerald-500/20 hover:bg-emerald-500/30 text-emerald-300 border border-emerald-400/40'
-                    }`}
-                    title="Abrir Formulário Rápido de Solicitação de Viagem e Reserva para o Visitante"
-                  >
-                    <Compass className="w-3.5 h-3.5 text-emerald-300" />
-                    <span>Portal Visitante</span>
-                  </button>
-                </div>
-              )}
-            </div>
-
-          </div>
-        </div>
-      </div>
-
     </header>
   );
 };
+

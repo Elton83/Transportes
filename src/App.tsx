@@ -8,7 +8,9 @@ import {
   HelpCircle, 
   Info, 
   MapPin, 
-  Shield 
+  Phone,
+  Shield,
+  FileSpreadsheet
 } from 'lucide-react';
 import { 
   INITIAL_DRIVERS, 
@@ -60,6 +62,8 @@ import { RelatoriosView } from './components/reports/RelatoriosView';
 import { ExecutiveFleetDashboard } from './components/dashboard/ExecutiveFleetDashboard';
 import { CoordinatorPortal } from './components/coordinator/CoordinatorPortal';
 import { VisitorPortal } from './components/visitor/VisitorPortal';
+import { ContratosView } from './components/contracts/ContratosView';
+import { DiarioDeBordoView } from './components/operations/DiarioDeBordoView';
 import { TripSignatureModal } from './components/dashboard/TripSignatureModal';
 import { NewChamadoModal } from './components/coordinator/NewChamadoModal';
 import { 
@@ -68,11 +72,12 @@ import {
   INITIAL_DOCUMENTS 
 } from './data/workshopAndDocsData';
 import { INITIAL_CHAMADOS } from './data/initialChamados';
+import { INITIAL_CONTRATOS } from './data/contractsData';
 import { 
   INITIAL_TEAMS_CONFIG, 
   INITIAL_TEAMS_LOGS 
 } from './data/teamsData';
-import { TeamsIntegrationConfig, TeamsDispatchLog, WhatsAppReservationLog, SigaSolicitationData, DriverScheduleItem } from './types';
+import { TeamsIntegrationConfig, TeamsDispatchLog, WhatsAppReservationLog, SigaSolicitationData, DriverScheduleItem, Contrato } from './types';
 import { dispatchTripToTeams } from './services/teamsService';
 import { TeamsExtractModal } from './components/teams/TeamsExtractModal';
 import { TeamsConfigModal } from './components/teams/TeamsConfigModal';
@@ -105,6 +110,8 @@ export default function App() {
   const [meuBeneficioTransactions, setMeuBeneficioTransactions] = useState<MeuBeneficioTransaction[]>(INITIAL_MEU_BENEFICIO_TRANSACTIONS);
   const [meuBeneficioApiConfig, setMeuBeneficioApiConfig] = useState<MeuBeneficioApiConfig>(INITIAL_MEU_BENEFICIO_CONFIG);
   const [chamados, setChamados] = useState<Chamado[]>(INITIAL_CHAMADOS);
+  const [contratos, setContratos] = useState<Contrato[]>(INITIAL_CONTRATOS);
+  const [diarioViewMode, setDiarioViewMode] = useState<'planilha' | 'operacional'>('planilha');
 
   // Integração com o Microsoft Teams TJPR (Envio de extratos ao demandante e ao coordenador)
   const [teamsConfig, setTeamsConfig] = useState<TeamsIntegrationConfig>(INITIAL_TEAMS_CONFIG);
@@ -932,6 +939,25 @@ export default function App() {
     );
   };
 
+  // Gestão de Contratos, Fornecedores e Seguros TJPR
+  const handleAddContrato = (novoContrato: Contrato) => {
+    setContratos((prev) => [novoContrato, ...prev]);
+    showToast(`Contrato ${novoContrato.numeroContrato} cadastrado com sucesso no SEI!`);
+  };
+
+  const handleUpdateContrato = (contratoAtualizado: Contrato) => {
+    setContratos((prev) =>
+      prev.map((c) => (c.id === contratoAtualizado.id ? contratoAtualizado : c))
+    );
+    showToast(`Contrato ${contratoAtualizado.numeroContrato} atualizado com sucesso!`);
+  };
+
+  // Lançamento e Atualização no Diário de Bordo da Frota
+  const handleAddTrip = (newTrip: Trip) => {
+    setTrips((prev) => [newTrip, ...prev]);
+    showToast(`Deslocamento ${newTrip.codigo} (${newTrip.veiculoPrefixo}) lançado na Planilha do Diário de Bordo!`);
+  };
+
   // Requisito 4: O coordenador deve receber a notificação de atividade concluída (assinatura do solicitante)
   const handleSaveTripSignature = (tripId: string, sigData: TripSignatureData) => {
     setTrips((prev) =>
@@ -1139,78 +1165,134 @@ export default function App() {
               />
             )}
 
-            {/* ABA 1: Operações & Viagens (Suas Demandas para o Motorista) */}
+            {/* ABA 1: Diário de Bordo (Planilha Oficial de Tráfego e Percursos) */}
             {activeNavTab === 'operacoes' && (
-              <>
-                {/* Visualização 1: Operador (Motorista) - Suas Demandas & Diário de Bordo */}
-                {(currentRole === 'operador' || currentRole === 'motorista') && (
-                  <DriverPortal
-                    currentDriver={currentDriver}
+              <div className="space-y-4">
+                {/* Seletor de Modo: Planilha Oficial vs Painel Operacional */}
+                <div className="bg-white px-4 py-2.5 rounded-2xl border border-slate-200/90 shadow-2xs flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+                  <div className="flex items-center gap-2">
+                    <span className="text-xs font-bold text-slate-700 uppercase tracking-wide">
+                      Visualização:
+                    </span>
+                    <div className="flex items-center bg-slate-100 p-1 rounded-xl">
+                      <button
+                        type="button"
+                        onClick={() => setDiarioViewMode('planilha')}
+                        className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all cursor-pointer flex items-center gap-1.5 ${
+                          diarioViewMode === 'planilha'
+                            ? 'bg-[#002B49] text-white shadow-xs'
+                            : 'text-slate-600 hover:text-slate-900'
+                        }`}
+                      >
+                        <FileSpreadsheet className="w-3.5 h-3.5 text-amber-300" />
+                        <span>Planilha Oficial Diário de Bordo</span>
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => setDiarioViewMode('operacional')}
+                        className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition-all cursor-pointer flex items-center gap-1.5 ${
+                          diarioViewMode === 'operacional'
+                            ? 'bg-[#002B49] text-white shadow-xs'
+                            : 'text-slate-600 hover:text-slate-900'
+                        }`}
+                      >
+                        <Car className="w-3.5 h-3.5 text-blue-300" />
+                        <span>Painel Operacional ({currentRole})</span>
+                      </button>
+                    </div>
+                  </div>
+
+                  <span className="text-[11px] font-mono text-slate-400 hidden sm:inline">
+                    {diarioViewMode === 'planilha' ? 'Planilha Eletrônica Ativa (TJPR)' : 'Modo Operacional Ativo'}
+                  </span>
+                </div>
+
+                {diarioViewMode === 'planilha' ? (
+                  <DiarioDeBordoView
                     trips={trips}
                     vehicles={vehicles}
-                    fuelLogs={fuelLogs}
-                    onStartTripClick={handleStartTripClick}
-                    onFinishTripClick={handleFinishTripClick}
+                    drivers={drivers}
+                    currentRole={currentRole}
+                    restrictedDriver={isDriverRole(currentRole) ? currentDriver : undefined}
                     onOpenTripLog={(trip) => setTripLogTrip(trip)}
                     onOpenOfficialOrder={(trip) => setOfficialOrderTrip(trip)}
-                    onOpenQuickFuel={() => setQuickFuelOpen(true)}
-                  />
-                )}
-
-                {/* Visualização 2: Administrador da Frota (SIGPAT Transportes TJPR) */}
-                {(currentRole === 'administrador' || currentRole === 'gestor') && (
-                  <ManagerDashboard
-                    vehicles={vehicles}
-                    drivers={drivers}
-                    trips={trips}
-                    fuelLogs={fuelLogs}
-                    maintenances={maintenances}
-                    onApproveTrip={handleApproveTrip}
-                    onRejectTrip={handleRejectTrip}
-                    onOpenOfficialOrder={(trip) => setOfficialOrderTrip(trip)}
-                    onOpenNewVehicleModal={() => setNewVehicleModalOpen(true)}
-                    onOpenNewMaintenanceModal={() => setNewMaintenanceModalOpen(true)}
-                    onUpdateVehicleStatus={handleUpdateVehicleStatus}
-                  />
-                )}
-
-                {/* Visualização 3: Coordenador Regional (Acompanhamento Diário, Chamados e Relatórios) */}
-                {currentRole === 'coordenador' && (
-                  <CoordinatorPortal
-                    currentRole={currentRole}
-                    selectedComarca={selectedComarca}
-                    trips={trips}
-                    vehicles={vehicles}
-                    drivers={drivers}
-                    chamados={chamados}
-                    notifications={notifications}
-                    onOpenNewChamadoModal={() => setNewChamadoModalOpen(true)}
-                    onUpdateChamadoStatus={handleUpdateChamadoStatus}
-                    onAssignDriverAndVehicle={handleAssignDriverAndVehicle}
-                    onCloseChamadoByCoordinator={handleCloseChamadoByCoordinator}
-                    onAddChamadoResposta={handleAddChamadoResposta}
-                    onNavigateToRelatorios={() => setActiveNavTab('relatorios')}
-                    onOpenTripDetails={(trip) => setTripLogTrip(trip)}
                     onOpenTripSignature={(trip) => setSignatureModalTrip(trip)}
-                    onOpenWhatsAppReservation={(trip, vehicle, driver) => {
-                      setWhatsappReservationTrip({ trip, vehicle, driver });
-                    }}
-                    onOpenSigaSolicitation={() => setSigaModalOpen(true)}
+                    onAddTrip={handleAddTrip}
+                    selectedComarca={selectedComarca}
                   />
-                )}
+                ) : (
+                  <>
+                    {/* Visualização 1: Operador (Motorista) - Suas Demandas & Diário de Bordo */}
+                    {(currentRole === 'operador' || currentRole === 'motorista') && (
+                      <DriverPortal
+                        currentDriver={currentDriver}
+                        trips={trips}
+                        vehicles={vehicles}
+                        fuelLogs={fuelLogs}
+                        onStartTripClick={handleStartTripClick}
+                        onFinishTripClick={handleFinishTripClick}
+                        onOpenTripLog={(trip) => setTripLogTrip(trip)}
+                        onOpenOfficialOrder={(trip) => setOfficialOrderTrip(trip)}
+                        onOpenQuickFuel={() => setQuickFuelOpen(true)}
+                      />
+                    )}
 
-                {/* Visualização 4: Portal do Solicitante (Magistrados & Servidores) */}
-                {currentRole === 'solicitante' && (
-                  <SolicitationPortal
-                    trips={trips}
-                    onCreateTrip={handleCreateTrip}
-                    onOpenOfficialOrder={(trip) => setOfficialOrderTrip(trip)}
-                    onOpenTeamsExtract={handleOpenTeamsExtract}
-                    onOpenTeamsConfig={() => setTeamsConfigModalOpen(true)}
-                    teamsConfig={teamsConfig}
-                  />
+                    {/* Visualização 2: Administrador da Frota (SIGPAT Transportes TJPR) */}
+                    {(currentRole === 'administrador' || currentRole === 'gestor') && (
+                      <ManagerDashboard
+                        vehicles={vehicles}
+                        drivers={drivers}
+                        trips={trips}
+                        fuelLogs={fuelLogs}
+                        maintenances={maintenances}
+                        onApproveTrip={handleApproveTrip}
+                        onRejectTrip={handleRejectTrip}
+                        onOpenOfficialOrder={(trip) => setOfficialOrderTrip(trip)}
+                        onOpenNewVehicleModal={() => setNewVehicleModalOpen(true)}
+                        onOpenNewMaintenanceModal={() => setNewMaintenanceModalOpen(true)}
+                        onUpdateVehicleStatus={handleUpdateVehicleStatus}
+                      />
+                    )}
+
+                    {/* Visualização 3: Coordenador Regional (Acompanhamento Diário, Chamados e Relatórios) */}
+                    {currentRole === 'coordenador' && (
+                      <CoordinatorPortal
+                        currentRole={currentRole}
+                        selectedComarca={selectedComarca}
+                        trips={trips}
+                        vehicles={vehicles}
+                        drivers={drivers}
+                        chamados={chamados}
+                        notifications={notifications}
+                        onOpenNewChamadoModal={() => setNewChamadoModalOpen(true)}
+                        onUpdateChamadoStatus={handleUpdateChamadoStatus}
+                        onAssignDriverAndVehicle={handleAssignDriverAndVehicle}
+                        onCloseChamadoByCoordinator={handleCloseChamadoByCoordinator}
+                        onAddChamadoResposta={handleAddChamadoResposta}
+                        onNavigateToRelatorios={() => setActiveNavTab('relatorios')}
+                        onOpenTripDetails={(trip) => setTripLogTrip(trip)}
+                        onOpenTripSignature={(trip) => setSignatureModalTrip(trip)}
+                        onOpenWhatsAppReservation={(trip, vehicle, driver) => {
+                          setWhatsappReservationTrip({ trip, vehicle, driver });
+                        }}
+                        onOpenSigaSolicitation={() => setSigaModalOpen(true)}
+                      />
+                    )}
+
+                    {/* Visualização 4: Portal do Solicitante (Magistrados & Servidores) */}
+                    {currentRole === 'solicitante' && (
+                      <SolicitationPortal
+                        trips={trips}
+                        onCreateTrip={handleCreateTrip}
+                        onOpenOfficialOrder={(trip) => setOfficialOrderTrip(trip)}
+                        onOpenTeamsExtract={handleOpenTeamsExtract}
+                        onOpenTeamsConfig={() => setTeamsConfigModalOpen(true)}
+                        teamsConfig={teamsConfig}
+                      />
+                    )}
+                  </>
                 )}
-              </>
+              </div>
             )}
 
             {/* ABA: Central de Chamados & Apoio Logístico */}
@@ -1304,7 +1386,17 @@ export default function App() {
               />
             )}
 
-            {/* ABA 7: Portal do Visitante (Solicitação Rápida de Viagem e Reserva) */}
+            {/* ABA 7: Menu Contratos (Gestão de Fornecedores, Seguros e Serviços Oficiais) */}
+            {activeNavTab === 'contratos' && (
+              <ContratosView
+                contratos={contratos}
+                onAddContrato={handleAddContrato}
+                onUpdateContrato={handleUpdateContrato}
+                selectedComarca={selectedComarca}
+              />
+            )}
+
+            {/* ABA 8: Portal do Visitante (Solicitação Rápida de Viagem e Reserva) */}
             {(activeNavTab === 'visitante' || currentRole === 'visitante') && (
               <VisitorPortal
                 comarcas={[
@@ -1491,6 +1583,38 @@ export default function App() {
           </div>
         </div>
       </footer>
+
+      {/* Botão Flutuante Clássico do Telefone / WhatsApp na parte inferior */}
+      <div className="fixed bottom-5 right-5 sm:bottom-6 sm:right-6 z-50 flex items-center gap-2 group">
+        {/* Tooltip explicativo ao passar o mouse */}
+        <div className="hidden sm:flex opacity-0 group-hover:opacity-100 transition-opacity duration-200 bg-slate-900 text-white text-xs py-1.5 px-3 rounded-xl shadow-xl border border-slate-700 whitespace-nowrap pointer-events-none items-center gap-1.5">
+          <span className="w-2 h-2 rounded-full bg-[#25D366] animate-pulse" />
+          <span className="font-semibold">Plantão WhatsApp TJPR • Reservas & Apoio</span>
+        </div>
+
+        <button
+          id="floating-whatsapp-phone-btn"
+          type="button"
+          onClick={() => {
+            const targetTrip = trips.find((t) => t.status === 'em_andamento') || trips[0];
+            const targetVeh = vehicles.find((v) => v.id === targetTrip?.veiculoId || v.prefixo === targetTrip?.veiculoPrefixo);
+            const targetDrv = drivers.find((d) => d.id === targetTrip?.motoristaId);
+            setWhatsappReservationTrip({ trip: targetTrip, vehicle: targetVeh, driver: targetDrv });
+          }}
+          className="relative w-14 h-14 sm:w-16 sm:h-16 rounded-full bg-[#25D366] hover:bg-[#20ba59] active:scale-95 text-white shadow-2xl hover:shadow-green-500/50 hover:scale-105 transition-all flex items-center justify-center cursor-pointer border-3 border-white focus:outline-none focus:ring-4 focus:ring-emerald-400/50"
+          title="Atendimento e Reservas de Carro via WhatsApp TJPR"
+          aria-label="Atendimento via WhatsApp TJPR"
+        >
+          {/* Indicador de status ativo pulsante */}
+          <span className="absolute -top-1 -right-1 flex h-4 w-4">
+            <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
+            <span className="relative inline-flex rounded-full h-4 w-4 bg-emerald-600 border-2 border-white"></span>
+          </span>
+
+          {/* Ícone clássico do telefone */}
+          <Phone className="w-7 h-7 sm:w-8 sm:h-8 fill-white" />
+        </button>
+      </div>
 
       </div>
 

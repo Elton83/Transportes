@@ -265,34 +265,6 @@ export const ExecutiveFleetDashboard: React.FC<ExecutiveFleetDashboardProps> = (
             </select>
           </div>
 
-          {/* Botão Integração SIGA */}
-          {onOpenSigaSolicitation && (
-            <button
-              onClick={onOpenSigaSolicitation}
-              className="flex items-center gap-1.5 px-3.5 py-1.5 bg-[#002B49] hover:bg-[#003b66] text-white rounded-lg text-xs font-semibold shadow-2xs transition-colors cursor-pointer"
-              title="Abrir solicitação oficial de veículo integrada ao SIGA TJPR"
-            >
-              <FileCheck2 className="w-3.5 h-3.5 text-[#C4A052]" />
-              <span>Solicitação SIGA</span>
-            </button>
-          )}
-
-          {/* Botão Integração WhatsApp */}
-          {onOpenWhatsAppReservation && activeTripsList.length > 0 && (
-            <button
-              onClick={() => {
-                const firstTrip = activeTripsList[0];
-                const veh = vehicles.find((v) => v.id === firstTrip.veiculoId || v.prefixo === firstTrip.veiculoPrefixo);
-                const drv = drivers.find((d) => d.id === firstTrip.motoristaId);
-                onOpenWhatsAppReservation(firstTrip, veh, drv);
-              }}
-              className="flex items-center gap-1.5 px-3 py-1.5 bg-emerald-50 hover:bg-emerald-100 text-emerald-800 border border-emerald-300 rounded-lg text-xs font-semibold shadow-2xs transition-colors cursor-pointer"
-              title="Disparar confirmação de reserva via WhatsApp"
-            >
-              <MessageCircle className="w-3.5 h-3.5 text-emerald-600" />
-              <span>WhatsApp Reserva</span>
-            </button>
-          )}
 
           {/* Botão Nova Viagem */}
           {onScheduleNewTrip && (

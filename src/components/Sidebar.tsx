@@ -21,7 +21,9 @@ import {
   FileCheck2,
   Lock,
   SlidersHorizontal,
-  Compass
+  Compass,
+  FileSignature,
+  FileSpreadsheet
 } from 'lucide-react';
 import { MainNavTab } from './Header';
 import { Role, Driver, Vehicle } from '../types';
@@ -96,7 +98,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
     },
     {
       id: 'operacoes' as MainNavTab,
-      icon: Car,
+      icon: FileSpreadsheet,
       badge: activeTripsCount > 0 ? `${activeTripsCount}` : undefined,
     },
     {
@@ -127,6 +129,11 @@ export const Sidebar: React.FC<SidebarProps> = ({
     {
       id: 'relatorios' as MainNavTab,
       icon: BarChart3,
+      badge: undefined,
+    },
+    {
+      id: 'contratos' as MainNavTab,
+      icon: FileSignature,
       badge: undefined,
     },
     {
@@ -286,41 +293,6 @@ export const Sidebar: React.FC<SidebarProps> = ({
               <span className="truncate">Nova Viagem</span>
             </button>
           ) : null}
-
-          {/* Botões Rápidos para Integrações (SIGA e WhatsApp) - Apenas se não for motorista restrito */}
-          {!isDriver && (
-            <div className="grid grid-cols-2 gap-1.5 pt-1">
-              {onOpenSigaSolicitation && (
-                <button
-                  type="button"
-                  onClick={() => {
-                    onOpenSigaSolicitation();
-                    onCloseMobile();
-                  }}
-                  className="flex items-center justify-center gap-1.5 py-1.5 px-2 bg-sky-950/80 hover:bg-sky-900 border border-sky-600/40 text-sky-200 text-[11px] font-semibold rounded-lg transition-colors cursor-pointer"
-                  title="Abertura de Solicitação com o SIGA TJPR"
-                >
-                  <FileCheck2 className="w-3.5 h-3.5 text-amber-400" />
-                  <span className="truncate">SIGA</span>
-                </button>
-              )}
-
-              {onOpenWhatsAppReservation && (
-                <button
-                  type="button"
-                  onClick={() => {
-                    onOpenWhatsAppReservation();
-                    onCloseMobile();
-                  }}
-                  className="flex items-center justify-center gap-1.5 py-1.5 px-2 bg-emerald-950/80 hover:bg-emerald-900 border border-emerald-600/40 text-emerald-200 text-[11px] font-semibold rounded-lg transition-colors cursor-pointer"
-                  title="Disparar confirmação de reserva via WhatsApp"
-                >
-                  <MessageCircle className="w-3.5 h-3.5 text-[#25D366]" />
-                  <span className="truncate">WhatsApp</span>
-                </button>
-              )}
-            </div>
-          )}
         </div>
       )}
 

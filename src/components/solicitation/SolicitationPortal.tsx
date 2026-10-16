@@ -76,7 +76,7 @@ export const SolicitationPortal: React.FC<SolicitationPortalProps> = ({
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    if (!finalidade || !origem || !destino) return;
+    if (!origem || !destino) return;
 
     onCreateTrip({
       processoSei,
@@ -84,7 +84,7 @@ export const SolicitationPortal: React.FC<SolicitationPortalProps> = ({
       solicitanteCargo,
       solicitanteVara,
       comarca,
-      finalidade,
+      finalidade: finalidade.trim() || 'Deslocamento institucional a serviço do TJPR',
       origem,
       destino,
       dataSaida,
@@ -230,21 +230,6 @@ export const SolicitationPortal: React.FC<SolicitationPortalProps> = ({
                   <option value="Ponta Grossa">Ponta Grossa</option>
                 </select>
               </div>
-            </div>
-
-            {/* Finalidade */}
-            <div>
-              <label className="block font-bold text-slate-700 mb-1">
-                Finalidade Oficial do Deslocamento e Justificativa Institucional
-              </label>
-              <textarea
-                rows={2}
-                placeholder="Descreva a finalidade (ex: Realização de inspeção correcional, audiência externa, cumprimento de diligência de mandado judicial...)"
-                value={finalidade}
-                onChange={(e) => setFinalidade(e.target.value)}
-                required
-                className="w-full px-2.5 py-1.5 border border-slate-300 rounded bg-white text-slate-800 focus:ring-1 focus:ring-[#002B49]"
-              />
             </div>
 
             {/* Itinerário e Horários */}

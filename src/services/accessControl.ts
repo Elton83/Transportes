@@ -35,6 +35,7 @@ export const ROLE_CONFIGS: Record<Role, RoleConfig> = {
       'meu_beneficio',
       'documentos',
       'relatorios',
+      'contratos',
       'visitante',
     ],
     canViewGlobalFleet: true,
@@ -60,6 +61,7 @@ export const ROLE_CONFIGS: Record<Role, RoleConfig> = {
       'meu_beneficio',
       'documentos',
       'relatorios',
+      'contratos',
       'visitante',
     ],
     canViewGlobalFleet: true,
@@ -82,6 +84,7 @@ export const ROLE_CONFIGS: Record<Role, RoleConfig> = {
       'chamados',
       'documentos',
       'relatorios',
+      'contratos',
       'visitante',
     ],
     canViewGlobalFleet: false,
@@ -207,8 +210,8 @@ export function getTabLabelForRole(tab: MainNavTab, role: Role): { label: string
       };
     case 'operacoes':
       return {
-        label: isDriver ? 'Minhas Demandas' : 'Operações & Viagens',
-        description: isDriver ? 'Viagens, diário de bordo e ordens' : 'Diário, percursos e rotina',
+        label: isDriver ? 'Meu Diário de Bordo' : 'Diário de Bordo',
+        description: 'Planilha de percursos, odômetro, horários e passageiros',
       };
     case 'chamados':
       return {
@@ -239,6 +242,11 @@ export function getTabLabelForRole(tab: MainNavTab, role: Role): { label: string
       return {
         label: 'Relatórios',
         description: 'Prestação de contas e auditoria',
+      };
+    case 'contratos':
+      return {
+        label: 'Contratos & Serviços',
+        description: 'Gestão de fornecedores, seguros e terceirizados',
       };
     case 'visitante':
       return {
