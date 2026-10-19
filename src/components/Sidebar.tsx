@@ -6,6 +6,8 @@ import {
   FolderLock,
   ChevronRight,
   ChevronLeft,
+  ChevronDown,
+  ChevronUp,
   Shield,
   Plus,
   Fuel,
@@ -23,7 +25,8 @@ import {
   SlidersHorizontal,
   Compass,
   FileSignature,
-  FileSpreadsheet
+  FileSpreadsheet,
+  LayoutGrid
 } from 'lucide-react';
 import { MainNavTab } from './Header';
 import { Role, Driver, Vehicle } from '../types';
@@ -83,13 +86,16 @@ export const Sidebar: React.FC<SidebarProps> = ({
   onOpenSigaSolicitation,
   onOpenWhatsAppReservation,
   totalVehicles = 250,
-  activeTripsCount = 7,
+  activeTripsCount = 2,
   currentDriver,
   assignedVehicle,
 }) => {
   const isDriver = isDriverRole(currentRole);
 
-  // Lista mestre de navegação do sistema
+  // Filtro de Segurança por Papel (RBAC)
+  const allowedTabs = getAllowedTabsForRole(currentRole);
+
+  // Lista mestre com todos os menus anteriores preservados
   const allNavItems = [
     {
       id: 'dashboard' as MainNavTab,
@@ -114,17 +120,17 @@ export const Sidebar: React.FC<SidebarProps> = ({
     {
       id: 'abastecer' as MainNavTab,
       icon: Fuel,
-      badge: undefined,
+      badge: fuelLogsCount > 0 ? `${fuelLogsCount}` : undefined,
     },
     {
       id: 'meu_beneficio' as MainNavTab,
       icon: CreditCard,
-      badge: undefined,
+      badge: meuBeneficioCount > 0 ? `${meuBeneficioCount}` : undefined,
     },
     {
       id: 'documentos' as MainNavTab,
       icon: FolderLock,
-      badge: undefined,
+      badge: documentsCount > 0 ? `${documentsCount}` : undefined,
     },
     {
       id: 'relatorios' as MainNavTab,
@@ -142,20 +148,6 @@ export const Sidebar: React.FC<SidebarProps> = ({
       badge: undefined,
     },
   ];
-
-  // Filtro de Segurança por Papel (RBAC):
-  // No caso do motorista, expõe estritamente: 1. Suas demandas, 2. Documento oficial, 3. Manutenção, 4. Cartão do benefício
-  const allowedTabs = getAllowedTabsForRole(currentRole);
-  const visibleNavItems = allNavItems
-    .filter((item) => allowedTabs.includes(item.id))
-    .map((item) => {
-      const { label, description } = getTabLabelForRole(item.id, currentRole);
-      return {
-        ...item,
-        label,
-        description,
-      };
-    });
 
   const roleOptions: { role: Role; label: string; sub: string; icon: typeof Car }[] = [
     {
@@ -199,43 +191,34 @@ export const Sidebar: React.FC<SidebarProps> = ({
   };
 
   const sidebarContent = (
-    <div className="flex flex-col h-full bg-[#001D33] text-slate-100 border-r border-white/10 select-none">
+    <div className="flex flex-col h-full bg-[#05202B] text-slate-100 border-r border-[#082E3C] select-none">
       
-      {/* 1. Header do Menu Lateral: Brasão TJPR e Título do Sistema */}
-      <div className="p-4 border-b border-white/10 flex items-center justify-between gap-3 shrink-0 bg-[#001729]">
-        <div className="flex items-center gap-3 min-w-0">
-          <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-[#002B49] to-[#004270] border border-amber-400/40 shadow-inner flex items-center justify-center shrink-0">
-            <div className="relative flex flex-col items-center justify-center">
-              <Shield className="w-5 h-5 text-[#C4A052]" />
-              <span className="font-serif font-black text-[8px] text-white tracking-wider absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2">
-                TJPR
-              </span>
-            </div>
+      {/* 1. Header do Menu Lateral com Logotipo TJPR idêntico à imagem */}
+      <div className="px-5 py-4 border-b border-[#082E3C] flex items-center justify-between gap-3 shrink-0 bg-[#041C26]">
+        <div className="flex items-center gap-2.5 min-w-0">
+          {/* Brasão TJPR Oficial da imagem */}
+          <div className="w-7 h-7 flex items-center justify-center shrink-0">
+            <svg viewBox="0 0 28 32" className="w-6 h-6 text-white fill-none stroke-current" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round">
+              <path d="M14 3 L14 26" />
+              <path d="M7 8 L21 8" />
+              <circle cx="14" cy="3.5" r="1.5" />
+              <path d="M6 10 L3 15 L9 15 Z" />
+              <path d="M22 10 L19 15 L25 15 Z" />
+              <path d="M3 6 C3 6, 7 4, 14 4 C21 4, 25 6, 25 6 C25 16, 20 25, 14 28 C8 25, 3 16, 3 6 Z" />
+            </svg>
           </div>
 
           {!isCollapsed && (
-            <div className="min-w-0 transition-opacity duration-200">
-              <div className="flex items-center gap-1.5">
-                <span className="text-[10px] uppercase font-bold tracking-widest text-amber-400">
-                  TJPR • SIGPAT
-                </span>
-                {isDriver && (
-                  <span className="text-[9px] px-1.5 py-0.2 bg-amber-500/20 text-amber-300 font-mono rounded border border-amber-400/30">
-                    CONDUTOR
-                  </span>
-                )}
-              </div>
-              <h2 className="text-sm font-bold text-white tracking-tight truncate">
-                {isDriver ? 'Portal do Motorista' : 'Gestão de Frota'}
-              </h2>
-            </div>
+            <span className="text-xl font-bold tracking-wide text-white select-none">
+              TJPR
+            </span>
           )}
         </div>
 
         {/* Botão de Fechar Mobile */}
         <button
           onClick={onCloseMobile}
-          className="lg:hidden p-1.5 rounded-lg text-slate-400 hover:text-white hover:bg-white/10"
+          className="lg:hidden p-1.5 rounded-lg text-[#8E9CA8] hover:text-white hover:bg-white/10"
           aria-label="Fechar menu lateral"
         >
           <X className="w-5 h-5" />
@@ -244,7 +227,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
         {/* Botão de Recolher no Desktop */}
         <button
           onClick={onToggleCollapse}
-          className="hidden lg:flex p-1.5 rounded-lg text-slate-400 hover:text-white hover:bg-white/10 transition-colors"
+          className="hidden lg:flex p-1 rounded-lg text-[#8E9CA8] hover:text-white hover:bg-white/10 transition-colors"
           title={isCollapsed ? 'Expandir menu lateral' : 'Recolher menu lateral'}
           aria-label={isCollapsed ? 'Expandir menu' : 'Recolher menu'}
         >
@@ -252,64 +235,39 @@ export const Sidebar: React.FC<SidebarProps> = ({
         </button>
       </div>
 
-      {/* 2. Atalho de Ação Rápida */}
-      {!isCollapsed && (
-        <div className="px-3 pt-3 pb-2 shrink-0 border-b border-white/5 bg-[#001524] space-y-2">
-          {isDriver ? (
-            // Ações exclusivas do motorista
-            <button
-              onClick={() => {
-                if (onQuickFuel) onQuickFuel();
-                onCloseMobile();
-              }}
-              className="w-full flex items-center justify-center gap-2 py-2 px-3 bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs rounded-lg shadow-sm transition-all cursor-pointer"
-              title="Registrar abastecimento com o Cartão Frota"
-            >
-              <Fuel className="w-4 h-4" />
-              <span className="truncate">Lançar Abastecimento</span>
-            </button>
-          ) : currentRole === 'coordenador' && onQuickNewChamado ? (
-            <button
-              onClick={() => {
-                onQuickNewChamado();
-                onCloseMobile();
-              }}
-              className="w-full flex items-center justify-center gap-2 py-2 px-3 bg-amber-500 hover:bg-amber-600 text-slate-950 font-bold text-xs rounded-lg shadow-sm transition-all cursor-pointer"
-              title="Abrir novo chamado para a Divisão de Transportes"
-            >
-              <LifeBuoy className="w-4 h-4" />
-              <span className="truncate">Abrir Chamado</span>
-            </button>
-          ) : onQuickNewTrip ? (
-            <button
-              onClick={() => {
-                onQuickNewTrip();
-                onCloseMobile();
-              }}
-              className="w-full flex items-center justify-center gap-2 py-2 px-3 bg-amber-500 hover:bg-amber-600 text-slate-950 font-bold text-xs rounded-lg shadow-sm transition-all cursor-pointer"
-              title="Criar nova solicitação de viagem oficial"
-            >
-              <Plus className="w-4 h-4" />
-              <span className="truncate">Nova Viagem</span>
-            </button>
-          ) : null}
-        </div>
-      )}
-
-      {/* 3. Itens de Navegação Principal (Filtrados por RBAC) */}
-      <div className="flex-1 overflow-y-auto px-3 py-3 space-y-1.5 scrollbar-thin scrollbar-thumb-white/10">
-        <div className="flex items-center justify-between text-[10px] font-bold uppercase tracking-wider text-slate-400 px-3 mb-1">
-          <span>{!isCollapsed ? (isDriver ? 'Seu Acesso Autorizado' : 'Menu Principal') : '•••'}</span>
-          {isDriver && !isCollapsed && (
-            <span className="text-amber-400 font-mono text-[9px] flex items-center gap-1">
-              <Lock className="w-2.5 h-2.5" /> 4 Módulos
-            </span>
-          )}
+      {/* 2. Menu Principal (Menus Anteriores Restaurados Integralmente) */}
+      <div className="flex-1 overflow-y-auto px-3 py-3 space-y-1.5 scrollbar-thin scrollbar-thumb-white/10 text-sm">
+        <div className="flex items-center justify-between text-[11px] font-bold uppercase tracking-wider text-[#8E9CA8] px-2 mb-2">
+          <span>MENU PRINCIPAL</span>
+          <span className="text-[10px] text-[#8E9CA8]/70 font-normal">
+            {allowedTabs.length} módulos
+          </span>
         </div>
 
-        {visibleNavItems.map((item) => {
+        {allNavItems.map((item) => {
+          const isAllowed = allowedTabs.includes(item.id);
+          const { label, description } = getTabLabelForRole(item.id, currentRole);
           const Icon = item.icon;
           const isActive = activeNavTab === item.id;
+
+          if (!isAllowed) {
+            if (isCollapsed) return null;
+            return (
+              <div
+                key={item.id}
+                className="w-full flex items-center justify-between px-3 py-2 rounded-lg opacity-40 cursor-not-allowed select-none"
+                title={`Módulo restrito para o perfil ${ROLE_CONFIGS[currentRole]?.label || currentRole}`}
+              >
+                <div className="flex items-center gap-2.5 min-w-0">
+                  <Icon className="w-4 h-4 text-[#8E9CA8] shrink-0" />
+                  <span className="text-xs text-[#8E9CA8] truncate">
+                    {label}
+                  </span>
+                </div>
+                <Lock className="w-3.5 h-3.5 text-[#8E9CA8] shrink-0" />
+              </div>
+            );
+          }
 
           return (
             <button
@@ -319,36 +277,33 @@ export const Sidebar: React.FC<SidebarProps> = ({
                 onNavTabChange(item.id);
                 onCloseMobile();
               }}
-              title={isCollapsed ? item.label : undefined}
-              className={`w-full flex items-center justify-between p-2.5 rounded-xl text-left transition-all group ${
+              title={isCollapsed ? label : undefined}
+              className={`w-full flex items-center justify-between px-3 py-2.5 rounded-lg text-left transition-all cursor-pointer group ${
                 isActive
-                  ? 'bg-[#0084C7] text-white font-semibold shadow-md border-l-4 border-amber-400'
-                  : 'text-slate-300 hover:text-white hover:bg-white/8 font-medium'
+                  ? 'bg-white/10 text-white font-medium shadow-xs'
+                  : 'text-[#8E9CA8] hover:text-white hover:bg-white/5 font-normal'
               }`}
             >
               <div className="flex items-center gap-3 min-w-0">
-                <div
-                  className={`p-1.5 rounded-lg shrink-0 transition-colors ${
-                    isActive
-                      ? 'bg-white/20 text-white'
-                      : 'bg-white/5 text-amber-300 group-hover:bg-white/10'
+                <Icon
+                  className={`w-4 h-4 shrink-0 transition-colors ${
+                    isActive ? 'text-white' : 'text-[#8E9CA8] group-hover:text-white'
                   }`}
-                >
-                  <Icon className="w-4 h-4" />
-                </div>
-
+                />
                 {!isCollapsed && (
-                  <div className="min-w-0 truncate">
-                    <p className="text-xs font-bold leading-tight truncate">{item.label}</p>
-                    <p className="text-[10px] text-slate-400 group-hover:text-slate-300 truncate">
-                      {item.description}
-                    </p>
+                  <div className="truncate">
+                    <span className="text-xs font-semibold block leading-tight truncate">
+                      {label}
+                    </span>
+                    <span className="text-[10px] text-[#8E9CA8] block truncate leading-tight mt-0.5">
+                      {description}
+                    </span>
                   </div>
                 )}
               </div>
 
               {!isCollapsed && item.badge && (
-                <span className="px-1.5 py-0.5 text-[10px] font-bold rounded-md bg-white/15 text-white shrink-0">
+                <span className="px-1.5 py-0.5 rounded-full bg-[#EF5350] text-white text-[10px] font-bold font-mono shrink-0 shadow-xs">
                   {item.badge}
                 </span>
               )}
@@ -358,10 +313,10 @@ export const Sidebar: React.FC<SidebarProps> = ({
 
         {/* Seletor de Perfil do Sistema no Menu Lateral */}
         {!isCollapsed && (
-          <div className="mt-5 pt-3 border-t border-white/10 px-1">
-            <div className="text-[10px] font-bold uppercase tracking-wider text-slate-400 px-2 mb-2 flex items-center justify-between">
+          <div className="mt-4 pt-3 border-t border-white/10 px-1">
+            <div className="text-[10px] font-bold uppercase tracking-wider text-[#8E9CA8] px-2 mb-2 flex items-center justify-between">
               <span>Alternar Perfil:</span>
-              <SlidersHorizontal className="w-3 h-3 text-slate-400" />
+              <SlidersHorizontal className="w-3 h-3 text-[#8E9CA8]" />
             </div>
 
             <div className="space-y-1">
@@ -381,16 +336,16 @@ export const Sidebar: React.FC<SidebarProps> = ({
                     }}
                     className={`w-full flex items-center justify-between px-2.5 py-1.5 rounded-lg text-xs transition-colors cursor-pointer ${
                       isRoleActive
-                        ? 'bg-amber-400/20 text-amber-300 font-bold border border-amber-400/30'
-                        : 'text-slate-400 hover:text-slate-100 hover:bg-white/5'
+                        ? 'bg-white/15 text-white font-semibold'
+                        : 'text-[#8E9CA8] hover:text-white hover:bg-white/5'
                     }`}
                   >
                     <div className="flex items-center gap-2 truncate">
-                      <RoleIcon className={`w-3.5 h-3.5 ${isRoleActive ? 'text-amber-300' : 'text-slate-400'}`} />
+                      <RoleIcon className={`w-3.5 h-3.5 ${isRoleActive ? 'text-white' : 'text-[#8E9CA8]'}`} />
                       <span className="truncate">{opt.label}</span>
                     </div>
                     {isRoleActive && (
-                      <div className="w-1.5 h-1.5 rounded-full bg-amber-400" />
+                      <div className="w-1.5 h-1.5 rounded-full bg-[#EF5350]" />
                     )}
                   </button>
                 );
@@ -404,25 +359,25 @@ export const Sidebar: React.FC<SidebarProps> = ({
           <div className="mt-4 pt-3 border-t border-white/10 px-2">
             {isDriver ? (
               // Resumo do Veículo Atribuído ao Motorista
-              <div className="bg-amber-400/10 rounded-xl p-3 border border-amber-400/20 space-y-2 text-xs">
-                <div className="text-[10px] font-bold uppercase tracking-wider text-amber-400 flex items-center gap-1.5">
-                  <Car className="w-3 h-3" />
+              <div className="bg-white/5 rounded-xl p-3 border border-white/10 space-y-2 text-xs">
+                <div className="text-[10px] font-bold uppercase tracking-wider text-[#8E9CA8] flex items-center gap-1.5">
+                  <Car className="w-3 h-3 text-[#8E9CA8]" />
                   Veículo Vinculado
                 </div>
                 <div className="flex items-center justify-between">
-                  <span className="text-slate-300 text-[11px]">Prefixo</span>
-                  <span className="font-mono font-bold text-amber-300">
+                  <span className="text-[#8E9CA8] text-[11px]">Prefixo</span>
+                  <span className="font-mono font-bold text-white">
                     {assignedVehicle?.prefixo || currentDriver?.veiculoPrefixoAtual || 'TJ-104'}
                   </span>
                 </div>
                 <div className="flex items-center justify-between">
-                  <span className="text-slate-300 text-[11px]">Modelo</span>
+                  <span className="text-[#8E9CA8] text-[11px]">Modelo</span>
                   <span className="text-white text-[11px] truncate max-w-[120px]">
                     {assignedVehicle?.modelo || 'Corolla XEi 2.0'}
                   </span>
                 </div>
                 <div className="flex items-center justify-between">
-                  <span className="text-slate-300 text-[11px]">Tanque</span>
+                  <span className="text-[#8E9CA8] text-[11px]">Tanque</span>
                   <span className="font-mono font-bold text-emerald-400">
                     {assignedVehicle?.nivelCombustivel || 85}%
                   </span>
@@ -431,20 +386,20 @@ export const Sidebar: React.FC<SidebarProps> = ({
             ) : (
               // Status Geral da Frota TJPR
               <div>
-                <div className="text-[10px] font-bold uppercase tracking-wider text-slate-400 mb-2">
+                <div className="text-[10px] font-bold uppercase tracking-wider text-[#8E9CA8] mb-2">
                   Status da Frota TJPR
                 </div>
                 <div className="bg-white/5 rounded-xl p-3 border border-white/10 space-y-2 text-xs">
                   <div className="flex items-center justify-between">
-                    <span className="text-slate-300 text-[11px] flex items-center gap-1.5">
-                      <Car className="w-3.5 h-3.5 text-blue-300" />
+                    <span className="text-[#8E9CA8] text-[11px] flex items-center gap-1.5">
+                      <Car className="w-3.5 h-3.5 text-[#8E9CA8]" />
                       Total de Veículos
                     </span>
                     <span className="font-mono font-bold text-white">{totalVehicles}</span>
                   </div>
 
                   <div className="flex items-center justify-between">
-                    <span className="text-slate-300 text-[11px] flex items-center gap-1.5">
+                    <span className="text-[#8E9CA8] text-[11px] flex items-center gap-1.5">
                       <CheckCircle2 className="w-3.5 h-3.5 text-emerald-400" />
                       Em Missão Hoje
                     </span>
@@ -452,15 +407,15 @@ export const Sidebar: React.FC<SidebarProps> = ({
                   </div>
 
                   <div className="flex items-center justify-between">
-                    <span className="text-slate-300 text-[11px] flex items-center gap-1.5">
+                    <span className="text-[#8E9CA8] text-[11px] flex items-center gap-1.5">
                       <Wrench className="w-3.5 h-3.5 text-amber-400" />
                       Em Manutenção
                     </span>
                     <span className="font-mono font-bold text-amber-300">{maintenancesCount}</span>
                   </div>
 
-                  <div className="pt-2 border-t border-white/10 flex items-center gap-1 text-[10px] text-slate-400 truncate">
-                    <MapPin className="w-3 h-3 text-amber-400 shrink-0" />
+                  <div className="pt-2 border-t border-white/10 flex items-center gap-1 text-[10px] text-[#8E9CA8] truncate">
+                    <MapPin className="w-3 h-3 text-[#8E9CA8] shrink-0" />
                     <span className="truncate">{selectedComarca}</span>
                   </div>
                 </div>
@@ -471,9 +426,9 @@ export const Sidebar: React.FC<SidebarProps> = ({
       </div>
 
       {/* 5. Rodapé do Menu Lateral: Perfil do Usuário Autenticado */}
-      <div className="p-3 border-t border-white/10 bg-[#001729] shrink-0">
+      <div className="p-3 border-t border-[#082E3C] bg-[#041C26] shrink-0">
         <div className="flex items-center gap-3">
-          <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-amber-400 to-amber-600 flex items-center justify-center font-bold text-slate-950 text-xs shadow-md shrink-0">
+          <div className="w-8 h-8 rounded-lg bg-white/10 flex items-center justify-center font-bold text-white text-xs shrink-0">
             {isDriver
               ? 'MO'
               : currentRole === 'coordenador'
@@ -487,7 +442,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
 
           {!isCollapsed && (
             <div className="min-w-0 flex-1">
-              <p className="text-xs font-bold text-white truncate">
+              <p className="text-xs font-semibold text-white truncate">
                 {isDriver
                   ? currentDriver?.nome || 'Carlos E. Silveira'
                   : currentRole === 'coordenador'
@@ -498,7 +453,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
                   ? 'Visitante Institucional'
                   : 'Dr. Marcelo Ramos'}
               </p>
-              <p className="text-[10px] text-blue-300 truncate">
+              <p className="text-[10px] text-[#8E9CA8] truncate">
                 {isDriver
                   ? `Matrícula ${currentDriver?.matricula || '48.912-3'} • Motorista`
                   : currentRole === 'coordenador'

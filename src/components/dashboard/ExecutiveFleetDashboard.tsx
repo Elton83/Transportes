@@ -69,6 +69,7 @@ interface ExecutiveFleetDashboardProps {
   onOpenSigaSolicitation?: () => void;
   onNavigateToChamados?: () => void;
   onOpenNewChamadoModal?: () => void;
+  hideHeader?: boolean;
 }
 
 export type DashboardFocusMetric = 'todos' | 'frota' | 'em_uso' | 'escala_motoristas' | 'chamados' | 'viagens';
@@ -89,6 +90,7 @@ export const ExecutiveFleetDashboard: React.FC<ExecutiveFleetDashboardProps> = (
   onOpenSigaSolicitation,
   onNavigateToChamados,
   onOpenNewChamadoModal,
+  hideHeader = false,
 }) => {
   // Filtro de foco interativo (ao clicar nos cards de métricas ou nas abas)
   const [activeFocus, setActiveFocus] = useState<DashboardFocusMetric>('todos');
@@ -212,72 +214,125 @@ export const ExecutiveFleetDashboard: React.FC<ExecutiveFleetDashboardProps> = (
   return (
     <div className="space-y-5">
       
-      {/* ------------------------------------------------------------- */}
-      {/* 1. TOP HEADER LIMPO E ELEGANTE (SEM POLUIÇÃO VISUAL)          */}
-      {/* ------------------------------------------------------------- */}
-      <div className="bg-white rounded-xl border border-slate-200/90 shadow-2xs p-4 sm:p-5 flex flex-col md:flex-row md:items-center justify-between gap-4">
-        <div>
-          <div className="flex items-center gap-2 text-xs text-slate-500 font-medium">
-            <span className="text-[#002B49] font-semibold">TJPR</span>
-            <span aria-hidden="true">·</span>
-            <span>Tribunal de Justiça do Paraná</span>
-            <span aria-hidden="true">·</span>
-            <span className="text-emerald-700 font-medium">Monitoramento Operacional em Tempo Real</span>
+      {/* 1. TOP HEADER LIMPO E ELEGANTE (SEM POLUIÇÃO VISUAL) */}
+      {!hideHeader ? (
+        <div className="bg-white rounded-xl border border-slate-200/90 shadow-2xs p-4 sm:p-5 flex flex-col md:flex-row md:items-center justify-between gap-4">
+          <div>
+            <div className="flex items-center gap-2 text-xs text-slate-500 font-medium">
+              <span className="text-[#002B49] font-semibold">TJPR</span>
+              <span aria-hidden="true">·</span>
+              <span>Tribunal de Justiça do Paraná</span>
+              <span aria-hidden="true">·</span>
+              <span className="text-emerald-700 font-medium">Monitoramento Operacional em Tempo Real</span>
+            </div>
+            <h1 className="text-xl sm:text-2xl font-bold text-slate-900 tracking-tight mt-0.5">
+              Dashboard da Frota Oficial
+            </h1>
+            <p className="text-xs text-slate-500 mt-0.5">
+              Disponibilidade da frota, escala de motoristas e chamados de transporte institucional.
+            </p>
           </div>
-          <h1 className="text-xl sm:text-2xl font-bold text-slate-900 tracking-tight mt-0.5">
-            Dashboard da Frota Oficial
-          </h1>
-          <p className="text-xs text-slate-500 mt-0.5">
-            Disponibilidade da frota, escala de motoristas e chamados de transporte institucional.
-          </p>
+
+          {/* Controles e Ações Principais */}
+          <div className="flex flex-wrap items-center gap-2.5 shrink-0">
+            {/* Seletor de Data */}
+            <div className="flex items-center gap-1.5 px-3 py-1.5 bg-slate-50 hover:bg-slate-100 border border-slate-200 rounded-lg text-xs font-medium text-slate-700 transition-colors">
+              <Calendar className="w-3.5 h-3.5 text-slate-500" />
+              <select
+                value={selectedDate}
+                onChange={(e) => setSelectedDate(e.target.value)}
+                aria-label="Selecionar Data do Monitoramento"
+                className="bg-transparent border-none text-xs font-semibold text-slate-800 focus:outline-hidden cursor-pointer"
+              >
+                <option value="2026-09-18">Hoje (18/09/2026)</option>
+                <option value="2026-09-19">Amanhã (19/09/2026)</option>
+                <option value="2026-09-20">20/09/2026</option>
+              </select>
+            </div>
+
+            {/* Seletor de Comarca */}
+            <div className="flex items-center gap-1.5 px-3 py-1.5 bg-slate-50 hover:bg-slate-100 border border-slate-200 rounded-lg text-xs font-medium text-slate-700 transition-colors">
+              <MapPin className="w-3.5 h-3.5 text-slate-500" />
+              <select
+                value={comarcaFilter}
+                onChange={(e) => setComarcaFilter(e.target.value)}
+                aria-label="Filtrar por Comarca"
+                className="bg-transparent border-none text-xs font-semibold text-slate-800 focus:outline-hidden cursor-pointer max-w-[130px]"
+              >
+                <option value="todas">Todas as Comarcas</option>
+                {comarcaOptions.map((com) => (
+                  <option key={com} value={com}>{com}</option>
+                ))}
+              </select>
+            </div>
+
+            {/* Botão Nova Viagem */}
+            {onScheduleNewTrip && (
+              <button
+                onClick={onScheduleNewTrip}
+                className="flex items-center gap-1.5 px-3 py-1.5 bg-[#05202B] hover:bg-[#082E3C] text-white rounded-lg text-xs font-semibold shadow-2xs transition-colors cursor-pointer"
+              >
+                <Plus className="w-3.5 h-3.5" />
+                <span>Nova Viagem</span>
+              </button>
+            )}
+          </div>
         </div>
-
-        {/* Controles e Ações Principais */}
-        <div className="flex flex-wrap items-center gap-2.5 shrink-0">
-          {/* Seletor de Data */}
-          <div className="flex items-center gap-1.5 px-3 py-1.5 bg-slate-50 hover:bg-slate-100 border border-slate-200 rounded-lg text-xs font-medium text-slate-700 transition-colors">
-            <Calendar className="w-3.5 h-3.5 text-slate-500" />
-            <select
-              value={selectedDate}
-              onChange={(e) => setSelectedDate(e.target.value)}
-              aria-label="Selecionar Data do Monitoramento"
-              className="bg-transparent border-none text-xs font-semibold text-slate-800 focus:outline-hidden cursor-pointer"
-            >
-              <option value="2026-09-18">Hoje (18/09/2026)</option>
-              <option value="2026-09-19">Amanhã (19/09/2026)</option>
-              <option value="2026-09-20">20/09/2026</option>
-            </select>
+      ) : (
+        /* Barra de Filtros Compacta e Didática Quando em Modo Integrado */
+        <div className="flex flex-wrap items-center justify-between gap-3 bg-white p-3 rounded-xl border border-slate-200 shadow-2xs">
+          <div className="flex items-center gap-2">
+            <span className="text-xs font-bold text-slate-700 uppercase tracking-wide flex items-center gap-1.5">
+              <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
+              Monitoramento Operacional da Frota:
+            </span>
+            <span className="text-xs text-slate-500">
+              {filteredVehicles.length} veículos em tempo real
+            </span>
           </div>
 
-          {/* Seletor de Comarca */}
-          <div className="flex items-center gap-1.5 px-3 py-1.5 bg-slate-50 hover:bg-slate-100 border border-slate-200 rounded-lg text-xs font-medium text-slate-700 transition-colors">
-            <MapPin className="w-3.5 h-3.5 text-slate-500" />
-            <select
-              value={comarcaFilter}
-              onChange={(e) => setComarcaFilter(e.target.value)}
-              aria-label="Filtrar por Comarca"
-              className="bg-transparent border-none text-xs font-semibold text-slate-800 focus:outline-hidden cursor-pointer max-w-[130px]"
-            >
-              <option value="todas">Todas as Comarcas</option>
-              {comarcaOptions.map((com) => (
-                <option key={com} value={com}>{com}</option>
-              ))}
-            </select>
+          <div className="flex items-center gap-2 flex-wrap">
+            <div className="flex items-center gap-1.5 px-2.5 py-1 bg-slate-50 border border-slate-200 rounded-lg text-xs text-slate-700">
+              <Calendar className="w-3.5 h-3.5 text-slate-500" />
+              <select
+                value={selectedDate}
+                onChange={(e) => setSelectedDate(e.target.value)}
+                aria-label="Selecionar Data"
+                className="bg-transparent border-none text-xs font-semibold text-slate-800 focus:outline-hidden cursor-pointer"
+              >
+                <option value="2026-09-18">Hoje (18/09/2026)</option>
+                <option value="2026-09-19">Amanhã (19/09/2026)</option>
+                <option value="2026-09-20">20/09/2026</option>
+              </select>
+            </div>
+
+            <div className="flex items-center gap-1.5 px-2.5 py-1 bg-slate-50 border border-slate-200 rounded-lg text-xs text-slate-700">
+              <MapPin className="w-3.5 h-3.5 text-slate-500" />
+              <select
+                value={comarcaFilter}
+                onChange={(e) => setComarcaFilter(e.target.value)}
+                aria-label="Filtrar Comarca"
+                className="bg-transparent border-none text-xs font-semibold text-slate-800 focus:outline-hidden cursor-pointer"
+              >
+                <option value="todas">Todas as Comarcas</option>
+                {comarcaOptions.map((com) => (
+                  <option key={com} value={com}>{com}</option>
+                ))}
+              </select>
+            </div>
+
+            {onScheduleNewTrip && (
+              <button
+                onClick={onScheduleNewTrip}
+                className="flex items-center gap-1.5 px-3 py-1 bg-[#05202B] hover:bg-[#082E3C] text-white rounded-lg text-xs font-semibold shadow-2xs transition-colors cursor-pointer"
+              >
+                <Plus className="w-3.5 h-3.5" />
+                <span>Nova Viagem</span>
+              </button>
+            )}
           </div>
-
-
-          {/* Botão Nova Viagem */}
-          {onScheduleNewTrip && (
-            <button
-              onClick={onScheduleNewTrip}
-              className="flex items-center gap-1.5 px-3 py-1.5 bg-slate-900 hover:bg-slate-800 text-white rounded-lg text-xs font-semibold shadow-2xs transition-colors cursor-pointer"
-            >
-              <Plus className="w-3.5 h-3.5" />
-              <span>Nova Viagem</span>
-            </button>
-          )}
         </div>
-      </div>
+      )}
 
       {/* ------------------------------------------------------------- */}
       {/* 2. 4 CARDS DE MÉTRICAS COMPACTOS & DIRETOS (SEM PESO VISUAL)  */}

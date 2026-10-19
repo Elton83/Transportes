@@ -10,7 +10,9 @@ import {
   MapPin, 
   Phone,
   Shield,
-  FileSpreadsheet
+  FileSpreadsheet,
+  LayoutDashboard,
+  SlidersHorizontal
 } from 'lucide-react';
 import { 
   INITIAL_DRIVERS, 
@@ -94,8 +96,8 @@ import { AccessRestrictedView } from './components/common/AccessRestrictedView';
 import { DriverSessionBar } from './components/common/DriverSessionBar';
 
 export default function App() {
-  // Estado principal de navegação e perfis (Iniciando no Dashboard com os 4 indicadores solicitados)
-  const [activeNavTab, setActiveNavTab] = useState<MainNavTab>('dashboard');
+  // Estado principal de navegação e perfis (Iniciando no Diário de Bordo & Frota unificado)
+  const [activeNavTab, setActiveNavTab] = useState<MainNavTab>('operacoes');
   const [currentRole, setCurrentRole] = useState<Role>('gestor');
   const [selectedComarca, setSelectedComarca] = useState<string>('Todas as Comarcas');
 
@@ -111,7 +113,7 @@ export default function App() {
   const [meuBeneficioApiConfig, setMeuBeneficioApiConfig] = useState<MeuBeneficioApiConfig>(INITIAL_MEU_BENEFICIO_CONFIG);
   const [chamados, setChamados] = useState<Chamado[]>(INITIAL_CHAMADOS);
   const [contratos, setContratos] = useState<Contrato[]>(INITIAL_CONTRATOS);
-  const [diarioViewMode, setDiarioViewMode] = useState<'planilha' | 'operacional'>('planilha');
+  const [diarioViewMode, setDiarioViewMode] = useState<'planilha' | 'dashboard' | 'operacional'>('planilha');
 
   // Integração com o Microsoft Teams TJPR (Envio de extratos ao demandante e ao coordenador)
   const [teamsConfig, setTeamsConfig] = useState<TeamsIntegrationConfig>(INITIAL_TEAMS_CONFIG);
@@ -1138,7 +1140,7 @@ export default function App() {
           />
         ) : (
           <>
-            {/* ABA 0: Dashboard Geral da Frota (4 Indicadores Centrais Requisitados + Escala de Motoristas) */}
+            {/* ABA: Dashboard Geral da Frota (Executivo, Indicadores, Escala e Veículos) */}
             {activeNavTab === 'dashboard' && (
               <ExecutiveFleetDashboard
                 vehicles={vehicles}
@@ -1159,55 +1161,110 @@ export default function App() {
                 onOpenNewChamadoModal={() => setNewChamadoModalOpen(true)}
                 onScheduleNewTrip={() => {
                   setActiveNavTab('operacoes');
-                  handleRoleChange('solicitante');
+                  setDiarioViewMode('planilha');
                 }}
                 onRegisterNewVehicle={() => setNewVehicleModalOpen(true)}
+                hideHeader={false}
               />
             )}
 
-            {/* ABA 1: Diário de Bordo (Planilha Oficial de Tráfego e Percursos) */}
+            {/* ABA: Diário de Bordo & Rotina Operacional (Com Painel Geral da Frota, Planilha Oficial e Portal Operacional Alocados) */}
             {activeNavTab === 'operacoes' && (
               <div className="space-y-4">
-                {/* Seletor de Modo: Planilha Oficial vs Painel Operacional */}
-                <div className="bg-white px-4 py-2.5 rounded-2xl border border-slate-200/90 shadow-2xs flex flex-col sm:flex-row sm:items-center justify-between gap-3">
-                  <div className="flex items-center gap-2">
-                    <span className="text-xs font-bold text-slate-700 uppercase tracking-wide">
-                      Visualização:
+                {/* Seletor Integrado e Didático no Diário de Bordo */}
+                <div className="bg-white px-4 py-3 rounded-xl border border-slate-200/90 shadow-2xs flex flex-col md:flex-row md:items-center justify-between gap-3">
+                  <div className="flex flex-wrap items-center gap-2">
+                    <span className="text-xs font-bold text-slate-800 uppercase tracking-wide flex items-center gap-1.5 mr-1">
+                      <FileSpreadsheet className="w-4 h-4 text-[#05202B]" />
+                      Diário de Bordo:
                     </span>
-                    <div className="flex items-center bg-slate-100 p-1 rounded-xl">
+                    <div className="flex items-center bg-slate-100 p-1 rounded-lg gap-1">
                       <button
                         type="button"
-                        onClick={() => setDiarioViewMode('planilha')}
-                        className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all cursor-pointer flex items-center gap-1.5 ${
-                          diarioViewMode === 'planilha'
-                            ? 'bg-[#002B49] text-white shadow-xs'
-                            : 'text-slate-600 hover:text-slate-900'
+                        id="diario-tab-dashboard"
+                        onClick={() => setDiarioViewMode('dashboard')}
+                        className={`flex items-center gap-1.5 px-3 py-1.5 rounded-md text-xs font-semibold transition-all cursor-pointer ${
+                          diarioViewMode === 'dashboard'
+                            ? 'bg-[#05202B] text-white shadow-xs'
+                            : 'text-slate-600 hover:text-slate-900 hover:bg-slate-200/60'
                         }`}
+                        title="Painel Executivo da Frota com disponibilidade, indicadores e escala"
                       >
-                        <FileSpreadsheet className="w-3.5 h-3.5 text-amber-300" />
-                        <span>Planilha Oficial Diário de Bordo</span>
+                        <LayoutDashboard className="w-3.5 h-3.5" />
+                        <span>Painel da Frota</span>
                       </button>
                       <button
                         type="button"
-                        onClick={() => setDiarioViewMode('operacional')}
-                        className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition-all cursor-pointer flex items-center gap-1.5 ${
-                          diarioViewMode === 'operacional'
-                            ? 'bg-[#002B49] text-white shadow-xs'
-                            : 'text-slate-600 hover:text-slate-900'
+                        id="diario-tab-planilha"
+                        onClick={() => setDiarioViewMode('planilha')}
+                        className={`flex items-center gap-1.5 px-3 py-1.5 rounded-md text-xs font-semibold transition-all cursor-pointer ${
+                          diarioViewMode === 'planilha'
+                            ? 'bg-[#05202B] text-white shadow-xs'
+                            : 'text-slate-600 hover:text-slate-900 hover:bg-slate-200/60'
                         }`}
+                        title="Planilha oficial do Diário de Bordo com odômetro, histórico e assinaturas"
                       >
-                        <Car className="w-3.5 h-3.5 text-blue-300" />
-                        <span>Painel Operacional ({currentRole})</span>
+                        <FileSpreadsheet className="w-3.5 h-3.5" />
+                        <span>Planilha Oficial</span>
+                      </button>
+                      <button
+                        type="button"
+                        id="diario-tab-operacional"
+                        onClick={() => setDiarioViewMode('operacional')}
+                        className={`flex items-center gap-1.5 px-3 py-1.5 rounded-md text-xs font-semibold transition-all cursor-pointer ${
+                          diarioViewMode === 'operacional'
+                            ? 'bg-[#05202B] text-white shadow-xs'
+                            : 'text-slate-600 hover:text-slate-900 hover:bg-slate-200/60'
+                        }`}
+                        title="Portal de demandas operacionais do condutor ou gestor"
+                      >
+                        <Car className="w-3.5 h-3.5" />
+                        <span>Portal do {currentRole === 'administrador' || currentRole === 'gestor' ? 'Gestor' : isDriverRole(currentRole) ? 'Motorista' : 'Perfil'}</span>
                       </button>
                     </div>
                   </div>
 
-                  <span className="text-[11px] font-mono text-slate-400 hidden sm:inline">
-                    {diarioViewMode === 'planilha' ? 'Planilha Eletrônica Ativa (TJPR)' : 'Modo Operacional Ativo'}
-                  </span>
+                  <div className="flex items-center gap-3 text-xs text-slate-500 font-mono">
+                    <span className="flex items-center gap-1.5">
+                      <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
+                      <span>{vehicles.length} veículos</span>
+                    </span>
+                    <span className="text-slate-300">|</span>
+                    <span className="text-amber-700 font-semibold">
+                      {trips.filter(t => t.status === 'em_andamento').length} em trânsito
+                    </span>
+                  </div>
                 </div>
 
-                {diarioViewMode === 'planilha' ? (
+                {/* 1. VISÃO DO PAINEL DA FROTA ALOCADA DENTRO DO DIÁRIO DE BORDO */}
+                {diarioViewMode === 'dashboard' && (
+                  <ExecutiveFleetDashboard
+                    vehicles={vehicles}
+                    drivers={drivers}
+                    trips={trips}
+                    fuelLogs={fuelLogs}
+                    selectedComarca={selectedComarca}
+                    driverSchedules={driverSchedules}
+                    chamados={chamados}
+                    onOpenTripDetails={(trip) => setTripLogTrip(trip)}
+                    onOpenOfficialOrder={(trip) => setOfficialOrderTrip(trip)}
+                    onSaveTripSignature={handleSaveTripSignature}
+                    onOpenWhatsAppReservation={(trip, vehicle, driver) => {
+                      setWhatsappReservationTrip({ trip, vehicle, driver });
+                    }}
+                    onOpenSigaSolicitation={() => setSigaModalOpen(true)}
+                    onNavigateToChamados={() => setActiveNavTab('chamados')}
+                    onOpenNewChamadoModal={() => setNewChamadoModalOpen(true)}
+                    onScheduleNewTrip={() => {
+                      setDiarioViewMode('planilha');
+                    }}
+                    onRegisterNewVehicle={() => setNewVehicleModalOpen(true)}
+                    hideHeader={false}
+                  />
+                )}
+
+                {/* 2. VISÃO DA PLANILHA OFICIAL DO DIÁRIO DE BORDO */}
+                {diarioViewMode === 'planilha' && (
                   <DiarioDeBordoView
                     trips={trips}
                     vehicles={vehicles}
@@ -1219,8 +1276,12 @@ export default function App() {
                     onOpenTripSignature={(trip) => setSignatureModalTrip(trip)}
                     onAddTrip={handleAddTrip}
                     selectedComarca={selectedComarca}
+                    hideHeader={false}
                   />
-                ) : (
+                )}
+
+                {/* 3. VISÃO DO PORTAL OPERACIONAL */}
+                {diarioViewMode === 'operacional' && (
                   <>
                     {/* Visualização 1: Operador (Motorista) - Suas Demandas & Diário de Bordo */}
                     {(currentRole === 'operador' || currentRole === 'motorista') && (
@@ -1272,10 +1333,8 @@ export default function App() {
                         onNavigateToRelatorios={() => setActiveNavTab('relatorios')}
                         onOpenTripDetails={(trip) => setTripLogTrip(trip)}
                         onOpenTripSignature={(trip) => setSignatureModalTrip(trip)}
-                        onOpenWhatsAppReservation={(trip, vehicle, driver) => {
-                          setWhatsappReservationTrip({ trip, vehicle, driver });
-                        }}
-                        onOpenSigaSolicitation={() => setSigaModalOpen(true)}
+                        onOpenTeamsExtract={handleOpenTeamsExtract}
+                        onOpenTeamsConfig={() => setTeamsConfigModalOpen(true)}
                       />
                     )}
 

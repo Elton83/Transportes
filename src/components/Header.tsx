@@ -144,7 +144,7 @@ export const Header: React.FC<HeaderProps> = ({
   };
 
   return (
-    <header className="bg-[#002B49] text-white shadow-lg border-b-2 border-[#C4A052] sticky top-0 z-40">
+    <header className="bg-[#05202B] text-white shadow-sm border-b border-[#082E3C] sticky top-0 z-40">
       
       {/* ------------------------------------------------------------- */}
       {/* LINHA 1: IDENTIDADE TJPR, SELETOR DE PERFIS E USUÁRIO         */}
@@ -158,7 +158,7 @@ export const Header: React.FC<HeaderProps> = ({
               <button
                 type="button"
                 onClick={onOpenMobileSidebar}
-                className="lg:hidden p-1.5 rounded-lg text-amber-400 hover:text-white hover:bg-white/10 transition-colors cursor-pointer"
+                className="lg:hidden p-1.5 rounded-lg text-[#8E9CA8] hover:text-white hover:bg-white/10 transition-colors cursor-pointer"
                 title="Abrir Menu Lateral"
                 aria-label="Abrir Menu Lateral"
               >
@@ -170,7 +170,7 @@ export const Header: React.FC<HeaderProps> = ({
               <button
                 type="button"
                 onClick={onToggleSidebar}
-                className="hidden lg:flex p-1.5 rounded-lg text-amber-400 hover:text-white hover:bg-white/10 transition-colors cursor-pointer"
+                className="hidden lg:flex p-1.5 rounded-lg text-[#8E9CA8] hover:text-white hover:bg-white/10 transition-colors cursor-pointer"
                 title={isSidebarCollapsed ? "Expandir Menu Lateral" : "Recolher Menu Lateral"}
                 aria-label="Alternar Menu Lateral"
               >
@@ -178,27 +178,29 @@ export const Header: React.FC<HeaderProps> = ({
               </button>
             )}
 
-            {/* Brasão TJPR */}
-            <div className="flex items-center justify-center w-9 h-9 sm:w-10 sm:h-10 rounded-lg bg-white/10 border border-white/20 shadow-inner shrink-0">
-              <div className="relative flex flex-col items-center justify-center">
-                <Shield className="w-5 h-5 sm:w-6 sm:h-6 text-[#C4A052]" />
-                <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 font-serif font-black text-[7px] sm:text-[8px] text-white tracking-widest">
-                  TJPR
-                </div>
-              </div>
+            {/* Brasão TJPR da imagem de referência */}
+            <div className="w-7 h-7 flex items-center justify-center shrink-0">
+              <svg viewBox="0 0 28 32" className="w-6 h-6 text-white fill-none stroke-current" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round">
+                <path d="M14 3 L14 26" />
+                <path d="M7 8 L21 8" />
+                <circle cx="14" cy="3.5" r="1.5" />
+                <path d="M6 10 L3 15 L9 15 Z" />
+                <path d="M22 10 L19 15 L25 15 Z" />
+                <path d="M3 6 C3 6, 7 4, 14 4 C21 4, 25 6, 25 6 C25 16, 20 25, 14 28 C8 25, 3 16, 3 6 Z" />
+              </svg>
             </div>
 
             <div>
               <div className="flex items-center gap-1.5">
-                <span className="text-[10px] uppercase tracking-wider font-semibold text-blue-200 hidden sm:inline">
+                <span className="text-[10px] uppercase tracking-wider font-semibold text-[#8E9CA8] hidden sm:inline">
                   Tribunal de Justiça do Paraná
                 </span>
-                <span className="text-[9px] bg-amber-400/20 text-amber-300 px-1.5 py-0.2 rounded border border-amber-300/30 font-mono font-bold">
+                <span className="text-[9px] bg-white/10 text-white px-1.5 py-0.2 rounded border border-white/10 font-mono font-medium">
                   Frota: {totalVehicles} Veículos
                 </span>
               </div>
               <h1 className="text-sm sm:text-base font-bold tracking-tight text-white flex items-center gap-1.5">
-                SIGPAT <span className="text-blue-200 font-normal hidden md:inline">| Transportes Oficiais</span>
+                TJPR <span className="text-[#8E9CA8] font-normal hidden md:inline">| Gestão Integrada de Transportes</span>
               </h1>
             </div>
           </div>
@@ -206,9 +208,9 @@ export const Header: React.FC<HeaderProps> = ({
           {/* CENTRO: SELETOR DE PERFIS (RBAC) - SEMPRE VISÍVEL */}
           <div className="flex items-center">
             {/* Versão Desktop (Botões Segmentados) */}
-            <div className="hidden md:flex items-center bg-[#001D33] p-1 rounded-xl border border-white/15 shadow-inner">
-              <span className="text-[10px] text-slate-300 px-2 font-bold uppercase tracking-wider flex items-center gap-1">
-                <Shield className="w-3 h-3 text-[#C4A052]" />
+            <div className="hidden md:flex items-center bg-[#041C26] p-1 rounded-xl border border-white/10 shadow-inner">
+              <span className="text-[10px] text-[#8E9CA8] px-2 font-bold uppercase tracking-wider flex items-center gap-1">
+                <Shield className="w-3 h-3 text-[#8E9CA8]" />
                 Perfil:
               </span>
               
@@ -216,10 +218,10 @@ export const Header: React.FC<HeaderProps> = ({
                 id="role-btn-admin"
                 type="button"
                 onClick={() => handleRoleSelect('administrador')}
-                className={`flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-xs font-semibold transition-all cursor-pointer ${
+                className={`flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-xs font-medium transition-all cursor-pointer ${
                   currentRole === 'administrador' || currentRole === 'gestor'
-                    ? 'bg-[#0084C7] text-white shadow-sm'
-                    : 'text-slate-300 hover:text-white hover:bg-white/5'
+                    ? 'bg-white/15 text-white shadow-xs font-semibold'
+                    : 'text-[#8E9CA8] hover:text-white hover:bg-white/5'
                 }`}
                 title="Acesso completo ao sistema e à frota inteira (250 veículos)"
               >
@@ -231,10 +233,10 @@ export const Header: React.FC<HeaderProps> = ({
                 id="role-btn-coordenador"
                 type="button"
                 onClick={() => handleRoleSelect('coordenador')}
-                className={`flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-xs font-semibold transition-all cursor-pointer ${
+                className={`flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-xs font-medium transition-all cursor-pointer ${
                   currentRole === 'coordenador'
-                    ? 'bg-[#0084C7] text-white shadow-sm'
-                    : 'text-slate-300 hover:text-white hover:bg-white/5'
+                    ? 'bg-white/15 text-white shadow-xs font-semibold'
+                    : 'text-[#8E9CA8] hover:text-white hover:bg-white/5'
                 }`}
                 title="Acesso regional da comarca e chamados de apoio"
               >
@@ -246,16 +248,16 @@ export const Header: React.FC<HeaderProps> = ({
                 id="role-btn-operador"
                 type="button"
                 onClick={() => handleRoleSelect('motorista')}
-                className={`flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-xs font-bold transition-all cursor-pointer ${
+                className={`flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-xs font-medium transition-all cursor-pointer ${
                   isDriver
-                    ? 'bg-amber-400 text-slate-950 shadow-sm'
-                    : 'text-amber-300 hover:text-white hover:bg-amber-400/10'
+                    ? 'bg-white/15 text-white shadow-xs font-semibold'
+                    : 'text-[#8E9CA8] hover:text-white hover:bg-white/5'
                 }`}
                 title="Acesso estrito do condutor: 4 módulos autorizados"
               >
                 <Car className="w-3.5 h-3.5" />
                 <span>Motorista</span>
-                <span className={`text-[9px] px-1 rounded font-mono ${isDriver ? 'bg-black/20 text-slate-950' : 'bg-amber-400/20 text-amber-300'}`}>
+                <span className={`text-[9px] px-1 rounded font-mono ${isDriver ? 'bg-white/20 text-white' : 'bg-white/5 text-[#8E9CA8]'}`}>
                   Restrito
                 </span>
               </button>
@@ -264,10 +266,10 @@ export const Header: React.FC<HeaderProps> = ({
                 id="role-btn-solicitante"
                 type="button"
                 onClick={() => handleRoleSelect('solicitante')}
-                className={`flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-xs font-semibold transition-all cursor-pointer ${
+                className={`flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-xs font-medium transition-all cursor-pointer ${
                   currentRole === 'solicitante'
-                    ? 'bg-[#0084C7] text-white shadow-sm'
-                    : 'text-slate-300 hover:text-white hover:bg-white/5'
+                    ? 'bg-white/15 text-white shadow-xs font-semibold'
+                    : 'text-[#8E9CA8] hover:text-white hover:bg-white/5'
                 }`}
                 title="Portal de requisição e acompanhamento de reservas"
               >
@@ -279,35 +281,32 @@ export const Header: React.FC<HeaderProps> = ({
                 id="role-btn-visitante"
                 type="button"
                 onClick={() => handleRoleSelect('visitante')}
-                className={`flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-xs font-bold transition-all cursor-pointer ${
+                className={`flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-xs font-medium transition-all cursor-pointer ${
                   currentRole === 'visitante'
-                    ? 'bg-emerald-600 text-white shadow-sm ring-1 ring-emerald-300'
-                    : 'text-emerald-300 hover:text-white hover:bg-emerald-500/10'
+                    ? 'bg-white/15 text-white shadow-xs font-semibold'
+                    : 'text-[#8E9CA8] hover:text-white hover:bg-white/5'
                 }`}
                 title="Portal do Visitante: Solicitação rápida de viagem e reserva de carro"
               >
                 <Compass className="w-3.5 h-3.5" />
                 <span>Visitante</span>
-                <span className={`text-[9px] px-1 rounded font-mono ${currentRole === 'visitante' ? 'bg-black/20 text-white' : 'bg-emerald-400/20 text-emerald-300'}`}>
-                  Público
-                </span>
               </button>
             </div>
 
             {/* Versão Mobile (Select Compacto Estilizado) */}
-            <div className="flex md:hidden items-center bg-[#001D33] px-2 py-1 rounded-lg border border-white/20 text-xs">
-              <Shield className="w-3 h-3 text-[#C4A052] mr-1.5" />
+            <div className="flex md:hidden items-center bg-[#041C26] px-2 py-1 rounded-lg border border-white/10 text-xs">
+              <Shield className="w-3 h-3 text-[#8E9CA8] mr-1.5" />
               <select
                 aria-label="Selecionar Perfil de Acesso"
                 value={isDriver ? 'motorista' : currentRole}
                 onChange={(e) => handleRoleSelect(e.target.value as Role)}
-                className="bg-transparent text-white font-semibold text-xs focus:outline-none cursor-pointer pr-1"
+                className="bg-transparent text-white font-medium text-xs focus:outline-none cursor-pointer pr-1"
               >
-                <option value="administrador" className="bg-[#002B49] text-white">Administrador (Total)</option>
-                <option value="coordenador" className="bg-[#002B49] text-white">Coordenador (Comarca)</option>
-                <option value="motorista" className="bg-[#002B49] text-white">Motorista (Restrito)</option>
-                <option value="solicitante" className="bg-[#002B49] text-white">Solicitante (SIGA)</option>
-                <option value="visitante" className="bg-[#002B49] text-white">Visitante (Solicitação Rápida)</option>
+                <option value="administrador" className="bg-[#05202B] text-white">Administrador (Total)</option>
+                <option value="coordenador" className="bg-[#05202B] text-white">Coordenador (Comarca)</option>
+                <option value="motorista" className="bg-[#05202B] text-white">Motorista (Restrito)</option>
+                <option value="solicitante" className="bg-[#05202B] text-white">Solicitante (SIGA)</option>
+                <option value="visitante" className="bg-[#05202B] text-white">Visitante (Solicitação Rápida)</option>
               </select>
             </div>
           </div>
@@ -316,8 +315,8 @@ export const Header: React.FC<HeaderProps> = ({
           <div className="flex items-center gap-2 sm:gap-2.5 shrink-0">
             {/* Comarca Dropdown (visível em telas médias ou superiores) */}
             {!isDriver ? (
-              <div className="hidden lg:flex items-center gap-1.5 bg-white/10 px-2 py-1 rounded-lg border border-white/15 text-xs">
-                <MapPin className="w-3.5 h-3.5 text-amber-300" />
+              <div className="hidden lg:flex items-center gap-1.5 bg-white/5 px-2 py-1 rounded-lg border border-white/10 text-xs">
+                <MapPin className="w-3.5 h-3.5 text-[#8E9CA8]" />
                 <select
                   aria-label="Selecionar Comarca do TJPR"
                   value={selectedComarca}
@@ -325,15 +324,15 @@ export const Header: React.FC<HeaderProps> = ({
                   className="bg-transparent text-white text-xs focus:outline-none cursor-pointer pr-1 max-w-[140px]"
                 >
                   {comarcas.map((c) => (
-                    <option key={c} value={c} className="bg-[#002B49] text-white">
+                    <option key={c} value={c} className="bg-[#05202B] text-white">
                       {c}
                     </option>
                   ))}
                 </select>
               </div>
             ) : (
-              <div className="hidden lg:flex items-center gap-1.5 bg-amber-400/15 px-2.5 py-1 rounded-lg border border-amber-400/30 text-xs text-amber-200">
-                <MapPin className="w-3 h-3 text-amber-300" />
+              <div className="hidden lg:flex items-center gap-1.5 bg-white/5 px-2.5 py-1 rounded-lg border border-white/10 text-xs text-white">
+                <MapPin className="w-3.5 h-3.5 text-[#8E9CA8]" />
                 <span>{currentDriver?.comarca.split(' - ')[0] || 'Curitiba'}</span>
               </div>
             )}
@@ -344,11 +343,11 @@ export const Header: React.FC<HeaderProps> = ({
                 id="header-notif-btn"
                 aria-label="Abrir notificações do sistema"
                 onClick={() => setShowNotifications(!showNotifications)}
-                className="relative p-1.5 rounded-lg text-slate-200 hover:text-white hover:bg-white/10 transition-colors cursor-pointer"
+                className="relative p-1.5 rounded-lg text-[#8E9CA8] hover:text-white hover:bg-white/10 transition-colors cursor-pointer"
               >
                 <Bell className="w-4 h-4 sm:w-5 sm:h-5" />
                 {unreadCount > 0 && (
-                  <span className="absolute top-0.5 right-0.5 flex items-center justify-center min-w-4 h-4 px-1 text-[10px] font-bold text-white bg-red-600 rounded-full animate-pulse">
+                  <span className="absolute -top-0.5 -right-0.5 w-4 h-4 bg-[#EF5350] text-white text-[10px] font-bold rounded-full flex items-center justify-center shadow-xs">
                     {unreadCount}
                   </span>
                 )}
