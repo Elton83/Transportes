@@ -661,41 +661,35 @@ export const VisitorPortal: React.FC<VisitorPortalProps> = ({
   }, [solicitanteRequests, searchProtocolo]);
 
   return (
-    <div className="max-w-4xl mx-auto space-y-5">
+    <div className="max-w-6xl mx-auto space-y-5">
 
       {/* ------------------------------------------------------------- */}
-      {/* BARRA SUPERIOR: KEYCLOAK SSO, HÉRCULES E SELETOR DE ABAS      */}
+      {/* BARRA SUPERIOR: IDENTIFICAÇÃO E SELETOR DE ABAS ALINHADOS     */}
       {/* ------------------------------------------------------------- */}
-      <div className="bg-white rounded-2xl border border-slate-200/90 px-4 py-3 shadow-2xs flex flex-col md:flex-row md:items-center justify-between gap-3">
-        <div className="flex items-center gap-2.5">
+      <div className="bg-white rounded-2xl border border-slate-200/90 px-4 py-3 shadow-2xs flex flex-col lg:flex-row lg:items-center justify-between gap-3">
+        <div className="flex items-center gap-2.5 min-w-0">
           <div className="w-9 h-9 rounded-xl bg-[#05202B] text-white flex items-center justify-center shrink-0 shadow-2xs border border-white/10">
             <Compass className="w-5 h-5 text-amber-300" />
           </div>
-          <div>
-            <div className="flex items-center gap-1.5 flex-wrap">
-              <span className="text-[10px] font-extrabold uppercase tracking-wider bg-emerald-100 text-emerald-900 px-2 py-0.5 rounded border border-emerald-300 flex items-center gap-1">
-                <Check className="w-3 h-3 text-emerald-700" />
-                Hércules TJPR Integrado
-              </span>
-              <span className="text-xs font-bold text-slate-800">
-                Portal de Solicitação de Veículo
-              </span>
-            </div>
-            <p className="text-[11px] text-slate-500 mt-0.5">
+          <div className="min-w-0">
+            <h1 className="text-sm font-bold text-slate-800 leading-tight">
+              Portal de Solicitação de Veículo
+            </h1>
+            <p className="text-[11px] text-slate-500 mt-0.5 truncate">
               Conectado: <strong className="text-slate-800">{solicitanteNome}</strong> ({cargoServidor} • {matriculaInput})
             </p>
           </div>
         </div>
 
-        {/* Abas Superiores de Navegação */}
-        <div className="flex items-center gap-1.5 flex-wrap">
+        {/* Abas Superiores de Navegação - Todos na mesma linha e alinhados */}
+        <div className="flex items-center gap-1.5 shrink-0 flex-nowrap overflow-x-auto">
           <button
             type="button"
             onClick={() => {
               setActiveTab('formulario');
               setSubmissionResult(null);
             }}
-            className={`text-xs px-3 py-1.5 rounded-xl font-semibold border transition-all cursor-pointer flex items-center gap-1.5 ${
+            className={`h-9 text-xs px-3.5 rounded-xl font-semibold border transition-all cursor-pointer whitespace-nowrap inline-flex items-center gap-1.5 shrink-0 ${
               activeTab === 'formulario'
                 ? 'bg-[#05202B] text-white border-[#05202B] shadow-2xs'
                 : 'bg-slate-50 hover:bg-slate-100 text-slate-700 border-slate-200'
@@ -708,7 +702,7 @@ export const VisitorPortal: React.FC<VisitorPortalProps> = ({
           <button
             type="button"
             onClick={() => setActiveTab('historico')}
-            className={`text-xs px-3 py-1.5 rounded-xl font-semibold border transition-all cursor-pointer flex items-center gap-1.5 ${
+            className={`h-9 text-xs px-3.5 rounded-xl font-semibold border transition-all cursor-pointer whitespace-nowrap inline-flex items-center gap-1.5 shrink-0 ${
               activeTab === 'historico'
                 ? 'bg-[#05202B] text-white border-[#05202B] shadow-2xs'
                 : 'bg-slate-50 hover:bg-slate-100 text-slate-700 border-slate-200'
@@ -717,7 +711,9 @@ export const VisitorPortal: React.FC<VisitorPortalProps> = ({
             <FileText className="w-3.5 h-3.5 text-blue-400" />
             <span>Histórico de Viagens</span>
             {totalPedidosCount > 0 && (
-              <span className="bg-white/20 text-white text-[10px] px-1.5 py-0.2 rounded-full font-mono font-bold">
+              <span className={`text-[10px] px-1.5 py-0.2 rounded-full font-mono font-bold ${
+                activeTab === 'historico' ? 'bg-white/20 text-white' : 'bg-slate-200 text-slate-700'
+              }`}>
                 {totalPedidosCount}
               </span>
             )}
@@ -726,7 +722,7 @@ export const VisitorPortal: React.FC<VisitorPortalProps> = ({
           <button
             type="button"
             onClick={() => setActiveTab('consultar')}
-            className={`text-xs px-3 py-1.5 rounded-xl font-semibold border transition-all cursor-pointer flex items-center gap-1.5 ${
+            className={`h-9 text-xs px-3.5 rounded-xl font-semibold border transition-all cursor-pointer whitespace-nowrap inline-flex items-center gap-1.5 shrink-0 ${
               activeTab === 'consultar'
                 ? 'bg-amber-400 text-slate-950 border-amber-500 shadow-2xs font-bold'
                 : 'bg-slate-50 hover:bg-slate-100 text-slate-700 border-slate-200'
@@ -740,7 +736,7 @@ export const VisitorPortal: React.FC<VisitorPortalProps> = ({
             <button
               type="button"
               onClick={onNavigateToCoordinator}
-              className="text-xs px-3 py-1.5 rounded-xl font-semibold bg-[#041C26] hover:bg-[#082E3C] text-slate-200 hover:text-white transition-all cursor-pointer flex items-center gap-1.5 border border-slate-700/60 shadow-2xs"
+              className="h-9 text-xs px-3.5 rounded-xl font-semibold bg-[#041C26] hover:bg-[#082E3C] text-slate-200 hover:text-white transition-all cursor-pointer whitespace-nowrap inline-flex items-center gap-1.5 border border-slate-700/60 shadow-2xs shrink-0"
               title="Acessar painel da Coordenação de Frotas"
             >
               <span>Coordenação</span>
@@ -1231,13 +1227,8 @@ export const VisitorPortal: React.FC<VisitorPortalProps> = ({
                   Modalidade do Pedido & Identificação do Servidor
                 </h2>
                 <p className="text-xs text-slate-500">
-                  Defina a modalidade do deslocamento e confirme seus dados integrados com o Sistema Hércules TJPR.
+                  Defina a modalidade do deslocamento e confirme os dados para solicitação.
                 </p>
-              </div>
-
-              <div className="flex items-center gap-1.5 bg-emerald-50 border border-emerald-200 px-2.5 py-1 rounded-lg text-emerald-800 text-xs font-semibold shrink-0">
-                <BadgeCheck className="w-4 h-4 text-emerald-600" />
-                <span>Sistema Hércules Ativo</span>
               </div>
             </div>
 
@@ -1682,11 +1673,11 @@ export const VisitorPortal: React.FC<VisitorPortalProps> = ({
                 </div>
               </div>
 
-              {/* BARRA DE MATRÍCULA HÉRCULES (FIGURA EM ANEXO) */}
+              {/* BARRA DE MATRÍCULA FUNCIONAL (ADICIONAR PASSAGEIRO) */}
               <div className="bg-white rounded-xl p-4 border border-slate-200/90 shadow-2xs space-y-3">
                 <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-1">
                   <label className="block text-xs font-bold text-slate-900">
-                    2. Matrícula do Servidor & Integração com Sistema Hércules TJPR:
+                    2. Matrícula Funcional do Servidor / Passageiro:
                   </label>
                   <span className="text-[11px] text-slate-500">
                     Preenchimento automático imediato ao inserir a matrícula funcional
@@ -1718,13 +1709,13 @@ export const VisitorPortal: React.FC<VisitorPortalProps> = ({
                     className="px-4 py-2.5 rounded-xl bg-[#05202B] hover:bg-[#082E3C] text-white text-xs font-bold flex items-center justify-center gap-1.5 transition-colors cursor-pointer shrink-0 shadow-2xs"
                   >
                     <Sparkles className="w-3.5 h-3.5 text-amber-300" />
-                    <span>Consultar no Hércules</span>
+                    <span>Adicionar por Matrícula</span>
                   </button>
                 </div>
 
-                {/* Exemplos Hércules TJPR (Chips idênticos à imagem em anexo) */}
+                {/* Exemplos TJPR */}
                 <div className="flex items-center gap-1.5 flex-wrap pt-0.5">
-                  <span className="text-[10px] text-slate-500 font-semibold">Exemplos Hércules TJPR:</span>
+                  <span className="text-[10px] text-slate-500 font-semibold">Exemplos cadastrados:</span>
                   {HERCULES_SERVIDORES.filter(s => s.matricula !== matriculaInput).map((serv) => (
                     <button
                       key={serv.matricula}
