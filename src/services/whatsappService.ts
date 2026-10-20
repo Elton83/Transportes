@@ -53,6 +53,45 @@ ${customNote ? `💬 *Observação da Coordenação:* "${customNote}"\n\n` : ''}
 Central de Tráfego: (41) 3200-2100 | Plantão: (41) 98822-4910`;
 };
 
+export const formatWhatsAppSolicitationNotification = (
+  chamadoCodigo: string,
+  solicitanteNome: string,
+  tipoServico: 'com_motorista' | 'reserva_veiculo',
+  origem: string,
+  destino: string,
+  dataSaida: string,
+  horaSaida: string,
+  dataRetorno?: string,
+  horaRetorno?: string,
+  matricula?: string
+): string => {
+  const modalidade = tipoServico === 'com_motorista'
+    ? '🚗 Viagem com Motorista Oficial Credenciado'
+    : '🔑 Reserva de Veículo Oficial (Direção Própria)';
+  
+  return `🏛️ *TRIBUNAL DE JUSTIÇA DO PARANÁ*
+*COORDENAÇÃO REGIONAL DE FROTAS | PROTOCOLO DE SOLICITAÇÃO*
+
+Prezado(a) *${solicitanteNome}* ${matricula ? `(Matrícula: *${matricula}*)` : ''},
+Sua solicitação de transporte oficial foi protocolada com êxito no sistema SIGPAT / Frotas TJPR.
+
+📋 *Nº do Chamado / Protocolo:* *${chamadoCodigo}*
+📌 *Status da Demanda:* 🟡 *EM ANÁLISE NA COORDENAÇÃO*
+🚘 *Modalidade Escolhida:* ${modalidade}
+
+📍 *Local de Partida:* ${origem}
+🎯 *Destino Solicitado:* ${destino}
+🗓️ *Data e Hora de Saída:* ${dataSaida} às ${horaSaida}
+⏱️ *Previsão de Retorno:* ${dataRetorno ? `${dataRetorno} às ${horaRetorno || '18:00'}` : 'Em aberto (será concluído no Diário de Bordo pelo condutor)'}
+
+ℹ️ *Orientações & Próximas Etapas:*
+1. A Coordenação de Frotas dimensionará e alocará o veículo ideal para a rota e número de ocupantes.
+2. Você receberá uma nova notificação por WhatsApp com os dados do condutor e placa do carro assim que despachado.
+3. Para consultar o andamento, acesse o Portal de Solicitação com o protocolo acima.
+
+Central de Gestão e Logística TJPR: (41) 3200-2100 | Plantão: (41) 98822-4910`;
+};
+
 export const formatWhatsAppDriverScheduleMessage = (
   driver: Driver,
   scheduleItem?: {

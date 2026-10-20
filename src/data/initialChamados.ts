@@ -55,6 +55,61 @@ export const INITIAL_CHAMADOS: Chamado[] = [
     ]
   },
   {
+    id: 'cham-elton-1',
+    codigo: 'CHA-2026-0048',
+    titulo: 'Solicitação de Viagem c/ Motorista (Portal do Visitante) - Londrina',
+    descricao: 'DEMANDA PROTOCOLADA NO PORTAL DO VISITANTE TJPR:\n• Solicitante: Dr. Elton Rabelo (Servidor do Judiciário)\n• Documento: 028.491.739-12 | WhatsApp: (41) 99820-1122 | E-mail: elton.rabelo@tjpr.jus.br\n• Tipo: Viagem com Motorista Oficial\n• Trajeto: Saída de "Palácio da Justiça - Centro Cívico, Curitiba" -> Destino: "Fórum da Comarca de Londrina (PR)"\n• Partida: 2026-09-22 às 08:00 | Retorno: 2026-09-22 às 19:00\n• Motivo da Pendência: Em análise na fila da Coordenação (aguardando designação de condutor e veículo)',
+    tipo: 'solicitacao_veiculo',
+    prioridade: 'alta',
+    status: 'aberto',
+    dataAbertura: '2026-09-19 09:15',
+    solicitanteNome: 'Dr. Elton Rabelo',
+    solicitanteCargo: 'Servidor do Judiciário',
+    solicitanteMatricula: '028.491.739-12',
+    comarca: 'Curitiba - Sede Administrativa',
+    prazoSugerido: '2026-09-22 08:00',
+    processoSei: 'VIS-0284917.8.16.6000',
+    tripIdVinculada: 'trip-elton-2',
+    respostas: [
+      {
+        id: 'resp-elton-1',
+        autor: 'Sistema SIGPAT (Portal do Visitante)',
+        cargo: 'Protocolo Eletrônico TJPR',
+        dataHora: '2026-09-19 09:15',
+        mensagem: 'Solicitação protocolada sob nº CHA-2026-0048 via Portal do Visitante. Entrada direta na fila de chamados em aberto da Coordenação de Frotas de Curitiba.',
+        isAdmin: false,
+      }
+    ]
+  },
+  {
+    id: 'cham-elton-2',
+    codigo: 'CHA-2026-0042',
+    titulo: 'Diligência a Paranaguá - Transporte de Autos (Pendente Assinatura)',
+    descricao: 'Viagem operacional concluída pelo condutor Carlos Eduardo Silveira (TJ-104). Aguardando assinatura/visto eletrônico do passageiro solicitante Dr. Elton Rabelo para homologação definitiva do processo SEI.',
+    tipo: 'solicitacao_veiculo',
+    prioridade: 'media',
+    status: 'em_atendimento',
+    dataAbertura: '2026-09-16 10:20',
+    solicitanteNome: 'Dr. Elton Rabelo',
+    solicitanteCargo: 'Servidor do Judiciário',
+    solicitanteMatricula: '028.491.739-12',
+    comarca: 'Curitiba - Sede Administrativa',
+    veiculoPrefixo: 'TJ-104',
+    prazoSugerido: '2026-09-17 17:30',
+    processoSei: '0021940-52.2026.8.16.6000',
+    tripIdVinculada: 'trip-elton-1',
+    respostas: [
+      {
+        id: 'resp-elton-2',
+        autor: 'Coordenação de Transportes',
+        cargo: 'Fiscal Operacional TJPR',
+        dataHora: '2026-09-17 17:40',
+        mensagem: 'Deslocamento concluído pelo motorista. Registrado odômetro final 34.320 km. Pendente visto/assinatura digital do solicitante.',
+        isAdmin: true,
+      }
+    ]
+  },
+  {
     id: 'cham-2',
     codigo: 'CHA-2026-0038',
     titulo: 'Solicitação de Van de Apoio para Mutirão Cível da Comarca',

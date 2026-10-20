@@ -572,9 +572,22 @@ export interface MeuBeneficioApiConfig {
   divergenciasDetectadas: number;
 }
 
+export interface PassengerDetail {
+  id: string;
+  tipo: 'servidor_hercules' | 'convidado_cpf' | 'observacao';
+  nome: string;
+  matricula?: string;
+  cpf?: string;
+  cargo?: string;
+  docValidado?: boolean;
+}
+
 export interface VisitorSolicitationData {
   tipoServico: 'com_motorista' | 'reserva_veiculo';
   solicitanteNome: string;
+  matriculaServidor?: string;
+  cargoServidor?: string;
+  lotacaoServidor?: string;
   documentoOuCpf: string;
   telefone: string;
   email: string;
@@ -584,13 +597,16 @@ export interface VisitorSolicitationData {
   destino: string;
   dataSaida: string;
   horaSaida: string;
-  dataRetorno: string;
-  horaRetorno: string;
+  dataRetorno?: string;
+  horaRetorno?: string;
+  retornoEmAberto?: boolean;
   finalidade?: string;
   passageirosQtd: number;
   demaisPassageiros?: string[];
+  demaisPassageirosDetalhes?: PassengerDetail[];
   categoriaVeiculoPreferida?: string;
   observacoes?: string;
+  enviarWhatsApp?: boolean;
 }
 
 // =========================================================

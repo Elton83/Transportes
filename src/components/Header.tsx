@@ -286,10 +286,10 @@ export const Header: React.FC<HeaderProps> = ({
                     ? 'bg-white/15 text-white shadow-xs font-semibold'
                     : 'text-[#8E9CA8] hover:text-white hover:bg-white/5'
                 }`}
-                title="Portal do Visitante: Solicitação rápida de viagem e reserva de carro"
+                title="Solicitação de Veículo: Viagem com motorista oficial ou reserva de carro"
               >
                 <Compass className="w-3.5 h-3.5" />
-                <span>Visitante</span>
+                <span>Solicitação de Veículo</span>
               </button>
             </div>
 
@@ -306,7 +306,7 @@ export const Header: React.FC<HeaderProps> = ({
                 <option value="coordenador" className="bg-[#05202B] text-white">Coordenador (Comarca)</option>
                 <option value="motorista" className="bg-[#05202B] text-white">Motorista (Restrito)</option>
                 <option value="solicitante" className="bg-[#05202B] text-white">Solicitante (SIGA)</option>
-                <option value="visitante" className="bg-[#05202B] text-white">Visitante (Solicitação Rápida)</option>
+                <option value="visitante" className="bg-[#05202B] text-white">Solicitação de Veículo</option>
               </select>
             </div>
           </div>
@@ -424,7 +424,7 @@ export const Header: React.FC<HeaderProps> = ({
                   : currentRole === 'solicitante'
                   ? 'SO'
                   : currentRole === 'visitante'
-                  ? 'VI'
+                  ? 'SV'
                   : 'AD'}
               </div>
               <div className="hidden xl:block text-left">
@@ -436,7 +436,7 @@ export const Header: React.FC<HeaderProps> = ({
                     : currentRole === 'solicitante'
                     ? 'Dr. Roberto Magalhães'
                     : currentRole === 'visitante'
-                    ? 'Visitante / Solicitante'
+                    ? 'Dr. Elton Rabelo'
                     : 'Dr. Marcelo Ramos'}
                 </p>
                 <p className="text-[10px] text-blue-200 truncate max-w-[130px]">
@@ -447,7 +447,7 @@ export const Header: React.FC<HeaderProps> = ({
                     : currentRole === 'solicitante'
                     ? 'Magistrado Solicitante'
                     : currentRole === 'visitante'
-                    ? 'Solicitação Rápida'
+                    ? 'Solicitação de Veículo'
                     : 'Gestor Geral SIGPAT'}
                 </p>
               </div>

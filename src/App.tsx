@@ -799,13 +799,13 @@ export default function App() {
       destino: solicitation.destino,
       dataSaida: solicitation.dataSaida,
       horaSaida: solicitation.horaSaida,
-      dataRetornoPrevista: solicitation.dataRetorno,
-      horaRetornoPrevista: solicitation.horaRetorno,
+      dataRetornoPrevista: solicitation.dataRetorno || 'A definir no retorno',
+      horaRetornoPrevista: solicitation.horaRetorno || 'A preencher pelo motorista',
       solicitanteNome: solicitation.solicitanteNome,
-      solicitanteCargo: `Visitante / ${solicitation.orgaoOuVinculo}`,
-      solicitanteVara: `Portal do Visitante TJPR • ${solicitation.orgaoOuVinculo}`,
+      solicitanteCargo: `Servidor / ${solicitation.orgaoOuVinculo}`,
+      solicitanteVara: `Solicitação de Veículo TJPR • ${solicitation.orgaoOuVinculo}`,
       comarca: solicitation.comarca,
-      finalidade: `${solicitation.tipoServico === 'com_motorista' ? '[Viagem c/ Motorista]' : '[Reserva de Carro]'} ${solicitation.finalidade || 'Deslocamento Institucional TJPR'}`,
+      finalidade: `${solicitation.tipoServico === 'com_motorista' ? '[Viagem c/ Motorista Oficial]' : '[Reserva de Carro - Direção Própria]'} ${solicitation.finalidade || 'Deslocamento Institucional TJPR'}`,
       passageiros: [
         solicitation.solicitanteNome,
         ...(solicitation.demaisPassageiros && solicitation.demaisPassageiros.length > 0
@@ -814,7 +814,7 @@ export default function App() {
       ],
       diarioBordo: [],
       dataCriacao: formattedDate,
-      observacoes: `WhatsApp: ${solicitation.telefone} | E-mail: ${solicitation.email} | Doc: ${solicitation.documentoOuCpf}${solicitation.demaisPassageiros && solicitation.demaisPassageiros.length > 0 ? ` | Demais Passageiros: ${solicitation.demaisPassageiros.join('; ')}` : ''}${solicitation.observacoes ? ` | Observações: ${solicitation.observacoes}` : ''}`,
+      observacoes: `Matrícula: ${solicitation.matriculaServidor || 'TJPR-98.341-2'} | WhatsApp: ${solicitation.telefone} | E-mail: ${solicitation.email} | Doc: ${solicitation.documentoOuCpf}${solicitation.demaisPassageiros && solicitation.demaisPassageiros.length > 0 ? ` | Demais Passageiros: ${solicitation.demaisPassageiros.join('; ')}` : ''}${solicitation.observacoes ? ` | Observações: ${solicitation.observacoes}` : ''}`,
       processoSei: `VIS-${solicitation.documentoOuCpf.replace(/\D/g, '').substring(0, 7) || '2026'}.8.16.6000`,
     };
 
@@ -823,16 +823,16 @@ export default function App() {
       id: chamadoId,
       codigo: chamadoCodigo,
       titulo: solicitation.tipoServico === 'com_motorista'
-        ? `Solicitação de Viagem c/ Motorista (Portal do Visitante) - ${solicitation.destino}`
-        : `Reserva de Veículo Oficial (Portal do Visitante) - ${solicitation.destino}`,
-      descricao: `DEMANDA PROTOCOLADA VIA KEYCLOAK / PORTAL DO VISITANTE TJPR:\n• Solicitante Autenticado: ${solicitation.solicitanteNome} (${solicitation.orgaoOuVinculo})\n• Documento: ${solicitation.documentoOuCpf} | WhatsApp: ${solicitation.telefone} | E-mail: ${solicitation.email}\n• Tipo de Atendimento: ${solicitation.tipoServico === 'com_motorista' ? 'Viagem com Motorista Oficial' : 'Reserva de Carro (Direção Própria)'}\n• Trajeto: Saída de "${solicitation.origem}" -> Destino: "${solicitation.destino}"\n• Partida: ${solicitation.dataSaida} às ${solicitation.horaSaida} | Retorno: ${solicitation.dataRetorno} às ${solicitation.horaRetorno}\n• Total de Passageiros: ${solicitation.passageirosQtd} pessoa(s)${solicitation.demaisPassageiros && solicitation.demaisPassageiros.length > 0 ? `\n• Demais Passageiros Identificados: ${solicitation.demaisPassageiros.join(', ')}` : ''}\n• Categoria Pretendida: ${solicitation.categoriaVeiculoPreferida || 'Sedan Executivo'}${solicitation.observacoes ? `\n• Observações: "${solicitation.observacoes}"` : ''}`,
+        ? `Solicitação de Viagem c/ Motorista Oficial - ${solicitation.destino}`
+        : `Reserva de Veículo (Direção Própria) - ${solicitation.destino}`,
+      descricao: `DEMANDA PROTOCOLADA NO SISTEMA DE SOLICITAÇÃO DE VEÍCULOS TJPR:\n• Solicitante: ${solicitation.solicitanteNome} (${solicitation.orgaoOuVinculo})\n• Matrícula Hércules: ${solicitation.matriculaServidor || 'TJPR-98.341-2'} | CPF: ${solicitation.documentoOuCpf}\n• Contato: WhatsApp ${solicitation.telefone} | E-mail: ${solicitation.email}\n• Modalidade: ${solicitation.tipoServico === 'com_motorista' ? 'Viagem com Motorista Oficial Credenciado' : 'Reserva de Carro Oficial (Direção Própria pelo Servidor)'}\n• Trajeto: Saída de "${solicitation.origem}" -> Destino: "${solicitation.destino}"\n• Partida: ${solicitation.dataSaida} às ${solicitation.horaSaida}\n• Retorno Previsto: ${solicitation.dataRetorno ? `${solicitation.dataRetorno} às ${solicitation.horaRetorno}` : 'Em aberto (preenchimento no diário de bordo pelo condutor)'}\n• Total de Passageiros: ${solicitation.passageirosQtd} pessoa(s)${solicitation.demaisPassageiros && solicitation.demaisPassageiros.length > 0 ? `\n• Demais Passageiros Identificados: ${solicitation.demaisPassageiros.join(', ')}` : ''}\n• Alocação do Veículo: A cargo da Gestão/Coordenação de Frotas TJPR${solicitation.observacoes ? `\n• Observações: "${solicitation.observacoes}"` : ''}`,
       tipo: 'solicitacao_veiculo',
       prioridade: 'alta',
-      status: 'aberto', // CAI DIRETAMENTE NA LISTA DE CHAMADOS ABERTO DO COORDENADOR
+      status: 'aberto',
       dataAbertura: formattedDate,
       solicitanteNome: solicitation.solicitanteNome,
-      solicitanteCargo: `Visitante / ${solicitation.orgaoOuVinculo}`,
-      solicitanteMatricula: solicitation.documentoOuCpf,
+      solicitanteCargo: `Servidor / ${solicitation.orgaoOuVinculo}`,
+      solicitanteMatricula: solicitation.matriculaServidor || solicitation.documentoOuCpf,
       comarca: solicitation.comarca,
       prazoSugerido: `${solicitation.dataSaida} ${solicitation.horaSaida}`,
       tripIdVinculada: tripId,
@@ -840,7 +840,7 @@ export default function App() {
       respostas: [
         {
           id: `resp-${Date.now()}`,
-          autor: 'Sistema SIGPAT (Portal do Visitante)',
+          autor: 'Sistema SIGPAT (Solicitação de Veículo)',
           cargo: 'Protocolo Eletrônico TJPR',
           dataHora: formattedDate,
           mensagem: `Demanda protocolada sob nº ${chamadoCodigo}. Entrada direta na fila de chamados em aberto da Coordenação de Frotas de ${solicitation.comarca}. Aguardando direcionamento de motorista e veículo.`,
@@ -855,7 +855,7 @@ export default function App() {
     // 3. Notificação no sistema para o coordenador
     const coordNotif: NotificationItem = {
       id: `notif-vis-${Date.now()}`,
-      titulo: `Novo Chamado em Aberto: ${chamadoCodigo} (Portal do Visitante)`,
+      titulo: `Novo Chamado em Aberto: ${chamadoCodigo} (Solicitação de Veículo)`,
       mensagem: `${solicitation.solicitanteNome} (${solicitation.orgaoOuVinculo}) solicitou transporte para "${solicitation.destino}". Aberto para direcionamento do coordenador.`,
       dataHora: `Hoje às ${now.toTimeString().split(' ')[0].substring(0, 5)}`,
       lida: false,
@@ -1140,36 +1140,8 @@ export default function App() {
           />
         ) : (
           <>
-            {/* ABA: Dashboard Geral da Frota (Executivo, Indicadores, Escala e Veículos) */}
-            {activeNavTab === 'dashboard' && (
-              <ExecutiveFleetDashboard
-                vehicles={vehicles}
-                drivers={drivers}
-                trips={trips}
-                fuelLogs={fuelLogs}
-                selectedComarca={selectedComarca}
-                driverSchedules={driverSchedules}
-                chamados={chamados}
-                onOpenTripDetails={(trip) => setTripLogTrip(trip)}
-                onOpenOfficialOrder={(trip) => setOfficialOrderTrip(trip)}
-                onSaveTripSignature={handleSaveTripSignature}
-                onOpenWhatsAppReservation={(trip, vehicle, driver) => {
-                  setWhatsappReservationTrip({ trip, vehicle, driver });
-                }}
-                onOpenSigaSolicitation={() => setSigaModalOpen(true)}
-                onNavigateToChamados={() => setActiveNavTab('chamados')}
-                onOpenNewChamadoModal={() => setNewChamadoModalOpen(true)}
-                onScheduleNewTrip={() => {
-                  setActiveNavTab('operacoes');
-                  setDiarioViewMode('planilha');
-                }}
-                onRegisterNewVehicle={() => setNewVehicleModalOpen(true)}
-                hideHeader={false}
-              />
-            )}
-
-            {/* ABA: Diário de Bordo & Rotina Operacional (Com Painel Geral da Frota, Planilha Oficial e Portal Operacional Alocados) */}
-            {activeNavTab === 'operacoes' && (
+            {/* ABA UNIFICADA: Diário de Bordo & Rotina Operacional (Com Painel Geral da Frota, Planilha Oficial e Portal Operacional) */}
+            {(activeNavTab === 'operacoes' || activeNavTab === 'dashboard') && (
               <div className="space-y-4">
                 {/* Seletor Integrado e Didático no Diário de Bordo */}
                 <div className="bg-white px-4 py-3 rounded-xl border border-slate-200/90 shadow-2xs flex flex-col md:flex-row md:items-center justify-between gap-3">
@@ -1473,9 +1445,13 @@ export default function App() {
                 onNavigateToCoordinator={() => {
                   handleRoleChange('coordenador');
                   setActiveNavTab('chamados');
-                  showToast('Alternado para Coordenação: solicitação do visitante aberta no topo da lista de chamados!');
+                  showToast('Alternado para Coordenação: solicitação de veículo aberta no topo da lista de chamados!');
                 }}
                 recentChamados={chamados}
+                trips={trips}
+                vehicles={vehicles}
+                onOpenTripSignature={(trip) => setSignatureModalTrip(trip)}
+                onOpenTripDetails={(trip) => setTripLogTrip(trip)}
               />
             )}
           </>

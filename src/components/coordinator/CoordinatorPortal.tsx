@@ -640,10 +640,10 @@ export const CoordinatorPortal: React.FC<CoordinatorPortalProps> = ({
                     ? 'bg-emerald-700 text-white shadow-xs ring-2 ring-emerald-300'
                     : 'bg-emerald-50 text-emerald-800 hover:bg-emerald-100 border border-emerald-200'
                 }`}
-                title="Filtrar chamados de viagem e reserva abertos via Portal do Visitante"
+                title="Filtrar chamados de viagem e reserva abertos via Solicitação de Veículo"
               >
                 <Compass className="w-3.5 h-3.5 text-emerald-500" />
-                <span>Portal do Visitante</span>
+                <span>Solicitação de Veículo</span>
                 <span className={`px-1.5 py-0.2 rounded-full text-[10px] font-mono ${
                   chamadoFilterStatus === 'visitante' ? 'bg-white/20 text-white' : 'bg-emerald-200/80 text-emerald-900 font-bold'
                 }`}>

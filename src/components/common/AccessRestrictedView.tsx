@@ -29,7 +29,7 @@ export const AccessRestrictedView: React.FC<AccessRestrictedViewProps> = ({
     documentos: 'Documentos Oficiais',
     relatorios: 'Relatórios Executivos & Auditoria',
     contratos: 'Contratos & Serviços Oficiais',
-    visitante: 'Portal do Visitante (Solicitação Rápida)',
+    visitante: 'Solicitação de Veículo (Viagem & Reserva Oficial)',
   };
 
   return (

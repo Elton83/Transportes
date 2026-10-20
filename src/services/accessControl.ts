@@ -27,7 +27,6 @@ export const ROLE_CONFIGS: Record<Role, RoleConfig> = {
     description: 'Acesso total à frota estadual, parametrizações, veículos, motoristas e auditoria.',
     color: 'emerald',
     allowedTabs: [
-      'dashboard',
       'operacoes',
       'chamados',
       'oficinas',
@@ -53,7 +52,6 @@ export const ROLE_CONFIGS: Record<Role, RoleConfig> = {
     description: 'Supervisão estratégica da frota, relatórios executivos e autorizações de viagens.',
     color: 'emerald',
     allowedTabs: [
-      'dashboard',
       'operacoes',
       'chamados',
       'oficinas',
@@ -79,7 +77,6 @@ export const ROLE_CONFIGS: Record<Role, RoleConfig> = {
     description: 'Acompanhamento regional da comarca, gestão de chamados de apoio e escala local.',
     color: 'sky',
     allowedTabs: [
-      'dashboard',
       'operacoes',
       'chamados',
       'documentos',
@@ -156,10 +153,10 @@ export const ROLE_CONFIGS: Record<Role, RoleConfig> = {
   },
   visitante: {
     role: 'visitante',
-    label: 'Visitante (Público)',
-    shortLabel: 'Visitante',
-    badgeLabel: 'Solicitação Rápida',
-    sub: 'Viagem & Reserva de Carro',
+    label: 'Solicitação de Veículo',
+    shortLabel: 'Solicitação',
+    badgeLabel: 'Solicitação de Veículo TJPR',
+    sub: 'Viagem & Reserva Oficial',
     description: 'Interface simplificada para solicitação ágil de viagens e reservas institucionais.',
     color: 'emerald',
     allowedTabs: [
@@ -252,8 +249,8 @@ export function getTabLabelForRole(tab: MainNavTab, role: Role): { label: string
       };
     case 'visitante':
       return {
-        label: 'Portal do Visitante',
-        description: 'Solicitação rápida de viagem ou reserva de carro',
+        label: 'Solicitação de Veículo',
+        description: 'Viagem com condutor ou reserva de veículo',
       };
     default:
       return { label: tab, description: '' };

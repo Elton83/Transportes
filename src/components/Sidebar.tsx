@@ -95,13 +95,8 @@ export const Sidebar: React.FC<SidebarProps> = ({
   // Filtro de Segurança por Papel (RBAC)
   const allowedTabs = getAllowedTabsForRole(currentRole);
 
-  // Lista mestre com todos os menus anteriores preservados
+  // Lista mestre com os menus do sistema (com Dashboard da Frota já integrado no Diário de Bordo)
   const allNavItems = [
-    {
-      id: 'dashboard' as MainNavTab,
-      icon: LayoutDashboard,
-      badge: undefined,
-    },
     {
       id: 'operacoes' as MainNavTab,
       icon: FileSpreadsheet,
@@ -176,8 +171,8 @@ export const Sidebar: React.FC<SidebarProps> = ({
     },
     {
       role: 'visitante',
-      label: 'Visitante (Público)',
-      sub: 'Solicitação Rápida',
+      label: 'Solicitação de Veículo',
+      sub: 'Viagem & Reserva Oficial',
       icon: Compass,
     },
   ];
@@ -436,7 +431,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
               : currentRole === 'solicitante'
               ? 'SO'
               : currentRole === 'visitante'
-              ? 'VI'
+              ? 'SV'
               : 'AD'}
           </div>
 
@@ -450,7 +445,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
                   : currentRole === 'solicitante'
                   ? 'Dr. Roberto Magalhães'
                   : currentRole === 'visitante'
-                  ? 'Visitante Institucional'
+                  ? 'Dr. Elton Rabelo'
                   : 'Dr. Marcelo Ramos'}
               </p>
               <p className="text-[10px] text-[#8E9CA8] truncate">
@@ -461,7 +456,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
                   : currentRole === 'solicitante'
                   ? 'Juiz de Direito • Solicitante'
                   : currentRole === 'visitante'
-                  ? 'Solicitante Externo'
+                  ? 'Matr. TJPR-98.341-2 • Solicitante'
                   : 'Administrador da Frota SIGPAT'}
               </p>
             </div>
