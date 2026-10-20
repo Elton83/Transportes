@@ -28,6 +28,7 @@ export const ROLE_CONFIGS: Record<Role, RoleConfig> = {
     color: 'emerald',
     allowedTabs: [
       'operacoes',
+      'calendario',
       'chamados',
       'oficinas',
       'abastecer',
@@ -43,16 +44,104 @@ export const ROLE_CONFIGS: Record<Role, RoleConfig> = {
     canManageSettings: true,
     isRestrictedDriver: false,
   },
+  motorista: {
+    role: 'motorista',
+    label: 'Motorista',
+    shortLabel: 'Motorista',
+    badgeLabel: 'Condutor Oficial TJPR',
+    sub: 'Rotina & Condução',
+    description: 'Acesso estrito às suas demandas, documentos oficiais, manutenção e cartão benefício.',
+    color: 'amber',
+    allowedTabs: [
+      'operacoes',      // Minhas Demandas (Viagens, Diário, Checklists, Ordens)
+      'calendario',     // Minha Agenda de Viagens e Serviços
+      'documentos',     // Documento Oficial (CRLV do veículo e CNH/certidões do condutor)
+      'oficinas',       // Manutenção (Status mecânico e revisões do veículo em uso)
+      'meu_beneficio',  // Cartão do Benefício (Meu Benefício • combustível e pedágio)
+    ],
+    canViewGlobalFleet: false,
+    canApproveTrips: false,
+    canAuditFinance: false,
+    canManageSettings: false,
+    isRestrictedDriver: true,
+  },
+  supervisor_administrativo: {
+    role: 'supervisor_administrativo',
+    label: 'Supervisor Administrativo',
+    shortLabel: 'Sup. Administrativo',
+    badgeLabel: 'Gestão & Contratos',
+    sub: 'Supervisão Administrativa',
+    description: 'Supervisão administrativa da Divisão de Transportes, solicitações, contratos, relatórios e auditoria.',
+    color: 'purple',
+    allowedTabs: [
+      'operacoes',
+      'calendario',
+      'chamados',
+      'documentos',
+      'relatorios',
+      'contratos',
+      'meu_beneficio',
+      'visitante',
+    ],
+    canViewGlobalFleet: false,
+    canApproveTrips: true,
+    canAuditFinance: true,
+    canManageSettings: false,
+    isRestrictedDriver: false,
+  },
+  supervisor_operacional: {
+    role: 'supervisor_operacional',
+    label: 'Supervisor Operacional',
+    shortLabel: 'Sup. Operacional',
+    badgeLabel: 'Escala & Frotas',
+    sub: 'Supervisão Operacional',
+    description: 'Gestão operacional de veículos, escala de motoristas, despacho de viagens e chamados da comarca.',
+    color: 'sky',
+    allowedTabs: [
+      'operacoes',
+      'calendario',
+      'chamados',
+      'oficinas',
+      'abastecer',
+      'documentos',
+      'relatorios',
+      'visitante',
+    ],
+    canViewGlobalFleet: true,
+    canApproveTrips: true,
+    canAuditFinance: false,
+    canManageSettings: false,
+    isRestrictedDriver: false,
+  },
+  visitante: {
+    role: 'visitante',
+    label: 'Solicitação do Veículo',
+    shortLabel: 'Solicitação',
+    badgeLabel: 'Solicitação do Veículo TJPR',
+    sub: 'Viagem & Reserva Oficial',
+    description: 'Interface simplificada para solicitação ágil de viagens e reservas institucionais.',
+    color: 'emerald',
+    allowedTabs: [
+      'visitante',
+    ],
+    canViewGlobalFleet: false,
+    canApproveTrips: false,
+    canAuditFinance: false,
+    canManageSettings: false,
+    isRestrictedDriver: false,
+  },
+  // Aliases para compatibilidade retroativa
   gestor: {
     role: 'gestor',
-    label: 'Gestor da Frota',
-    shortLabel: 'Gestor',
+    label: 'Administrador (Gestor)',
+    shortLabel: 'Admin',
     badgeLabel: 'Gestão da Frota TJPR',
     sub: 'Supervisão Executiva',
     description: 'Supervisão estratégica da frota, relatórios executivos e autorizações de viagens.',
     color: 'emerald',
     allowedTabs: [
       'operacoes',
+      'calendario',
       'chamados',
       'oficinas',
       'abastecer',
@@ -70,61 +159,42 @@ export const ROLE_CONFIGS: Record<Role, RoleConfig> = {
   },
   coordenador: {
     role: 'coordenador',
-    label: 'Coordenador',
-    shortLabel: 'Coordenação',
-    badgeLabel: 'Comarca & Chamados',
-    sub: 'Relatórios & Chamados',
+    label: 'Supervisor Operacional',
+    shortLabel: 'Sup. Operacional',
+    badgeLabel: 'Escala & Frotas',
+    sub: 'Supervisão Operacional',
     description: 'Acompanhamento regional da comarca, gestão de chamados de apoio e escala local.',
     color: 'sky',
     allowedTabs: [
       'operacoes',
+      'calendario',
       'chamados',
+      'oficinas',
+      'abastecer',
       'documentos',
       'relatorios',
-      'contratos',
       'visitante',
     ],
-    canViewGlobalFleet: false,
+    canViewGlobalFleet: true,
     canApproveTrips: true,
     canAuditFinance: false,
     canManageSettings: false,
     isRestrictedDriver: false,
   },
-  motorista: {
-    role: 'motorista',
-    label: 'Motorista Oficial',
-    shortLabel: 'Motorista',
-    badgeLabel: 'Condutor Oficial TJPR',
-    sub: 'Rotina & Condução',
-    description: 'Acesso estrito às suas demandas, documentos oficiais, manutenção e cartão benefício.',
-    color: 'amber',
-    // REQUISITO CENTRAL: motorista tem acesso apenas as suas demandas, documento oficial, manutenção e o cartão do beneficio
-    allowedTabs: [
-      'operacoes',      // Minhas Demandas (Viagens, Diário, Checklists, Ordens)
-      'documentos',     // Documento Oficial (CRLV do veículo e CNH/certidões do condutor)
-      'oficinas',       // Manutenção (Status mecânico e revisões do veículo em uso)
-      'meu_beneficio',  // Cartão do Benefício (Meu Benefício • combustível e pedágio)
-    ],
-    canViewGlobalFleet: false,
-    canApproveTrips: false,
-    canAuditFinance: false,
-    canManageSettings: false,
-    isRestrictedDriver: true,
-  },
   operador: {
     role: 'operador',
-    label: 'Operador (Motorista)',
+    label: 'Motorista',
     shortLabel: 'Motorista',
     badgeLabel: 'Condutor Oficial TJPR',
     sub: 'Rotina & Condução',
     description: 'Acesso estrito às suas demandas, documentos oficiais, manutenção e cartão benefício.',
     color: 'amber',
-    // Sinônimo operacional do motorista
     allowedTabs: [
-      'operacoes',      // Minhas Demandas
-      'documentos',     // Documento Oficial
-      'oficinas',       // Manutenção
-      'meu_beneficio',  // Cartão do Benefício
+      'operacoes',
+      'calendario',
+      'documentos',
+      'oficinas',
+      'meu_beneficio',
     ],
     canViewGlobalFleet: false,
     canApproveTrips: false,
@@ -134,37 +204,25 @@ export const ROLE_CONFIGS: Record<Role, RoleConfig> = {
   },
   solicitante: {
     role: 'solicitante',
-    label: 'Solicitante',
-    shortLabel: 'Solicitante',
-    badgeLabel: 'Magistrado / Servidor',
-    sub: 'Solicitação de Veículos',
-    description: 'Abertura de solicitações de veículos oficiais e acompanhamento de reservas no SIGA.',
+    label: 'Supervisor Administrativo',
+    shortLabel: 'Sup. Administrativo',
+    badgeLabel: 'Gestão & Contratos',
+    sub: 'Supervisão Administrativa',
+    description: 'Supervisão administrativa da Divisão de Transportes, solicitações e contratos.',
     color: 'purple',
     allowedTabs: [
       'operacoes',
+      'calendario',
       'chamados',
+      'documentos',
+      'relatorios',
+      'contratos',
+      'meu_beneficio',
       'visitante',
     ],
     canViewGlobalFleet: false,
-    canApproveTrips: false,
-    canAuditFinance: false,
-    canManageSettings: false,
-    isRestrictedDriver: false,
-  },
-  visitante: {
-    role: 'visitante',
-    label: 'Solicitação de Veículo',
-    shortLabel: 'Solicitação',
-    badgeLabel: 'Solicitação de Veículo TJPR',
-    sub: 'Viagem & Reserva Oficial',
-    description: 'Interface simplificada para solicitação ágil de viagens e reservas institucionais.',
-    color: 'emerald',
-    allowedTabs: [
-      'visitante',
-    ],
-    canViewGlobalFleet: false,
-    canApproveTrips: false,
-    canAuditFinance: false,
+    canApproveTrips: true,
+    canAuditFinance: true,
     canManageSettings: false,
     isRestrictedDriver: false,
   },
@@ -212,6 +270,13 @@ export function getTabLabelForRole(tab: MainNavTab, role: Role): { label: string
           ? 'Minhas demandas, percursos e odômetro' 
           : 'Planilha de percursos e registros',
       };
+    case 'calendario':
+      return {
+        label: isDriver ? 'Agenda de Serviços' : 'Calendário de Eventos',
+        description: isDriver 
+          ? 'Minhas viagens e atividades agendadas' 
+          : 'Agenda em tempo real de serviços, viagens e manutenções',
+      };
     case 'chamados':
       return {
         label: 'Chamados & Suporte',
@@ -249,7 +314,7 @@ export function getTabLabelForRole(tab: MainNavTab, role: Role): { label: string
       };
     case 'visitante':
       return {
-        label: 'Solicitação de Veículo',
+        label: 'Solicitação do Veículo',
         description: 'Viagem com condutor ou reserva de veículo',
       };
     default:

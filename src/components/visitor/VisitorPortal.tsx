@@ -673,7 +673,7 @@ export const VisitorPortal: React.FC<VisitorPortalProps> = ({
           </div>
           <div className="min-w-0">
             <h1 className="text-sm font-bold text-slate-800 leading-tight">
-              Portal de Solicitação de Veículo
+              Portal de Solicitação do Veículo
             </h1>
             <p className="text-[11px] text-slate-500 mt-0.5 truncate">
               Conectado: <strong className="text-slate-800">{solicitanteNome}</strong> ({cargoServidor} • {matriculaInput})

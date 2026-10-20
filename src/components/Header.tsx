@@ -24,7 +24,8 @@ import {
   ExternalLink,
   Compass,
   UserPlus,
-  FileSignature
+  FileSignature,
+  CalendarDays
 } from 'lucide-react';
 import { Driver, NotificationItem, Role, Vehicle } from '../types';
 import { 
@@ -37,6 +38,7 @@ import {
 export type MainNavTab = 
   | 'dashboard' 
   | 'operacoes' 
+  | 'calendario'
   | 'chamados' 
   | 'oficinas' 
   | 'abastecer' 
@@ -124,6 +126,7 @@ export const Header: React.FC<HeaderProps> = ({
   const tabIcons: Record<MainNavTab, typeof LayoutDashboard> = {
     dashboard: LayoutDashboard,
     operacoes: Car,
+    calendario: CalendarDays,
     chamados: LifeBuoy,
     oficinas: Wrench,
     abastecer: Fuel,
@@ -200,7 +203,7 @@ export const Header: React.FC<HeaderProps> = ({
                 </span>
               </div>
               <h1 className="text-sm sm:text-base font-bold tracking-tight text-white flex items-center gap-1.5">
-                TJPR <span className="text-[#8E9CA8] font-normal hidden md:inline">| Gestão Integrada de Transportes</span>
+                TJPR <span className="text-[#8E9CA8] font-normal hidden md:inline">| Divisão de Transportes</span>
               </h1>
             </div>
           </div>
@@ -214,6 +217,7 @@ export const Header: React.FC<HeaderProps> = ({
                 Perfil:
               </span>
               
+              {/* 1. Administrador */}
               <button
                 id="role-btn-admin"
                 type="button"
@@ -223,29 +227,15 @@ export const Header: React.FC<HeaderProps> = ({
                     ? 'bg-white/15 text-white shadow-xs font-semibold'
                     : 'text-[#8E9CA8] hover:text-white hover:bg-white/5'
                 }`}
-                title="Acesso completo ao sistema e à frota inteira (250 veículos)"
+                title="Acesso total ao sistema e à frota estadual (250 veículos)"
               >
                 <UserCheck className="w-3.5 h-3.5" />
                 <span>Administrador</span>
               </button>
 
+              {/* 2. Motorista */}
               <button
-                id="role-btn-coordenador"
-                type="button"
-                onClick={() => handleRoleSelect('coordenador')}
-                className={`flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-xs font-medium transition-all cursor-pointer ${
-                  currentRole === 'coordenador'
-                    ? 'bg-white/15 text-white shadow-xs font-semibold'
-                    : 'text-[#8E9CA8] hover:text-white hover:bg-white/5'
-                }`}
-                title="Acesso regional da comarca e chamados de apoio"
-              >
-                <LifeBuoy className="w-3.5 h-3.5" />
-                <span>Coordenador</span>
-              </button>
-
-              <button
-                id="role-btn-operador"
+                id="role-btn-motorista"
                 type="button"
                 onClick={() => handleRoleSelect('motorista')}
                 className={`flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-xs font-medium transition-all cursor-pointer ${
@@ -262,23 +252,41 @@ export const Header: React.FC<HeaderProps> = ({
                 </span>
               </button>
 
+              {/* 3. Supervisor Administrativo */}
               <button
-                id="role-btn-solicitante"
+                id="role-btn-supervisor-adm"
                 type="button"
-                onClick={() => handleRoleSelect('solicitante')}
+                onClick={() => handleRoleSelect('supervisor_administrativo')}
                 className={`flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-xs font-medium transition-all cursor-pointer ${
-                  currentRole === 'solicitante'
+                  currentRole === 'supervisor_administrativo' || currentRole === 'solicitante'
                     ? 'bg-white/15 text-white shadow-xs font-semibold'
                     : 'text-[#8E9CA8] hover:text-white hover:bg-white/5'
                 }`}
-                title="Portal de requisição e acompanhamento de reservas"
+                title="Supervisão Administrativa: solicitações de veículos, contratos, relatórios e auditoria"
               >
                 <FileText className="w-3.5 h-3.5" />
-                <span>Solicitante</span>
+                <span>Supervisor Administrativo</span>
               </button>
 
+              {/* 4. Supervisor Operacional */}
               <button
-                id="role-btn-visitante"
+                id="role-btn-supervisor-op"
+                type="button"
+                onClick={() => handleRoleSelect('supervisor_operacional')}
+                className={`flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-xs font-medium transition-all cursor-pointer ${
+                  currentRole === 'supervisor_operacional' || currentRole === 'coordenador'
+                    ? 'bg-white/15 text-white shadow-xs font-semibold'
+                    : 'text-[#8E9CA8] hover:text-white hover:bg-white/5'
+                }`}
+                title="Supervisão Operacional: despacho de viagens, alocação de motoristas/veículos e chamados da comarca"
+              >
+                <LifeBuoy className="w-3.5 h-3.5" />
+                <span>Supervisor Operacional</span>
+              </button>
+
+              {/* 5. Solicitação do Veículo */}
+              <button
+                id="role-btn-solicitacao-veiculo"
                 type="button"
                 onClick={() => handleRoleSelect('visitante')}
                 className={`flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-xs font-medium transition-all cursor-pointer ${
@@ -286,10 +294,10 @@ export const Header: React.FC<HeaderProps> = ({
                     ? 'bg-white/15 text-white shadow-xs font-semibold'
                     : 'text-[#8E9CA8] hover:text-white hover:bg-white/5'
                 }`}
-                title="Solicitação de Veículo: Viagem com motorista oficial ou reserva de carro"
+                title="Solicitação do Veículo: Viagem com motorista oficial ou reserva de veículo"
               >
                 <Compass className="w-3.5 h-3.5" />
-                <span>Solicitação de Veículo</span>
+                <span>Solicitação do Veículo</span>
               </button>
             </div>
 
@@ -298,15 +306,25 @@ export const Header: React.FC<HeaderProps> = ({
               <Shield className="w-3 h-3 text-[#8E9CA8] mr-1.5" />
               <select
                 aria-label="Selecionar Perfil de Acesso"
-                value={isDriver ? 'motorista' : currentRole}
+                value={
+                  isDriver 
+                    ? 'motorista' 
+                    : currentRole === 'coordenador' 
+                    ? 'supervisor_operacional' 
+                    : currentRole === 'solicitante' 
+                    ? 'supervisor_administrativo' 
+                    : currentRole === 'gestor'
+                    ? 'administrador'
+                    : currentRole
+                }
                 onChange={(e) => handleRoleSelect(e.target.value as Role)}
                 className="bg-transparent text-white font-medium text-xs focus:outline-none cursor-pointer pr-1"
               >
-                <option value="administrador" className="bg-[#05202B] text-white">Administrador (Total)</option>
-                <option value="coordenador" className="bg-[#05202B] text-white">Coordenador (Comarca)</option>
+                <option value="administrador" className="bg-[#05202B] text-white">Administrador</option>
                 <option value="motorista" className="bg-[#05202B] text-white">Motorista (Restrito)</option>
-                <option value="solicitante" className="bg-[#05202B] text-white">Solicitante (SIGA)</option>
-                <option value="visitante" className="bg-[#05202B] text-white">Solicitação de Veículo</option>
+                <option value="supervisor_administrativo" className="bg-[#05202B] text-white">Supervisor Administrativo</option>
+                <option value="supervisor_operacional" className="bg-[#05202B] text-white">Supervisor Operacional</option>
+                <option value="visitante" className="bg-[#05202B] text-white">Solicitação do Veículo</option>
               </select>
             </div>
           </div>
@@ -419,36 +437,36 @@ export const Header: React.FC<HeaderProps> = ({
               }`}>
                 {isDriver
                   ? 'MO'
-                  : currentRole === 'coordenador'
-                  ? 'CO'
-                  : currentRole === 'solicitante'
+                  : currentRole === 'supervisor_operacional' || currentRole === 'coordenador'
                   ? 'SO'
+                  : currentRole === 'supervisor_administrativo' || currentRole === 'solicitante'
+                  ? 'SA'
                   : currentRole === 'visitante'
                   ? 'SV'
                   : 'AD'}
               </div>
               <div className="hidden xl:block text-left">
-                <p className="text-xs font-semibold text-white leading-tight truncate max-w-[130px]">
+                <p className="text-xs font-semibold text-white leading-tight truncate max-w-[140px]">
                   {isDriver
                     ? currentDriver?.nome || 'Carlos Silveira'
-                    : currentRole === 'coordenador'
+                    : currentRole === 'supervisor_operacional' || currentRole === 'coordenador'
                     ? 'Juliana Mendes'
-                    : currentRole === 'solicitante'
+                    : currentRole === 'supervisor_administrativo' || currentRole === 'solicitante'
                     ? 'Dr. Roberto Magalhães'
                     : currentRole === 'visitante'
                     ? 'Dr. Elton Rabelo'
                     : 'Dr. Marcelo Ramos'}
                 </p>
-                <p className="text-[10px] text-blue-200 truncate max-w-[130px]">
+                <p className="text-[10px] text-blue-200 truncate max-w-[140px]">
                   {isDriver
                     ? `Matr. ${currentDriver?.matricula || '48.912-3'}`
-                    : currentRole === 'coordenador'
-                    ? 'Coordenação TJPR'
-                    : currentRole === 'solicitante'
-                    ? 'Magistrado Solicitante'
+                    : currentRole === 'supervisor_operacional' || currentRole === 'coordenador'
+                    ? 'Supervisora Operacional'
+                    : currentRole === 'supervisor_administrativo' || currentRole === 'solicitante'
+                    ? 'Supervisor Administrativo'
                     : currentRole === 'visitante'
-                    ? 'Solicitação de Veículo'
-                    : 'Gestor Geral SIGPAT'}
+                    ? 'Solicitação do Veículo'
+                    : 'Administrador da Frota'}
                 </p>
               </div>
             </div>

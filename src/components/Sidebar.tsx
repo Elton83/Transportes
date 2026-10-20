@@ -26,7 +26,8 @@ import {
   Compass,
   FileSignature,
   FileSpreadsheet,
-  LayoutGrid
+  LayoutGrid,
+  CalendarDays
 } from 'lucide-react';
 import { MainNavTab } from './Header';
 import { Role, Driver, Vehicle } from '../types';
@@ -103,6 +104,11 @@ export const Sidebar: React.FC<SidebarProps> = ({
       badge: activeTripsCount > 0 ? `${activeTripsCount}` : undefined,
     },
     {
+      id: 'calendario' as MainNavTab,
+      icon: CalendarDays,
+      badge: undefined,
+    },
+    {
       id: 'chamados' as MainNavTab,
       icon: LifeBuoy,
       badge: chamadosCount > 0 ? `${chamadosCount}` : undefined,
@@ -148,30 +154,30 @@ export const Sidebar: React.FC<SidebarProps> = ({
     {
       role: 'administrador',
       label: 'Administrador',
-      sub: 'Gestão Geral & SIGPAT',
+      sub: 'Gestão Geral & Frota Total',
       icon: UserCheck,
     },
     {
-      role: 'coordenador',
-      label: 'Coordenador',
-      sub: 'Relatórios & Chamados',
-      icon: LifeBuoy,
-    },
-    {
       role: 'motorista',
-      label: 'Motorista Oficial',
-      sub: 'Acesso Restrito: 4 Áreas',
+      label: 'Motorista',
+      sub: 'Condutor Oficial • 4 Módulos',
       icon: Car,
     },
     {
-      role: 'solicitante',
-      label: 'Solicitante',
-      sub: 'Solicitação de Veículos',
+      role: 'supervisor_administrativo',
+      label: 'Supervisor Administrativo',
+      sub: 'Supervisão Adm. & Contratos',
       icon: FileText,
     },
     {
+      role: 'supervisor_operacional',
+      label: 'Supervisor Operacional',
+      sub: 'Escala, Frotas & Despachos',
+      icon: LifeBuoy,
+    },
+    {
       role: 'visitante',
-      label: 'Solicitação de Veículo',
+      label: 'Solicitação do Veículo',
       sub: 'Viagem & Reserva Oficial',
       icon: Compass,
     },
@@ -320,7 +326,9 @@ export const Sidebar: React.FC<SidebarProps> = ({
                 const isRoleActive = 
                   currentRole === opt.role ||
                   (opt.role === 'administrador' && currentRole === 'gestor') ||
-                  (opt.role === 'motorista' && currentRole === 'operador');
+                  (opt.role === 'motorista' && currentRole === 'operador') ||
+                  (opt.role === 'supervisor_administrativo' && currentRole === 'solicitante') ||
+                  (opt.role === 'supervisor_operacional' && currentRole === 'coordenador');
 
                 return (
                   <button
@@ -426,10 +434,10 @@ export const Sidebar: React.FC<SidebarProps> = ({
           <div className="w-8 h-8 rounded-lg bg-white/10 flex items-center justify-center font-bold text-white text-xs shrink-0">
             {isDriver
               ? 'MO'
-              : currentRole === 'coordenador'
-              ? 'CO'
-              : currentRole === 'solicitante'
+              : currentRole === 'supervisor_operacional' || currentRole === 'coordenador'
               ? 'SO'
+              : currentRole === 'supervisor_administrativo' || currentRole === 'solicitante'
+              ? 'SA'
               : currentRole === 'visitante'
               ? 'SV'
               : 'AD'}
@@ -440,9 +448,9 @@ export const Sidebar: React.FC<SidebarProps> = ({
               <p className="text-xs font-semibold text-white truncate">
                 {isDriver
                   ? currentDriver?.nome || 'Carlos E. Silveira'
-                  : currentRole === 'coordenador'
+                  : currentRole === 'supervisor_operacional' || currentRole === 'coordenador'
                   ? 'Juliana Mendes'
-                  : currentRole === 'solicitante'
+                  : currentRole === 'supervisor_administrativo' || currentRole === 'solicitante'
                   ? 'Dr. Roberto Magalhães'
                   : currentRole === 'visitante'
                   ? 'Dr. Elton Rabelo'
@@ -451,13 +459,13 @@ export const Sidebar: React.FC<SidebarProps> = ({
               <p className="text-[10px] text-[#8E9CA8] truncate">
                 {isDriver
                   ? `Matrícula ${currentDriver?.matricula || '48.912-3'} • Motorista`
-                  : currentRole === 'coordenador'
-                  ? 'Coordenadora Regional'
-                  : currentRole === 'solicitante'
-                  ? 'Juiz de Direito • Solicitante'
+                  : currentRole === 'supervisor_operacional' || currentRole === 'coordenador'
+                  ? 'Supervisora Operacional de Transportes'
+                  : currentRole === 'supervisor_administrativo' || currentRole === 'solicitante'
+                  ? 'Supervisor Administrativo'
                   : currentRole === 'visitante'
                   ? 'Matr. TJPR-98.341-2 • Solicitante'
-                  : 'Administrador da Frota SIGPAT'}
+                  : 'Administrador da Divisão de Transportes'}
               </p>
             </div>
           )}

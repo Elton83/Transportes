@@ -1,11 +1,13 @@
 export type Role = 
   | 'administrador' 
+  | 'motorista' 
+  | 'supervisor_administrativo' 
+  | 'supervisor_operacional' 
+  | 'visitante'
   | 'operador' 
   | 'coordenador' 
   | 'gestor' 
-  | 'motorista' 
-  | 'solicitante'
-  | 'visitante';
+  | 'solicitante';
 
 export type ChamadoStatus = 'aberto' | 'em_atendimento' | 'concluido' | 'cancelado';
 export type ChamadoPrioridade = 'baixa' | 'media' | 'alta' | 'urgente';
@@ -672,3 +674,58 @@ export interface Contrato {
   anexos?: { titulo: string; tamanho: string; dataUpload: string }[];
 }
 
+export type CalendarEventType = 
+  | 'viagem_motorista' 
+  | 'reserva_veiculo' 
+  | 'manutencao' 
+  | 'chamado_apoio' 
+  | 'evento_operacional';
+
+export interface OperationalEvent {
+  id: string;
+  titulo: string;
+  categoria: 'audiencia' | 'plantao' | 'vistoria' | 'inspecao' | 'treinamento' | 'outro';
+  categoriaLabel: string;
+  dataInicio: string; // YYYY-MM-DD
+  horaInicio: string; // HH:mm
+  dataFim?: string; // YYYY-MM-DD
+  horaFim?: string; // HH:mm
+  comarca: string;
+  local: string;
+  veiculoPrefixo?: string;
+  motoristaNome?: string;
+  responsavelNome: string;
+  responsavelCargo?: string;
+  descricao?: string;
+  status: 'agendado' | 'em_andamento' | 'concluido' | 'cancelado';
+  criadoEm: string;
+}
+
+export interface CalendarEventItem {
+  id: string;
+  tipo: CalendarEventType;
+  tipoLabel: string;
+  titulo: string;
+  descricao?: string;
+  dataInicio: string; // YYYY-MM-DD
+  horaInicio?: string; // HH:mm
+  dataFim?: string; // YYYY-MM-DD
+  horaFim?: string; // HH:mm
+  comarca?: string;
+  localOrigem?: string;
+  localDestino?: string;
+  veiculoPrefixo?: string;
+  veiculoModelo?: string;
+  veiculoPlaca?: string;
+  motoristaNome?: string;
+  motoristaId?: string;
+  solicitanteNome?: string;
+  solicitanteCargo?: string;
+  status: string;
+  statusLabel: string;
+  statusCor: 'emerald' | 'amber' | 'blue' | 'purple' | 'red' | 'slate';
+  codigoReferencia?: string;
+  processoSei?: string;
+  sourceType: 'trip' | 'maintenance' | 'chamado' | 'operational_event';
+  rawObject?: any;
+}

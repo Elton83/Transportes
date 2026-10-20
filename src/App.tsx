@@ -65,6 +65,7 @@ import { ExecutiveFleetDashboard } from './components/dashboard/ExecutiveFleetDa
 import { CoordinatorPortal } from './components/coordinator/CoordinatorPortal';
 import { VisitorPortal } from './components/visitor/VisitorPortal';
 import { ContratosView } from './components/contracts/ContratosView';
+import { CalendarEventsView } from './components/calendar/CalendarEventsView';
 import { DiarioDeBordoView } from './components/operations/DiarioDeBordoView';
 import { TripSignatureModal } from './components/dashboard/TripSignatureModal';
 import { NewChamadoModal } from './components/coordinator/NewChamadoModal';
@@ -366,8 +367,8 @@ export default function App() {
               {
                 id: `resp-${Date.now()}`,
                 dataHora: formattedDate,
-                autor: currentRole === 'coordenador' ? 'Juliana Mendes' : 'Divisão de Transportes',
-                cargo: currentRole === 'coordenador' ? 'Coordenadora Regional' : 'Gestor da Frota (SIGPAT)',
+                autor: (currentRole === 'coordenador' || currentRole === 'supervisor_operacional') ? 'Juliana Mendes' : 'Divisão de Transportes',
+                cargo: (currentRole === 'coordenador' || currentRole === 'supervisor_operacional') ? 'Supervisora Operacional' : 'Gestor da Frota (SIGPAT)',
                 mensagem: `Status do chamado alterado para "${statusLabels[novoStatus]}".`,
                 isAdmin: currentRole === 'administrador' || currentRole === 'gestor',
               },
@@ -394,8 +395,8 @@ export default function App() {
               {
                 id: `resp-${Date.now()}`,
                 dataHora: formattedDate,
-                autor: currentRole === 'coordenador' ? 'Juliana Mendes' : (currentRole === 'operador' || currentRole === 'motorista') ? 'Carlos E. Silveira' : 'Dr. Marcelo Ramos',
-                cargo: currentRole === 'coordenador' ? 'Coordenadora Regional' : (currentRole === 'operador' || currentRole === 'motorista') ? 'Operador de Frota' : 'Administrador da Frota',
+                autor: (currentRole === 'coordenador' || currentRole === 'supervisor_operacional') ? 'Juliana Mendes' : (currentRole === 'operador' || currentRole === 'motorista') ? 'Carlos E. Silveira' : 'Dr. Marcelo Ramos',
+                cargo: (currentRole === 'coordenador' || currentRole === 'supervisor_operacional') ? 'Supervisora Operacional' : (currentRole === 'operador' || currentRole === 'motorista') ? 'Operador de Frota' : 'Administrador da Frota',
                 mensagem,
                 isAdmin: currentRole === 'administrador' || currentRole === 'gestor',
               },
@@ -1287,8 +1288,8 @@ export default function App() {
                       />
                     )}
 
-                    {/* Visualização 3: Coordenador Regional (Acompanhamento Diário, Chamados e Relatórios) */}
-                    {currentRole === 'coordenador' && (
+                    {/* Visualização 3: Supervisor Operacional (Acompanhamento Diário, Chamados e Relatórios) */}
+                    {(currentRole === 'coordenador' || currentRole === 'supervisor_operacional') && (
                       <CoordinatorPortal
                         currentRole={currentRole}
                         selectedComarca={selectedComarca}
@@ -1310,8 +1311,8 @@ export default function App() {
                       />
                     )}
 
-                    {/* Visualização 4: Portal do Solicitante (Magistrados & Servidores) */}
-                    {currentRole === 'solicitante' && (
+                    {/* Visualização 4: Supervisor Administrativo (Solicitações & Contratos) */}
+                    {(currentRole === 'solicitante' || currentRole === 'supervisor_administrativo') && (
                       <SolicitationPortal
                         trips={trips}
                         onCreateTrip={handleCreateTrip}
@@ -1324,6 +1325,24 @@ export default function App() {
                   </>
                 )}
               </div>
+            )}
+
+            {/* ABA: Calendário de Eventos & Agenda de Serviços (Alimentada Automaticamente) */}
+            {activeNavTab === 'calendario' && (
+              <CalendarEventsView
+                trips={trips}
+                maintenances={maintenances}
+                chamados={chamados}
+                fuelLogs={fuelLogs}
+                vehicles={vehicles}
+                drivers={drivers}
+                selectedComarca={selectedComarca}
+                currentRole={currentRole}
+                currentDriver={currentDriver}
+                onOpenTripDetails={(trip) => setTripLogTrip(trip)}
+                onOpenTripSignature={(trip) => setSignatureModalTrip(trip)}
+                onNavigateToTab={(tab) => setActiveNavTab(tab)}
+              />
             )}
 
             {/* ABA: Central de Chamados & Apoio Logístico */}
@@ -1443,9 +1462,9 @@ export default function App() {
                 ]}
                 onSubmitSolicitation={handleVisitorSolicitation}
                 onNavigateToCoordinator={() => {
-                  handleRoleChange('coordenador');
+                  handleRoleChange('supervisor_operacional');
                   setActiveNavTab('chamados');
-                  showToast('Alternado para Coordenação: solicitação de veículo aberta no topo da lista de chamados!');
+                  showToast('Alternado para Supervisão Operacional: solicitação de veículo aberta no topo da lista de chamados!');
                 }}
                 recentChamados={chamados}
                 trips={trips}
