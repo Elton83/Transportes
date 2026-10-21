@@ -1,107 +1,81 @@
 import { DriverScheduleItem } from '../types';
+import { INITIAL_DRIVERS } from './initialData';
 
-export const INITIAL_DRIVER_SCHEDULES: DriverScheduleItem[] = [
-  {
-    id: 'sch-1',
-    driverId: 'drv-2',
-    driverNome: 'Moisés Florentino de Souza',
-    driverMatricula: '39.810-7',
-    driverTelefone: '(41) 99564-3773',
-    comarca: 'Curitiba - Sede Administrativa',
+// Escala operacional completa e oficial dos 22 motoristas do TJPR, cada um vinculado 1:1 ao seu respectivo Volkswagen Virtus TSI (TJ-101 a TJ-122)
+export const INITIAL_DRIVER_SCHEDULES: DriverScheduleItem[] = INITIAL_DRIVERS.map((drv, idx) => {
+  const isEmViagem = drv.status === 'em_viagem' || drv.id === 'drv-2' || drv.id === 'drv-5';
+  const isFolga = drv.status === 'folga';
+
+  let statusEscala: DriverScheduleItem['statusEscala'] = 'escalado';
+  let tripIdDesignada: string | undefined = undefined;
+  let destinoOuMissao = 'Disponível na base para diligências e apoio institucional da Comarca';
+  let solicitanteNome: string | undefined = undefined;
+  let observacoes = `Veículo Virtus ${drv.veiculoPrefixoAtual} com vínculo 1:1 permanente ao condutor oficial.`;
+
+  if (isEmViagem) {
+    statusEscala = 'em_viagem';
+    if (drv.id === 'drv-2') {
+      tripIdDesignada = 'trip-102';
+      destinoOuMissao = 'Fórum Des. Alberto Pacheco - Ponta Grossa (PR)';
+      solicitanteNome = 'Des. Gilberto Silveira Neto';
+      observacoes = 'Em trânsito pela BR-277 com o Virtus TJ-102. Retorno previsto para as 16:30.';
+    } else if (drv.id === 'drv-5') {
+      tripIdDesignada = 'trip-108';
+      destinoOuMissao = 'Complexo Penitenciário de Piraquara (PR)';
+      solicitanteNome = 'Dra. Fernanda Siqueira';
+      observacoes = 'Escalado para missão judicial de custódia extraordinária com escolta no Virtus TJ-105.';
+    }
+  } else if (isFolga) {
+    statusEscala = 'folga';
+    destinoOuMissao = 'Folga regulamentar programada na escala mensal da Divisão de Transportes';
+    observacoes = 'Condutor em descanso regulamentar conforme escala do TJPR.';
+  } else if (drv.id === 'drv-1') {
+    statusEscala = 'escalado';
+    tripIdDesignada = 'trip-101';
+    destinoOuMissao = 'Fórum da Comarca de Paranaguá (PR)';
+    solicitanteNome = 'Dra. Mariana Vasconcellos';
+    observacoes = 'Saída programada com o Virtus TJ-101. Checklist de saída pré-aprovado.';
+  } else if (drv.id === 'drv-3') {
+    statusEscala = 'escalado';
+    tripIdDesignada = 'trip-107';
+    destinoOuMissao = 'Vara Única de Capitão Leônidas Marques (PR)';
+    solicitanteNome = 'Dr. Valter Silveira';
+    observacoes = 'Diligência institucional de inspeção pericial com o Virtus TJ-103.';
+  } else if (drv.id === 'drv-4') {
+    statusEscala = 'disponivel_base';
+    destinoOuMissao = 'Pronto na garagem central do Centro Cívico para chamados da coordenação';
+    observacoes = 'Disponível na garagem central do Centro Cívico com o Virtus TJ-104.';
+  } else {
+    statusEscala = idx % 2 === 0 ? 'escalado' : 'disponivel_base';
+  }
+
+  const turnoNome = idx % 3 === 0 
+    ? 'Turno Matutino (07h às 16h)' 
+    : idx % 3 === 1 
+    ? 'Turno Integral (08h às 17h)' 
+    : 'Turno Vespertino (13h às 22h)';
+  const horaInicio = idx % 3 === 0 ? '07:00' : idx % 3 === 1 ? '08:00' : '13:00';
+  const horaFim = idx % 3 === 0 ? '16:00' : idx % 3 === 1 ? '17:00' : '22:00';
+
+  return {
+    id: `sch-${drv.id}`,
+    driverId: drv.id,
+    driverNome: drv.nome,
+    driverMatricula: drv.matricula,
+    driverTelefone: drv.telefone,
+    comarca: drv.comarca,
     data: '2026-09-18',
-    turnoNome: 'Turno Matutino 1 (07h às 16h)',
-    horaInicio: '07:00',
-    horaFim: '16:00',
-    statusEscala: 'em_viagem',
-    veiculoPrefixo: 'TJ-102',
+    turnoNome,
+    horaInicio,
+    horaFim,
+    statusEscala,
+    veiculoPrefixo: drv.veiculoPrefixoAtual || `TJ-${101 + idx}`,
     veiculoModelo: 'Volkswagen Virtus TSI',
-    tripIdDesignada: 'trip-102',
-    destinoOuMissao: 'Fórum Des. Alberto Pacheco - Ponta Grossa (PR)',
-    solicitanteNome: 'Des. Gilberto Silveira Neto',
-    cnhCategoria: 'D',
-    cnhValidade: '14/08/2027',
-    observacoes: 'Em trânsito pela BR-277. Retorno previsto para as 16:30.',
-  },
-  {
-    id: 'sch-2',
-    driverId: 'drv-3',
-    driverNome: 'José Carlos Faria de Lima',
-    driverMatricula: '51.490-1',
-    driverTelefone: '(41) 99930-1555',
-    comarca: 'Curitiba - Sede Administrativa',
-    data: '2026-09-18',
-    turnoNome: 'Turno Integral (08h às 17h)',
-    horaInicio: '08:00',
-    horaFim: '17:00',
-    statusEscala: 'em_viagem',
-    veiculoPrefixo: 'TJ-103',
-    veiculoModelo: 'Volkswagen Virtus TSI',
-    tripIdDesignada: 'trip-107',
-    destinoOuMissao: 'Vara Única de Capitão Leônidas Marques (PR)',
-    solicitanteNome: 'Dr. Valter Silveira',
-    cnhCategoria: 'C',
-    cnhValidade: '05/11/2026',
-    observacoes: 'Diligência institucional de inspeção pericial.',
-  },
-  {
-    id: 'sch-3',
-    driverId: 'drv-1',
-    driverNome: 'Romão Sidney Rigos Junior',
-    driverMatricula: '48.912-3',
-    driverTelefone: '(41) 99914-4544',
-    comarca: 'Curitiba - Sede Administrativa',
-    data: '2026-09-18',
-    turnoNome: 'Turno Regular Sede (08h às 17h)',
-    horaInicio: '08:00',
-    horaFim: '17:00',
-    statusEscala: 'escalado',
-    veiculoPrefixo: 'TJ-101',
-    veiculoModelo: 'Volkswagen Virtus TSI',
-    tripIdDesignada: 'trip-101',
-    destinoOuMissao: 'Fórum da Comarca de Paranaguá (PR)',
-    solicitanteNome: 'Dra. Mariana Vasconcellos',
-    cnhCategoria: 'D',
-    cnhValidade: '20/11/2028',
-    observacoes: 'Saída programada para 08:30. Checklist de saída pré-aprovado.',
-  },
-  {
-    id: 'sch-4',
-    driverId: 'drv-4',
-    driverNome: 'Gustavo Ferreira da Silva',
-    driverMatricula: '56.320-8',
-    driverTelefone: '(41) 99806-6142',
-    comarca: 'Curitiba - Palácio da Justiça',
-    data: '2026-09-18',
-    turnoNome: 'Turno Intermediário (09h às 18h)',
-    horaInicio: '09:00',
-    horaFim: '18:00',
-    statusEscala: 'disponivel_base',
-    veiculoPrefixo: 'TJ-104',
-    veiculoModelo: 'Volkswagen Virtus TSI',
-    destinoOuMissao: 'Pronto na base para saídas urgentes e apoio institucional',
-    cnhCategoria: 'B',
-    cnhValidade: '10/04/2029',
-    observacoes: 'Disponível na garagem central do Centro Cívico para chamados da coordenação.',
-  },
-  {
-    id: 'sch-5',
-    driverId: 'drv-5',
-    driverNome: 'Hélio Pereira dos Santos',
-    driverMatricula: '42.319-4',
-    driverTelefone: '(41) 99710-2078',
-    comarca: 'Curitiba - Sede Administrativa',
-    data: '2026-09-18',
-    turnoNome: 'Turno Vespertino Especial (13h às 22h)',
-    horaInicio: '13:00',
-    horaFim: '22:00',
-    statusEscala: 'escalado',
-    veiculoPrefixo: 'TJ-105',
-    veiculoModelo: 'Volkswagen Virtus TSI',
-    tripIdDesignada: 'trip-108',
-    destinoOuMissao: 'Complexo Penitenciário de Piraquara (PR)',
-    solicitanteNome: 'Dra. Fernanda Siqueira',
-    cnhCategoria: 'D',
-    cnhValidade: '12/03/2028',
-    observacoes: 'Escalado para missão judicial de custódia extraordinária com escolta.',
-  },
-];
+    tripIdDesignada,
+    destinoOuMissao,
+    solicitanteNome,
+    cnhCategoria: drv.cnhCategoria,
+    cnhValidade: drv.cnhValidade,
+    observacoes,
+  };
+});

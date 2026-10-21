@@ -1596,7 +1596,7 @@ export const CalendarEventsView: React.FC<CalendarEventsViewProps> = ({
                       const linkedVeh = vehicles.find(v => v.prefixo === d.veiculoPrefixoAtual) || vehicles[idx];
                       return (
                         <option key={d.id} value={d.nome}>
-                          {d.nome} {linkedVeh ? `(${linkedVeh.prefixo} • ${linkedVeh.placa})` : ''}
+                          {d.nome} (Matr. {d.matricula}) {linkedVeh ? `→ ${linkedVeh.prefixo} (${linkedVeh.placa})` : ''}
                         </option>
                       );
                     })}

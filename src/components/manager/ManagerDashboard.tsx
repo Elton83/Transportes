@@ -100,11 +100,35 @@ export const ManagerDashboard: React.FC<ManagerDashboardProps> = ({
 
   const handleOpenDispatch = (trip: Trip) => {
     setDispatchTrip(trip);
-    // Sugerir primeiro veículo e motorista disponíveis
-    const firstAvailVeh = vehicles.find((v) => v.status === 'disponivel');
-    const firstAvailDrv = drivers.find((d) => d.status === 'disponivel');
+    // Sugerir primeiro veículo e motorista disponíveis mantendo o vínculo 1:1 automático
+    const firstAvailVeh = vehicles.find((v) => v.status === 'disponivel') || vehicles[0];
+    const linkedDrv = drivers.find((d) => d.veiculoPrefixoAtual === firstAvailVeh?.prefixo) || drivers[0];
     setSelectedVehicleId(firstAvailVeh ? firstAvailVeh.id : vehicles[0]?.id || '');
-    setSelectedDriverId(firstAvailDrv ? firstAvailDrv.id : drivers[0]?.id || '');
+    setSelectedDriverId(linkedDrv ? linkedDrv.id : drivers[0]?.id || '');
+  };
+
+  const handleSelectVehicleForDispatch = (vId: string) => {
+    setSelectedVehicleId(vId);
+    const veh = vehicles.find((v) => v.id === vId);
+    if (veh) {
+      const linked = drivers.find((d) => d.veiculoPrefixoAtual === veh.prefixo) ||
+        drivers[vehicles.findIndex((v) => v.id === vId)];
+      if (linked) {
+        setSelectedDriverId(linked.id);
+      }
+    }
+  };
+
+  const handleSelectDriverForDispatch = (dId: string) => {
+    setSelectedDriverId(dId);
+    const drv = drivers.find((d) => d.id === dId);
+    if (drv) {
+      const linkedVeh = vehicles.find((v) => v.prefixo === drv.veiculoPrefixoAtual) ||
+        vehicles[drivers.findIndex((d) => d.id === dId)];
+      if (linkedVeh) {
+        setSelectedVehicleId(linkedVeh.id);
+      }
+    }
   };
 
   const handleConfirmDispatch = (e: React.FormEvent) => {
@@ -550,38 +574,76 @@ export const ManagerDashboard: React.FC<ManagerDashboardProps> = ({
               </div>
 
               <div>
-                <label className="block font-bold text-slate-700 mb-1">Selecionar Veículo Oficial Disponível</label>
+                <div className="flex items-center justify-between mb-1">
+                  <label className="block font-bold text-slate-700">Selecionar Veículo Oficial Disponível</label>
+                  <span className="text-[10px] text-emerald-700 font-semibold bg-emerald-50 px-1.5 py-0.5 rounded border border-emerald-200">
+                    ⚡ Preenchimento automático
+                  </span>
+                </div>
                 <select
                   aria-label="Selecionar Veículo Oficial Disponível para despacho"
                   value={selectedVehicleId}
-                  onChange={(e) => setSelectedVehicleId(e.target.value)}
+                  onChange={(e) => handleSelectVehicleForDispatch(e.target.value)}
                   required
                   className="w-full px-2.5 py-2 border border-slate-300 rounded bg-white text-slate-800 focus:ring-1 focus:ring-[#002B49]"
                 >
-                  {vehicles.map((v) => (
-                    <option key={v.id} value={v.id} disabled={v.status !== 'disponivel'}>
-                      {v.prefixo} - {v.modelo} ({v.placa}) - {v.status === 'disponivel' ? 'DISPONÍVEL' : `OCUPADO (${v.status})`}
-                    </option>
-                  ))}
+                  {vehicles.map((v) => {
+                    const linked = drivers.find(d => d.veiculoPrefixoAtual === v.prefixo);
+                    return (
+                      <option key={v.id} value={v.id} disabled={v.status !== 'disponivel'}>
+                        {v.prefixo} - {v.modelo} ({v.placa}) {linked ? `→ Condutor: ${linked.nome}` : ''} - {v.status === 'disponivel' ? 'DISPONÍVEL' : `OCUPADO (${v.status})`}
+                      </option>
+                    );
+                  })}
                 </select>
               </div>
 
               <div>
-                <label className="block font-bold text-slate-700 mb-1">Selecionar Condutor Oficial da Escala</label>
+                <div className="flex items-center justify-between mb-1">
+                  <label className="block font-bold text-slate-700">Selecionar Condutor Oficial da Escala</label>
+                  <span className="text-[10px] text-emerald-700 font-semibold bg-emerald-50 px-1.5 py-0.5 rounded border border-emerald-200">
+                    🔗 Atrelado ao carro
+                  </span>
+                </div>
                 <select
                   aria-label="Selecionar Condutor Oficial da Escala para despacho"
                   value={selectedDriverId}
-                  onChange={(e) => setSelectedDriverId(e.target.value)}
+                  onChange={(e) => handleSelectDriverForDispatch(e.target.value)}
                   required
                   className="w-full px-2.5 py-2 border border-slate-300 rounded bg-white text-slate-800 focus:ring-1 focus:ring-[#002B49]"
                 >
-                  {drivers.map((d) => (
-                    <option key={d.id} value={d.id} disabled={d.status !== 'disponivel'}>
-                      {d.nome} (Matr. {d.matricula}) - CNH Cat. {d.cnhCategoria} - {d.status === 'disponivel' ? 'DISPONÍVEL' : `INDISPONÍVEL (${d.status})`}
-                    </option>
-                  ))}
+                  {drivers.map((d) => {
+                    const linkedVeh = vehicles.find(v => v.prefixo === d.veiculoPrefixoAtual);
+                    return (
+                      <option key={d.id} value={d.id} disabled={d.status !== 'disponivel'}>
+                        {d.nome} (Matr. {d.matricula}) {linkedVeh ? `(${linkedVeh.prefixo} • ${linkedVeh.placa})` : ''} - {d.status === 'disponivel' ? 'DISPONÍVEL' : `INDISPONÍVEL (${d.status})`}
+                      </option>
+                    );
+                  })}
                 </select>
               </div>
+
+              {/* Banner de Confirmação do Vínculo 1:1 Fixo */}
+              {(() => {
+                const sVeh = vehicles.find(v => v.id === selectedVehicleId);
+                const sDrv = drivers.find(d => d.id === selectedDriverId);
+                if (!sVeh || !sDrv) return null;
+                return (
+                  <div className="p-2.5 bg-emerald-50 border border-emerald-300 rounded-lg flex items-center justify-between text-xs text-emerald-950 shadow-xs">
+                    <div className="flex items-center gap-2">
+                      <CheckCircle2 className="w-4 h-4 text-emerald-600 shrink-0" />
+                      <span>
+                        <strong>Vínculo Fixo:</strong> {sVeh.prefixo} ({sVeh.placa} - {sVeh.modelo}) &harr; <strong>{sDrv.nome}</strong> (Matr. {sDrv.matricula})
+                      </span>
+                    </div>
+                    {sDrv.telefone && sDrv.telefone !== '—' && (
+                      <span className="text-[10px] font-mono font-bold bg-white px-2 py-0.5 rounded border border-emerald-200 text-emerald-800 shrink-0">
+                        {sDrv.telefone}
+                      </span>
+                    )}
+                  </div>
+                );
+              })()}
 
               <div className="flex items-center justify-end gap-3 pt-3 border-t border-slate-200">
                 <button
