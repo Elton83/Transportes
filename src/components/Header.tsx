@@ -81,7 +81,7 @@ export const Header: React.FC<HeaderProps> = ({
   onMarkNotificationRead,
   selectedComarca,
   onComarcaChange,
-  totalVehicles = 250,
+  totalVehicles = 22,
   maintenancesCount = 6,
   documentsCount = 8,
   chamadosCount = 3,

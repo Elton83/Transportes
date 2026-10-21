@@ -98,15 +98,15 @@ export const DiarioDeBordoView: React.FC<DiarioDeBordoViewProps> = ({
   const [activeCardFocus, setActiveCardFocus] = useState<'todos' | 'frota' | 'em_uso' | 'escala_motoristas' | 'chamados'>('todos');
 
   // Cálculos para os 4 Cards de Métricas da Frota (Alocados conforme solicitado)
-  const totalVehiclesCount = vehicles.length;
-  const availableVehiclesCount = vehicles.filter(v => v.status === 'disponivel').length || 173;
-  const maintenanceVehiclesCount = vehicles.filter(v => v.status === 'manutencao').length || 14;
+  const totalVehiclesCount = vehicles.length || 22;
+  const availableVehiclesCount = vehicles.filter(v => v.status === 'disponivel').length;
+  const maintenanceVehiclesCount = vehicles.filter(v => v.status === 'manutencao').length;
 
   const inUseCount = useMemo(() => {
     const live = trips.filter(t => t.status === 'em_andamento').length;
-    return live > 2 ? live : 51;
-  }, [trips]);
-  const inUsePercentage = Math.round((inUseCount / (totalVehiclesCount || 250)) * 100) || 20;
+    return live > 0 ? live : vehicles.filter(v => v.status === 'em_viagem').length;
+  }, [trips, vehicles]);
+  const inUsePercentage = Math.round((inUseCount / (totalVehiclesCount || 22)) * 100);
 
   const driverSchedulesCount = driverSchedules?.length || 5;
   const scheduleEmViagem = driverSchedules?.filter(s => s.statusEscala === 'em_viagem').length || 2;

@@ -86,7 +86,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
   onQuickNewChamado,
   onOpenSigaSolicitation,
   onOpenWhatsAppReservation,
-  totalVehicles = 250,
+  totalVehicles = 22,
   activeTripsCount = 2,
   currentDriver,
   assignedVehicle,

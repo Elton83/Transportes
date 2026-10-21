@@ -107,7 +107,7 @@ export const ExecutiveFleetDashboard: React.FC<ExecutiveFleetDashboardProps> = (
     driver?: Driver;
   } | null>(null);
 
-  // Paginação e filtro de status para os 250 veículos
+  // Paginação e filtro de status para os 22 veículos
   const [fleetPage, setFleetPage] = useState<number>(1);
   const [fleetStatusFilter, setFleetStatusFilter] = useState<'todos' | 'disponivel' | 'em_viagem' | 'manutencao'>('todos');
   const FLEET_PER_PAGE = 24;
@@ -1358,7 +1358,7 @@ export const ExecutiveFleetDashboard: React.FC<ExecutiveFleetDashboardProps> = (
             <div>
               <div className="flex items-center gap-2">
                 <span className="text-[10px] uppercase font-bold tracking-wider px-2 py-0.5 rounded bg-blue-100 text-[#002B49] font-mono">
-                  Frota TJPR • 250 Veículos
+                  Frota TJPR • 22 Veículos
                 </span>
                 <span className="text-xs text-slate-500">
                   ({filteredVehicles.length} no filtro atual)
