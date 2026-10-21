@@ -12,7 +12,7 @@ export const formatWhatsAppReservationMessage = (
   const veicPlaca = vehicle?.placa || trip.veiculoPlaca || 'Oficial';
   const comarca = vehicle?.comarca || trip.comarca || 'Paraná';
   const motNome = driver?.nome || trip.motoristaNome || 'Motorista Oficial TJPR';
-  const motTel = driver?.telefone || '(41) 99841-2093';
+  const motTel = driver?.telefone || '(41) 99914-4544';
   const protocolo = trip.sigaProtocolo || trip.processoSei || trip.codigo;
   const passageiros = trip.passageiros && trip.passageiros.length > 0 
     ? trip.passageiros.join(', ') 

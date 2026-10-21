@@ -122,7 +122,7 @@ export const INITIAL_CHAMADOS: Chamado[] = [
     solicitanteCargo: 'Coordenador Regional Norte',
     solicitanteMatricula: 'TJPR-51.209-4',
     comarca: 'Londrina',
-    veiculoPrefixo: 'V-102',
+    veiculoPrefixo: 'TJ-104',
     processoSei: '0038102-14.2026.8.16.6000',
     prazoSugerido: '2026-09-21 17:00',
     respostas: [
@@ -131,7 +131,7 @@ export const INITIAL_CHAMADOS: Chamado[] = [
         autor: 'Administração de Frotas TJPR',
         cargo: 'Chefe de Tráfego',
         dataHora: '2026-09-18 16:00',
-        mensagem: 'Veículo V-102 (Mercedes-Benz Sprinter) pré-agendado no SIGPAT. Aguardando apenas envio da escala de motoristas da comarca.',
+        mensagem: 'Veículo TJ-104 (Volkswagen Virtus TSI) pré-agendado no SIGPAT. Aguardando envio da escala de motoristas da comarca.',
         isAdmin: true
       }
     ]
@@ -149,7 +149,7 @@ export const INITIAL_CHAMADOS: Chamado[] = [
     solicitanteCargo: 'Coordenadora de Apoio Logístico',
     solicitanteMatricula: 'TJPR-63.421-9',
     comarca: 'Curitiba - Palácio da Justiça',
-    veiculoPrefixo: 'SED-088',
+    veiculoPrefixo: 'TJ-105',
     processoSei: '0027190-88.2026.8.16.6000',
     respostas: [
       {
@@ -175,7 +175,7 @@ export const INITIAL_CHAMADOS: Chamado[] = [
     solicitanteCargo: 'Assessora de Gabinete / Coordenadora',
     solicitanteMatricula: 'TJPR-45.981-0',
     comarca: 'Maringá',
-    veiculoPrefixo: 'SED-092',
+    veiculoPrefixo: 'TJ-106',
     processoSei: '0051029-33.2026.8.16.6000',
     prazoSugerido: '2026-09-20 08:00',
     respostas: []

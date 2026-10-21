@@ -227,7 +227,7 @@ export const Header: React.FC<HeaderProps> = ({
                     ? 'bg-white/15 text-white shadow-xs font-semibold'
                     : 'text-[#8E9CA8] hover:text-white hover:bg-white/5'
                 }`}
-                title="Acesso total ao sistema e à frota estadual (250 veículos)"
+                title="Acesso total ao sistema e à frota estadual (22 veículos)"
               >
                 <UserCheck className="w-3.5 h-3.5" />
                 <span>Administrador</span>

@@ -27,6 +27,8 @@ import {
   FileText
 } from 'lucide-react';
 import { Trip, Vehicle, Driver, TripSignatureData } from '../../types';
+import { VEHICLES } from '../../data/vehiclesData';
+import { INITIAL_DRIVERS } from '../../data/initialData';
 
 interface RequesterTabletSignatureModalProps {
   isOpen: boolean;
@@ -54,6 +56,10 @@ export const RequesterTabletSignatureModal: React.FC<RequesterTabletSignatureMod
 }) => {
   if (!isOpen) return null;
 
+  // Localizar veículo e motorista oficial garantindo consistência com a frota de 22 Virtus
+  const matchedVeh = vehicle || VEHICLES.find(v => v.prefixo === trip.veiculoPrefixo || v.placa === trip.veiculoPlaca) || VEHICLES[0];
+  const matchedDrv = driver || INITIAL_DRIVERS.find(d => d.id === trip.motoristaId || d.nome === trip.motoristaNome || d.veiculoPrefixoAtual === matchedVeh.prefixo) || INITIAL_DRIVERS[0];
+
   // Horário e Data atuais para o término do atendimento
   const now = new Date();
   const dataHojeStr = now.toLocaleDateString('pt-BR');
@@ -64,8 +70,8 @@ export const RequesterTabletSignatureModal: React.FC<RequesterTabletSignatureMod
   const solicitanteVara = trip.solicitanteVara || 'Vara Cível / Gabinete';
   const solicitanteMatricula = '52.415-1';
 
-  const kmInicial = trip.kmInicial || (vehicle?.kmAtual ? vehicle.kmAtual - 24 : 148);
-  const kmFinalCalc = currentKm || (vehicle?.kmAtual ? vehicle.kmAtual : kmInicial + 24);
+  const kmInicial = trip.kmInicial || (matchedVeh?.kmAtual ? matchedVeh.kmAtual - 24 : 148);
+  const kmFinalCalc = currentKm || (matchedVeh?.kmAtual ? matchedVeh.kmAtual : kmInicial + 24);
   const kmRodados = Math.max(1, kmFinalCalc - kmInicial);
 
   // Estados de Assinatura
@@ -307,10 +313,10 @@ export const RequesterTabletSignatureModal: React.FC<RequesterTabletSignatureMod
 
     const signaturePayload: TripSignatureData = {
       data: dataHojeStr,
-      condutorNome: (trip.motoristaNome || driver?.nome || 'ROBERTO').toUpperCase(),
-      condutorMatricula: driver?.matricula?.replace(/\D/g, '').slice(-3) || '212',
-      veiculoModelo: (vehicle?.modelo || 'COROLLA').toUpperCase().split(' ')[0],
-      placa: (vehicle?.placa || 'DSD-6525').toUpperCase(),
+      condutorNome: (trip.motoristaNome || matchedDrv?.nome || 'Romão Sidney Rigos Junior').toUpperCase(),
+      condutorMatricula: matchedDrv?.matricula?.replace(/\D/g, '').slice(-3) || '912',
+      veiculoModelo: (matchedVeh?.modelo || trip.veiculoModelo || 'Volkswagen Virtus TSI').toUpperCase(),
+      placa: (matchedVeh?.placa || trip.veiculoPlaca || 'TZI6J11').toUpperCase(),
       destino: (trip.destino || 'PALÁCIO').toUpperCase().replace(/FÓRUM DA COMARCA DE /gi, '').trim(),
       horaSaida: trip.horaSaida || '15:00',
       kmSaida: kmInicial,
@@ -427,11 +433,11 @@ export const RequesterTabletSignatureModal: React.FC<RequesterTabletSignatureMod
                 <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 text-xs">
                   <div className="bg-slate-50 p-2.5 rounded-xl border border-slate-100">
                     <span className="text-[10px] text-slate-400 font-medium">Veículo Oficial</span>
-                    <p className="font-bold text-slate-800">{vehicle?.prefixo || 'TJ-208'} • {vehicle?.placa || 'DSD-6525'}</p>
+                    <p className="font-bold text-slate-800">{vehicle?.prefixo || 'TJ-101'} • {vehicle?.placa || 'TZI6J11'}</p>
                   </div>
                   <div className="bg-slate-50 p-2.5 rounded-xl border border-slate-100">
                     <span className="text-[10px] text-slate-400 font-medium">Condutor Oficial</span>
-                    <p className="font-bold text-slate-800">{trip.motoristaNome || driver?.nome || 'Roberto'}</p>
+                    <p className="font-bold text-slate-800">{trip.motoristaNome || driver?.nome || 'Romão Sidney Rigos Junior'}</p>
                   </div>
                   <div className="bg-slate-50 p-2.5 rounded-xl border border-slate-100">
                     <span className="text-[10px] text-slate-400 font-medium">Km Percorrido</span>
@@ -533,14 +539,14 @@ export const RequesterTabletSignatureModal: React.FC<RequesterTabletSignatureMod
 
                 <div className="p-2.5 rounded-xl bg-slate-50 border border-slate-100">
                   <span className="text-[10px] text-slate-400 block font-medium">Motorista Designado</span>
-                  <strong className="text-slate-800 text-xs truncate block">{trip.motoristaNome || driver?.nome || 'Motorista'}</strong>
+                  <strong className="text-slate-800 text-xs truncate block">{trip.motoristaNome || driver?.nome || 'Romão Sidney Rigos Junior'}</strong>
                   <span className="text-[10px] text-slate-500 block">Matrícula: {driver?.matricula || '39.810-7'}</span>
                 </div>
 
                 <div className="p-2.5 rounded-xl bg-slate-50 border border-slate-100">
                   <span className="text-[10px] text-slate-400 block font-medium">Veículo / Prefixo</span>
-                  <strong className="text-slate-800 text-xs block">{vehicle?.prefixo || 'TJ-208'} • {vehicle?.modelo || 'Corolla'}</strong>
-                  <span className="text-[10px] font-mono text-slate-500 block">{vehicle?.placa || 'DSD-6525'}</span>
+                  <strong className="text-slate-800 text-xs block">{vehicle?.prefixo || 'TJ-101'} • {vehicle?.modelo || 'Volkswagen Virtus TSI'}</strong>
+                  <span className="text-[10px] font-mono text-slate-500 block">{vehicle?.placa || 'TZI6J11'}</span>
                 </div>
 
                 <div className="p-2.5 rounded-xl bg-slate-50 border border-slate-100">

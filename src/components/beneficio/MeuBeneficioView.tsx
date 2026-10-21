@@ -282,7 +282,7 @@ export const MeuBeneficioView: React.FC<MeuBeneficioViewProps> = ({
                 <CreditCard className="w-3.5 h-3.5 text-amber-700" />
                 Cartão Frota: •••• •••• •••• 9102
               </span>
-              <span>Titular: <strong>{restrictedDriver?.nome || 'Carlos Eduardo Silveira'}</strong></span>
+              <span>Titular: <strong>{restrictedDriver?.nome || 'Romão Sidney Rigos Junior'}</strong></span>
             </div>
           ) : (
             <div className="flex items-center gap-2">

@@ -640,14 +640,14 @@ export const ExecutiveFleetDashboard: React.FC<ExecutiveFleetDashboardProps> = (
                           <div className="flex items-center gap-1.5">
                             <Smartphone className="w-3.5 h-3.5 text-[#002B49]" />
                             <span className="text-slate-700 font-medium font-sans">
-                              {vehicle.prefixo === 'TJ-208' ? 'Galaxy A54 (BR-277, Km 142)' : 'Galaxy A34 (BR-277, Km 48)'}
+                              {vehicle.prefixo === 'TJ-102' ? 'Galaxy A54 (BR-277, Km 142)' : 'Galaxy A34 (BR-277, Km 48)'}
                             </span>
                           </div>
                           <div className="flex items-center gap-2">
                             <span className="text-emerald-700 font-semibold">84% 🔋 5G</span>
                             <span aria-hidden="true">·</span>
                             <span className="font-bold text-slate-800">
-                              {vehicle.prefixo === 'TJ-208' ? '78 km/h' : '72 km/h'}
+                              {vehicle.prefixo === 'TJ-102' ? '78 km/h' : '72 km/h'}
                             </span>
                           </div>
                         </div>
@@ -1056,10 +1056,10 @@ export const ExecutiveFleetDashboard: React.FC<ExecutiveFleetDashboardProps> = (
                   <div className="p-2.5 bg-slate-50 rounded-lg text-xs font-mono flex items-center justify-between border border-slate-200">
                     <span className="flex items-center gap-1.5 text-slate-700">
                       <Smartphone className="w-3.5 h-3.5 text-[#002B49]" />
-                      {vehicle.prefixo === 'TJ-208' ? 'BR-277, Km 142' : 'BR-277, Km 48'}
+                      {vehicle.prefixo === 'TJ-102' ? 'BR-277, Km 142' : 'BR-277, Km 48'}
                     </span>
                     <span className="font-bold text-slate-800">
-                      {vehicle.prefixo === 'TJ-208' ? '78 km/h · 84% 🔋' : '72 km/h · 84% 🔋'}
+                      {vehicle.prefixo === 'TJ-102' ? '78 km/h · 84% 🔋' : '72 km/h · 84% 🔋'}
                     </span>
                   </div>
 

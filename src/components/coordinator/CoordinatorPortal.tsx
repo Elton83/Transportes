@@ -184,11 +184,55 @@ export const CoordinatorPortal: React.FC<CoordinatorPortalProps> = ({
     setRespostaText('');
   };
 
+  // Handlers para sincronização automática 1-para-1 entre motorista e veículo
+  const handleAssignDriverChange = (driverId: string) => {
+    setSelectedDriverId(driverId);
+    if (!driverId) return;
+    const drv = drivers.find((d) => d.id === driverId);
+    if (drv) {
+      const linkedVeh = vehicles.find((v) => v.prefixo === drv.veiculoPrefixoAtual);
+      if (linkedVeh) {
+        setSelectedVehicleId(linkedVeh.id);
+      }
+    }
+  };
+
+  const handleAssignVehicleChange = (vehicleId: string) => {
+    setSelectedVehicleId(vehicleId);
+    if (!vehicleId) return;
+    const veh = vehicles.find((v) => v.id === vehicleId);
+    if (veh) {
+      const linkedDrv = drivers.find((d) => d.veiculoPrefixoAtual === veh.prefixo);
+      if (linkedDrv) {
+        setSelectedDriverId(linkedDrv.id);
+      }
+    }
+  };
+
   // Abrir Modal de Gestão & Direcionamento
   const handleOpenManageChamado = (chamado: Chamado) => {
     setManagingChamado(chamado);
-    setSelectedDriverId(chamado.motoristaId || drivers[0]?.id || '');
-    setSelectedVehicleId(chamado.veiculoId || vehicles[0]?.id || '');
+    
+    // Identificar par vinculado 1-para-1 automaticamente
+    let initialDrv = chamado.motoristaId 
+      ? drivers.find(d => d.id === chamado.motoristaId) 
+      : (chamado.veiculoPrefixo ? drivers.find(d => d.veiculoPrefixoAtual === chamado.veiculoPrefixo) : null);
+    
+    let initialVeh = chamado.veiculoId 
+      ? vehicles.find(v => v.id === chamado.veiculoId) 
+      : (chamado.veiculoPrefixo ? vehicles.find(v => v.prefixo === chamado.veiculoPrefixo) : null);
+
+    if (initialDrv && !initialVeh) {
+      initialVeh = vehicles.find(v => v.prefixo === initialDrv?.veiculoPrefixoAtual) || vehicles[0];
+    } else if (initialVeh && !initialDrv) {
+      initialDrv = drivers.find(d => d.veiculoPrefixoAtual === initialVeh?.prefixo) || drivers[0];
+    } else if (!initialDrv && !initialVeh) {
+      initialDrv = drivers[0];
+      initialVeh = vehicles.find(v => v.prefixo === initialDrv?.veiculoPrefixoAtual) || vehicles[0];
+    }
+
+    setSelectedDriverId(initialDrv?.id || '');
+    setSelectedVehicleId(initialVeh?.id || '');
     setDispatchInstructions(
       `Atendimento prioritário de transporte oficial na Comarca de ${chamado.comarca}. Favor entrar em contato prévio com o solicitante ${chamado.solicitanteNome}.`
     );
@@ -1127,7 +1171,7 @@ export const CoordinatorPortal: React.FC<CoordinatorPortalProps> = ({
                       <tr key={trip.id} className="hover:bg-slate-50 transition-colors">
                         <td className="px-4 py-3 font-mono font-bold text-[#002B49]">{trip.codigo}</td>
                         <td className="px-4 py-3 font-semibold text-slate-800">{trip.solicitanteNome}</td>
-                        <td className="px-4 py-3 font-mono text-slate-700">{trip.veiculoPrefixo || 'TJ-208'}</td>
+                        <td className="px-4 py-3 font-mono text-slate-700">{trip.veiculoPrefixo || 'TJ-101'}</td>
                         <td className="px-4 py-3 text-slate-700">{trip.motoristaNome || 'Motorista Oficial'}</td>
                         <td className="px-4 py-3 text-slate-600 truncate max-w-xs">{trip.origem} ➔ {trip.destino}</td>
                         <td className="px-4 py-3">
@@ -1284,23 +1328,23 @@ export const CoordinatorPortal: React.FC<CoordinatorPortalProps> = ({
               <div className="space-y-1.5">
                 <label className="font-bold text-slate-800 flex items-center gap-1.5">
                   <User className="w-3.5 h-3.5 text-[#002B49]" />
-                  <span>2.1 Direcionar Motorista Oficial TJPR:</span>
+                  <span>2.1 Direcionar Motorista Oficial TJPR (Vínculo 1:1 Automático):</span>
                 </label>
                 <select
                   value={selectedDriverId}
-                  onChange={(e) => setSelectedDriverId(e.target.value)}
+                  onChange={(e) => handleAssignDriverChange(e.target.value)}
                   className="w-full p-3 rounded-xl border border-slate-200 bg-white text-slate-800 font-medium focus:outline-hidden focus:ring-2 focus:ring-[#002B49]"
                   required
                 >
                   <option value="">Selecione o motorista para a diligência...</option>
                   {drivers.map((drv) => (
                     <option key={drv.id} value={drv.id}>
-                      {drv.nome} • CNH {drv.cnhCategoria} (Matrícula: {drv.matricula}) • Status: {drv.status === 'disponivel' ? 'Disponível' : 'Em Deslocamento'}
+                      {drv.nome} • Virtus {drv.veiculoPrefixoAtual} • {drv.telefone} • Status: {drv.status === 'disponivel' ? 'Disponível' : 'Em Deslocamento'}
                     </option>
                   ))}
                 </select>
                 <p className="text-[10px] text-slate-500">
-                  O condutor selecionado receberá o despacho em seu aplicativo corporativo TJPR com os detalhes do percurso.
+                  Ao escolher o motorista, seu veículo Virtus exclusivo ({drivers.find(d => d.id === selectedDriverId)?.veiculoPrefixoAtual || 'TJ-10X'}) é preenchido automaticamente.
                 </p>
               </div>
 
@@ -1308,23 +1352,26 @@ export const CoordinatorPortal: React.FC<CoordinatorPortalProps> = ({
               <div className="space-y-1.5">
                 <label className="font-bold text-slate-800 flex items-center gap-1.5">
                   <Car className="w-3.5 h-3.5 text-[#002B49]" />
-                  <span>2.2 Direcionar Veículo Oficial da Frota:</span>
+                  <span>2.2 Direcionar Veículo Oficial da Frota (Vínculo 1:1 Automático):</span>
                 </label>
                 <select
                   value={selectedVehicleId}
-                  onChange={(e) => setSelectedVehicleId(e.target.value)}
+                  onChange={(e) => handleAssignVehicleChange(e.target.value)}
                   className="w-full p-3 rounded-xl border border-slate-200 bg-white text-slate-800 font-medium focus:outline-hidden focus:ring-2 focus:ring-[#002B49]"
                   required
                 >
                   <option value="">Selecione o veículo disponível...</option>
-                  {vehicles.map((veh) => (
-                    <option key={veh.id} value={veh.id}>
-                      {veh.prefixo} • {veh.modelo} ({veh.placa}) • Comarca: {veh.comarca} • {veh.status === 'disponivel' ? 'Disponível' : veh.status === 'em_viagem' ? 'Em Viagem' : 'Em Manutenção'}
-                    </option>
-                  ))}
+                  {vehicles.map((veh) => {
+                    const tiedDriver = drivers.find(d => d.veiculoPrefixoAtual === veh.prefixo);
+                    return (
+                      <option key={veh.id} value={veh.id}>
+                        {veh.prefixo} • {veh.modelo} ({veh.placa}) • Motorista: {tiedDriver?.nome || 'Designado'} • {veh.status === 'disponivel' ? 'Disponível' : veh.status === 'em_viagem' ? 'Em Viagem' : 'Em Manutenção'}
+                      </option>
+                    );
+                  })}
                 </select>
                 <p className="text-[10px] text-slate-500">
-                  Veículo alocado e reservado no sistema SIGPAT com vínculo automático à Ordem de Tráfego.
+                  Veículo alocado e reservado no sistema SIGPAT com vínculo exclusivo ao condutor oficial.
                 </p>
               </div>
 

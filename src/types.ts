@@ -73,8 +73,8 @@ export type VehicleType =
 
 export interface Vehicle {
   id: string;
-  prefixo: string; // Ex: V-104
-  placa: string; // Ex: BEP-4J20
+  prefixo: string; // Ex: TJ-101
+  placa: string; // Ex: TZI6J11
   modelo: string;
   marca: string;
   ano: number;

@@ -370,13 +370,13 @@ export const Sidebar: React.FC<SidebarProps> = ({
                 <div className="flex items-center justify-between">
                   <span className="text-[#8E9CA8] text-[11px]">Prefixo</span>
                   <span className="font-mono font-bold text-white">
-                    {assignedVehicle?.prefixo || currentDriver?.veiculoPrefixoAtual || 'TJ-104'}
+                    {assignedVehicle?.prefixo || currentDriver?.veiculoPrefixoAtual || 'TJ-101'}
                   </span>
                 </div>
                 <div className="flex items-center justify-between">
                   <span className="text-[#8E9CA8] text-[11px]">Modelo</span>
                   <span className="text-white text-[11px] truncate max-w-[120px]">
-                    {assignedVehicle?.modelo || 'Corolla XEi 2.0'}
+                    {assignedVehicle?.modelo || 'Volkswagen Virtus TSI'}
                   </span>
                 </div>
                 <div className="flex items-center justify-between">

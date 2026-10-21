@@ -75,10 +75,10 @@ const INITIAL_OPERATIONAL_EVENTS: OperationalEvent[] = [
     comarca: 'Curitiba - Sede Administrativa',
     local: 'Fórum Central de Curitiba & Unidades de Custódia',
     veiculoPrefixo: 'TJ-104',
-    motoristaNome: 'Carlos Eduardo Silveira',
+    motoristaNome: 'Gustavo Ferreira da Silva',
     responsavelNome: 'Dr. Roberto Magalhães',
     responsavelCargo: 'Juiz de Direito Plantonista',
-    descricao: 'Disponibilidade ininterrupta para diligências urgentes e audiências de custódia do plantão.',
+    descricao: 'Disponibilidade ininterrupta para diligências urgentes e audiências de custódia do plantão com o Virtus TJ-104.',
     status: 'em_andamento',
     criadoEm: '2026-10-19 14:00',
   },
@@ -91,13 +91,13 @@ const INITIAL_OPERATIONAL_EVENTS: OperationalEvent[] = [
     horaInicio: '08:30',
     dataFim: '2026-10-21',
     horaFim: '17:30',
-    comarca: 'Londrina',
-    local: 'Unidade de Acolhimento Institucional - Londrina',
-    veiculoPrefixo: 'TJ-305',
-    motoristaNome: 'Carlos Eduardo Silveira',
+    comarca: 'Curitiba - Sede Administrativa',
+    local: 'Unidade de Acolhimento Institucional',
+    veiculoPrefixo: 'TJ-102',
+    motoristaNome: 'Moisés Florentino de Souza',
     responsavelNome: 'Dra. Mariana Vasconcellos',
     responsavelCargo: 'Juíza de Direito Substituta',
-    descricao: 'Transporte de equipe multidisciplinar (Juíza, Psicóloga e Assistente Social) para inspeção de abrigos.',
+    descricao: 'Transporte de equipe multidisciplinar (Juíza, Psicóloga e Assistente Social) no Virtus TJ-102.',
     status: 'agendado',
     criadoEm: '2026-10-18 09:30',
   },
@@ -112,11 +112,11 @@ const INITIAL_OPERATIONAL_EVENTS: OperationalEvent[] = [
     horaFim: '15:00',
     comarca: 'Curitiba - Sede Administrativa',
     local: 'Pátio Central da Divisão de Transportes - Palácio da Justiça',
-    veiculoPrefixo: 'TJ-208',
-    motoristaNome: 'Marcos Antonio Batista',
+    veiculoPrefixo: 'TJ-103',
+    motoristaNome: 'José Carlos Faria de Lima',
     responsavelNome: 'Divisão de Transportes',
     responsavelCargo: 'Equipe de Inspeção Técnica',
-    descricao: 'Inspeção de tacógrafo, extintores, cinto de segurança e higienização hospitalar.',
+    descricao: 'Inspeção de tacógrafo, extintores, cinto de segurança e higienização hospitalar do Virtus TJ-103.',
     status: 'agendado',
     criadoEm: '2026-10-15 11:20',
   },
@@ -131,9 +131,10 @@ const INITIAL_OPERATIONAL_EVENTS: OperationalEvent[] = [
     horaFim: '12:00',
     comarca: 'Curitiba - Sede Administrativa',
     local: 'Escola Judicial do Paraná (EJUD-PR)',
-    motoristaNome: 'Carlos Eduardo Silveira',
+    veiculoPrefixo: 'TJ-105',
+    motoristaNome: 'Hélio Pereira dos Santos',
     responsavelNome: 'Coordenação Pedagógica EJUD',
-    descricao: 'Módulo de atualização para condutores oficiais de transporte de magistrados e escolta.',
+    descricao: 'Módulo de atualização para condutores oficiais de transporte de magistrados.',
     status: 'agendado',
     criadoEm: '2026-10-10 16:00',
   },
@@ -149,9 +150,9 @@ const INITIAL_OPERATIONAL_EVENTS: OperationalEvent[] = [
     comarca: 'Curitiba - Sede Administrativa',
     local: 'Plenário do Palácio da Justiça - TJPR',
     veiculoPrefixo: 'TJ-101',
-    motoristaNome: 'Carlos Eduardo Silveira',
+    motoristaNome: 'Romão Sidney Rigos Junior',
     responsavelNome: 'Gabinete da Presidência',
-    descricao: 'Recepção e condução de autoridades convidadas para sessão plenária solene.',
+    descricao: 'Recepção e condução de autoridades convidadas para sessão plenária solene com o Virtus TJ-101.',
     status: 'agendado',
     criadoEm: '2026-10-12 10:00',
   }
@@ -205,6 +206,48 @@ export const CalendarEventsView: React.FC<CalendarEventsViewProps> = ({
   const [newEvtMotoristaNome, setNewEvtMotoristaNome] = useState('');
   const [newEvtResponsavelNome, setNewEvtResponsavelNome] = useState('');
   const [newEvtDescricao, setNewEvtDescricao] = useState('');
+
+  // Vinculação Automática Fixo 1 a 1: O carro está atrelado ao motorista
+  const handleSelectVeiculo = (prefixo: string) => {
+    setNewEvtVeiculoPrefixo(prefixo);
+    if (!prefixo) {
+      setNewEvtMotoristaNome('');
+      return;
+    }
+    const linkedDriver = drivers.find(d => d.veiculoPrefixoAtual === prefixo) ||
+      drivers[vehicles.findIndex(v => v.prefixo === prefixo)];
+    if (linkedDriver) {
+      setNewEvtMotoristaNome(linkedDriver.nome);
+    }
+  };
+
+  const handleSelectMotorista = (nome: string) => {
+    setNewEvtMotoristaNome(nome);
+    if (!nome) {
+      setNewEvtVeiculoPrefixo('');
+      return;
+    }
+    const linkedDriver = drivers.find(d => d.nome === nome);
+    if (linkedDriver && linkedDriver.veiculoPrefixoAtual) {
+      setNewEvtVeiculoPrefixo(linkedDriver.veiculoPrefixoAtual);
+    } else {
+      const idx = drivers.findIndex(d => d.nome === nome);
+      if (idx >= 0 && vehicles[idx]) {
+        setNewEvtVeiculoPrefixo(vehicles[idx].prefixo);
+      }
+    }
+  };
+
+  // Informações do par vinculado selecionado para feedback visual imediato
+  const selectedPairInfo = useMemo(() => {
+    if (!newEvtVeiculoPrefixo && !newEvtMotoristaNome) return null;
+    const veh = vehicles.find(v => v.prefixo === newEvtVeiculoPrefixo);
+    const drv = drivers.find(d => d.nome === newEvtMotoristaNome);
+    if (veh && drv) {
+      return { veh, drv };
+    }
+    return null;
+  }, [newEvtVeiculoPrefixo, newEvtMotoristaNome, vehicles, drivers]);
 
   // --------------------------------------------------------------------------
   // ALIMENTAÇÃO AUTOMÁTICA EM TEMPO REAL: Unifica todas as fontes de atividades
@@ -1511,38 +1554,71 @@ export const CalendarEventsView: React.FC<CalendarEventsViewProps> = ({
                 </div>
               </div>
 
-              <div className="grid grid-cols-2 gap-3">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                 <div>
-                  <label className="block text-xs font-bold text-slate-700 mb-1">Veículo Oficial:</label>
+                  <div className="flex items-center justify-between mb-1">
+                    <label className="block text-xs font-bold text-slate-700">Veículo Oficial:</label>
+                    <span className="text-[10px] text-emerald-700 font-semibold bg-emerald-50 px-1.5 py-0.5 rounded border border-emerald-200">
+                      ⚡ Preenchimento automático
+                    </span>
+                  </div>
                   <select
                     value={newEvtVeiculoPrefixo}
-                    onChange={(e) => setNewEvtVeiculoPrefixo(e.target.value)}
-                    className="w-full px-3 py-2 text-xs bg-slate-50 border border-slate-300 rounded-xl"
+                    onChange={(e) => handleSelectVeiculo(e.target.value)}
+                    className="w-full px-3 py-2 text-xs bg-slate-50 border border-slate-300 rounded-xl focus:bg-white focus:outline-none focus:border-[#05202B]"
                   >
                     <option value="">A designar pela Coordenação</option>
-                    {vehicles.slice(0, 15).map(v => (
-                      <option key={v.id} value={v.prefixo}>
-                        {v.prefixo} • {v.modelo} ({v.placa})
-                      </option>
-                    ))}
+                    {vehicles.map((v, idx) => {
+                      const linked = drivers.find(d => d.veiculoPrefixoAtual === v.prefixo) || drivers[idx];
+                      return (
+                        <option key={v.id} value={v.prefixo}>
+                          {v.prefixo} • {v.placa} ({v.modelo}) {linked ? `→ Condutor: ${linked.nome}` : ''}
+                        </option>
+                      );
+                    })}
                   </select>
                 </div>
 
                 <div>
-                  <label className="block text-xs font-bold text-slate-700 mb-1">Motorista Designado:</label>
+                  <div className="flex items-center justify-between mb-1">
+                    <label className="block text-xs font-bold text-slate-700">Motorista Designado:</label>
+                    <span className="text-[10px] text-emerald-700 font-semibold bg-emerald-50 px-1.5 py-0.5 rounded border border-emerald-200">
+                      🔗 Atrelado ao carro
+                    </span>
+                  </div>
                   <select
                     value={newEvtMotoristaNome}
-                    onChange={(e) => setNewEvtMotoristaNome(e.target.value)}
-                    className="w-full px-3 py-2 text-xs bg-slate-50 border border-slate-300 rounded-xl"
+                    onChange={(e) => handleSelectMotorista(e.target.value)}
+                    className="w-full px-3 py-2 text-xs bg-slate-50 border border-slate-300 rounded-xl focus:bg-white focus:outline-none focus:border-[#05202B]"
                   >
                     <option value="">A designar pela Coordenação</option>
-                    {drivers.map(d => (
-                      <option key={d.id} value={d.nome}>
-                        {d.nome} ({d.matricula})
-                      </option>
-                    ))}
+                    {drivers.map((d, idx) => {
+                      const linkedVeh = vehicles.find(v => v.prefixo === d.veiculoPrefixoAtual) || vehicles[idx];
+                      return (
+                        <option key={d.id} value={d.nome}>
+                          {d.nome} {linkedVeh ? `(${linkedVeh.prefixo} • ${linkedVeh.placa})` : ''}
+                        </option>
+                      );
+                    })}
                   </select>
                 </div>
+
+                {/* Banner de Confirmação do Vínculo Automático Fixo */}
+                {selectedPairInfo && (
+                  <div className="sm:col-span-2 p-2.5 bg-emerald-50 border border-emerald-300 rounded-xl flex items-center justify-between text-xs text-emerald-950 shadow-xs">
+                    <div className="flex items-center gap-2">
+                      <CheckCircle2 className="w-4 h-4 text-emerald-600 shrink-0" />
+                      <span>
+                        <strong>Vínculo Fixo:</strong> {selectedPairInfo.veh.prefixo} ({selectedPairInfo.veh.placa} - {selectedPairInfo.veh.modelo}) &harr; <strong>{selectedPairInfo.drv.nome}</strong>
+                      </span>
+                    </div>
+                    {selectedPairInfo.drv.telefone && selectedPairInfo.drv.telefone !== '—' && (
+                      <span className="text-[11px] font-mono font-bold bg-white px-2 py-0.5 rounded border border-emerald-200 text-emerald-800 shrink-0">
+                        {selectedPairInfo.drv.telefone}
+                      </span>
+                    )}
+                  </div>
+                )}
               </div>
 
               <div>

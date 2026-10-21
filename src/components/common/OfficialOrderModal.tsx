@@ -142,9 +142,9 @@ export const OfficialOrderModal: React.FC<OfficialOrderModalProps> = ({
                 Veículo Oficial Vinculado
               </span>
               <div className="font-bold text-sm text-[#002B49]">{trip.veiculoPrefixo || vehicle?.prefixo}</div>
-              <p className="text-slate-700">{vehicle?.modelo || 'Toyota Corolla XEi'}</p>
-              <p className="font-mono text-slate-500 text-[11px]">Placa: {vehicle?.placa || 'BEP-4J20'}</p>
-              <p className="font-mono text-slate-500 text-[11px]">Chassi: {vehicle?.chassi || '9BRBL42E0P8091234'}</p>
+              <p className="text-slate-700">{vehicle?.modelo || 'Volkswagen Virtus TSI'}</p>
+              <p className="font-mono text-slate-500 text-[11px]">Placa: {vehicle?.placa || 'TZI6J11'}</p>
+              <p className="font-mono text-slate-500 text-[11px]">Chassi: {vehicle?.chassi || '9BWAG4BZ4RP010101'}</p>
             </div>
 
             <div className="p-3 border border-slate-200 rounded-lg bg-white">

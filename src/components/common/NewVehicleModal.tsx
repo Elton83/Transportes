@@ -94,7 +94,7 @@ export const NewVehicleModal: React.FC<NewVehicleModalProps> = ({
               <label className="block font-bold text-slate-700 mb-1">Placa Mercosul</label>
               <input
                 type="text"
-                placeholder="Ex: BEP-9X12"
+                placeholder="Ex: TZI6J11"
                 value={placa}
                 onChange={(e) => setPlaca(e.target.value)}
                 required
@@ -119,7 +119,7 @@ export const NewVehicleModal: React.FC<NewVehicleModalProps> = ({
               <label className="block font-bold text-slate-700 mb-1">Modelo Completo</label>
               <input
                 type="text"
-                placeholder="Ex: Toyota Corolla Altis Hybrid 1.8"
+                placeholder="Ex: Volkswagen Virtus TSI"
                 value={modelo}
                 onChange={(e) => setModelo(e.target.value)}
                 required
@@ -131,7 +131,7 @@ export const NewVehicleModal: React.FC<NewVehicleModalProps> = ({
               <label className="block font-bold text-slate-700 mb-1">Marca / Fabricante</label>
               <input
                 type="text"
-                placeholder="Ex: Toyota, Chevrolet, Ford..."
+                placeholder="Ex: Volkswagen"
                 value={marca}
                 onChange={(e) => setMarca(e.target.value)}
                 className="w-full px-2.5 py-1.5 border border-slate-300 rounded bg-white focus:ring-1 focus:ring-[#002B49]"

@@ -64,8 +64,8 @@ const PRESET_ROUTES: Record<string, {
   limiteVelocidadeKmH: number;
   waypoints: { lat: number; lng: number; label: string; kmMarca: number }[];
 }> = {
-  // Viagem TJ-208: Curitiba -> Ponta Grossa
-  'TJ-208': {
+  // Viagem TJ-101 / TJ-102: Curitiba -> Ponta Grossa
+  'TJ-101': {
     nomeRota: 'Curitiba (Palácio da Justiça) ➔ Ponta Grossa (Fórum Des. Alberto Pacheco)',
     rodovia: 'BR-277 / BR-376 - Rodovia do Café',
     distanciaTotalKm: 114,
@@ -80,8 +80,23 @@ const PRESET_ROUTES: Record<string, {
       { lat: -25.0950, lng: -50.1620, label: 'Fórum Des. Alberto Pacheco - Ponta Grossa', kmMarca: 114 },
     ]
   },
-  // Viagem TJ-312: Cascavel -> Capitão Leônidas Marques
-  'TJ-312': {
+  'TJ-102': {
+    nomeRota: 'Curitiba (Palácio da Justiça) ➔ Ponta Grossa (Fórum Des. Alberto Pacheco)',
+    rodovia: 'BR-277 / BR-376 - Rodovia do Café',
+    distanciaTotalKm: 114,
+    limiteVelocidadeKmH: 100,
+    waypoints: [
+      { lat: -25.4198, lng: -49.2705, label: 'Palácio da Justiça - Centro Cívico (Curitiba)', kmMarca: 0 },
+      { lat: -25.4385, lng: -49.3320, label: 'Saída de Curitiba - Parque Barigui / BR-277', kmMarca: 12 },
+      { lat: -25.4590, lng: -49.5280, label: 'Campo Largo - Contorno Norte', kmMarca: 32 },
+      { lat: -25.4410, lng: -49.7210, label: 'São Luiz do Purunã - Serra de São Luiz', kmMarca: 54 },
+      { lat: -25.3980, lng: -49.9120, label: 'Witmarsum - Trevo Rodoviário', kmMarca: 76 },
+      { lat: -25.2650, lng: -50.0890, label: 'Ponta Grossa - Distrito Industrial', kmMarca: 98 },
+      { lat: -25.0950, lng: -50.1620, label: 'Fórum Des. Alberto Pacheco - Ponta Grossa', kmMarca: 114 },
+    ]
+  },
+  // Viagem TJ-103: Cascavel -> Capitão Leônidas Marques
+  'TJ-103': {
     nomeRota: 'Cascavel (Fórum Central) ➔ Capitão Leônidas Marques (Vara Única)',
     rodovia: 'BR-277 / PR-592',
     distanciaTotalKm: 76,

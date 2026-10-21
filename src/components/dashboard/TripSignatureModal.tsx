@@ -19,6 +19,8 @@ import {
   Check
 } from 'lucide-react';
 import { Trip, Vehicle, Driver, TripSignatureData } from '../../types';
+import { VEHICLES } from '../../data/vehiclesData';
+import { INITIAL_DRIVERS } from '../../data/initialData';
 
 interface TripSignatureModalProps {
   isOpen: boolean;
@@ -45,6 +47,10 @@ export const TripSignatureModal: React.FC<TripSignatureModalProps> = ({
 }) => {
   if (!isOpen) return null;
 
+  // Localizar veículo e motorista oficial garantindo consistência com a frota de 22 Virtus
+  const matchedVeh = vehicle || VEHICLES.find(v => v.prefixo === trip.veiculoPrefixo || v.placa === trip.veiculoPlaca) || VEHICLES[0];
+  const matchedDrv = driver || INITIAL_DRIVERS.find(d => d.id === trip.motoristaId || d.nome === trip.motoristaNome || d.veiculoPrefixoAtual === matchedVeh.prefixo) || INITIAL_DRIVERS[0];
+
   // Extrair passageiro e matrícula padrão
   const defaultPassageiroNome = trip.passageiros?.[0] || trip.solicitanteNome || 'ROBERTO';
   const defaultPassageiroMatricula = '524151';
@@ -54,15 +60,15 @@ export const TripSignatureModal: React.FC<TripSignatureModalProps> = ({
     data: trip.dataRetornoEfetiva 
       ? trip.dataRetornoEfetiva.split('-').reverse().join('/') 
       : (trip.dataSaida ? trip.dataSaida.split('-').reverse().join('/') : '17/09/2026'),
-    condutorNome: (trip.motoristaNome || driver?.nome || 'ROBERTO').toUpperCase(),
-    condutorMatricula: driver?.matricula?.replace(/\D/g, '').slice(-3) || '212',
-    veiculoModelo: (vehicle?.modelo || 'COROLLA').toUpperCase().split(' ')[0],
-    placa: (vehicle?.placa || 'DSD-6525').toUpperCase(),
+    condutorNome: (trip.motoristaNome || matchedDrv?.nome || 'Romão Sidney Rigos Junior').toUpperCase(),
+    condutorMatricula: matchedDrv?.matricula?.replace(/\D/g, '').slice(-3) || '912',
+    veiculoModelo: (matchedVeh?.modelo || trip.veiculoModelo || 'Volkswagen Virtus TSI').toUpperCase(),
+    placa: (matchedVeh?.placa || trip.veiculoPlaca || 'TZI6J11').toUpperCase(),
     destino: (trip.destino || 'PALACIO').toUpperCase().split(' - ')[0].replace(/FÓRUM DA COMARCA DE /gi, '').trim(),
     horaSaida: trip.horaSaida || '15:00',
-    kmSaida: trip.kmInicial || (vehicle?.kmAtual ? vehicle.kmAtual - 3 : 152),
+    kmSaida: trip.kmInicial || (matchedVeh?.kmAtual ? matchedVeh.kmAtual - 3 : 152),
     horaRetorno: trip.horaRetornoEfetiva || trip.horaRetornoPrevista || '15:30',
-    kmRetorno: trip.kmFinal || (vehicle?.kmAtual || 155),
+    kmRetorno: trip.kmFinal || (matchedVeh?.kmAtual || 155),
     passageiroNome: defaultPassageiroNome.toUpperCase().replace(/^DR\.\s*/i, '').split(' ')[0],
     passageiroMatricula: defaultPassageiroMatricula,
     autenticadoDigitalmente: true,
@@ -153,24 +159,59 @@ export const TripSignatureModal: React.FC<TripSignatureModalProps> = ({
     setActiveSigner(null);
   };
 
-  // Carregar preset com os valores exatos da imagem de exemplo
+  // Handlers para preenchimento automático 1-para-1 entre motorista e veículo
+  const handleDriverNameChange = (val: string) => {
+    const upper = val.toUpperCase().trim();
+    const matched = INITIAL_DRIVERS.find(d => d.nome.toUpperCase() === upper);
+    if (matched) {
+      const veh = VEHICLES.find(v => v.prefixo === matched.veiculoPrefixoAtual);
+      setSignatureData(prev => ({
+        ...prev,
+        condutorNome: matched.nome.toUpperCase(),
+        condutorMatricula: matched.matricula.replace(/\D/g, '').slice(-3),
+        veiculoModelo: veh ? veh.modelo.toUpperCase() : prev.veiculoModelo,
+        placa: veh ? veh.placa.toUpperCase() : prev.placa
+      }));
+    } else {
+      setSignatureData(prev => ({ ...prev, condutorNome: val.toUpperCase() }));
+    }
+  };
+
+  const handlePlateChange = (val: string) => {
+    const upper = val.toUpperCase().trim();
+    const matched = VEHICLES.find(v => v.placa === upper || v.prefixo === upper);
+    if (matched) {
+      const drv = INITIAL_DRIVERS.find(d => d.veiculoPrefixoAtual === matched.prefixo);
+      setSignatureData(prev => ({
+        ...prev,
+        placa: matched.placa,
+        veiculoModelo: matched.modelo.toUpperCase(),
+        condutorNome: drv ? drv.nome.toUpperCase() : prev.condutorNome,
+        condutorMatricula: drv ? drv.matricula.replace(/\D/g, '').slice(-3) : prev.condutorMatricula
+      }));
+    } else {
+      setSignatureData(prev => ({ ...prev, placa: val.toUpperCase() }));
+    }
+  };
+
+  // Carregar preset oficial com Volkswagen Virtus TSI e motorista oficial
   const loadExamplePreset = () => {
     setSignatureData({
       data: '17/09/2026',
-      condutorNome: 'ROBERTO',
-      condutorMatricula: '212',
-      veiculoModelo: 'COROLLA',
-      placa: 'DSD-6525',
-      destino: 'PALACIO',
+      condutorNome: 'ROMÃO SIDNEY RIGOS JUNIOR',
+      condutorMatricula: '912',
+      veiculoModelo: 'VOLKSWAGEN VIRTUS TSI',
+      placa: 'TZI6J11',
+      destino: 'PALÁCIO DA JUSTIÇA',
       horaSaida: '15:00',
       kmSaida: 152,
       horaRetorno: '15:30',
       kmRetorno: 155,
-      passageiroNome: 'ROBERTO',
-      passageiroMatricula: '524151',
+      passageiroNome: defaultPassageiroNome.toUpperCase().replace(/^DR\.\s*/i, '').split(' ')[0],
+      passageiroMatricula: defaultPassageiroMatricula,
       autenticadoDigitalmente: true,
       dataHoraAssinatura: '17/09/2026 15:32',
-      hashAutenticidade: 'TJPR-TRP-ROB6525'
+      hashAutenticidade: 'TJPR-TRP-TZI6J11'
     });
     setCondutorCanvasData(null);
     setPassageiroCanvasData(null);
@@ -225,10 +266,10 @@ export const TripSignatureModal: React.FC<TripSignatureModalProps> = ({
             <button
               onClick={loadExamplePreset}
               className="px-2.5 py-1.5 bg-sky-900/70 hover:bg-sky-800 text-sky-200 rounded-lg text-xs font-medium border border-sky-700/50 flex items-center gap-1.5 transition-colors"
-              title="Carregar exemplo da imagem oficial (Roberto / Corolla / Palácio)"
+              title="Carregar exemplo da frota oficial (Romão Sidney / Virtus TSI / TZI6J11)"
             >
               <Sparkles className="w-3.5 h-3.5 text-amber-300" />
-              <span className="hidden sm:inline">Exemplo da Imagem</span>
+              <span className="hidden sm:inline">Exemplo Oficial Virtus</span>
             </button>
 
             <button
@@ -312,13 +353,21 @@ export const TripSignatureModal: React.FC<TripSignatureModalProps> = ({
                   />
                 </div>
                 <div>
-                  <label className="block text-[10px] font-bold text-slate-600 uppercase mb-1">Condutor</label>
+                  <label className="block text-[10px] font-bold text-slate-600 uppercase mb-1">Condutor (Vínculo 1:1)</label>
                   <input
                     type="text"
+                    list="signature-modal-driver-list"
                     value={signatureData.condutorNome}
-                    onChange={(e) => setSignatureData({ ...signatureData, condutorNome: e.target.value.toUpperCase() })}
+                    onChange={(e) => handleDriverNameChange(e.target.value)}
                     className="w-full px-2.5 py-1.5 bg-white border border-slate-300 rounded text-xs font-semibold"
                   />
+                  <datalist id="signature-modal-driver-list">
+                    {INITIAL_DRIVERS.map(d => (
+                      <option key={d.id} value={d.nome.toUpperCase()}>
+                        {d.veiculoPrefixoAtual} • {d.telefone}
+                      </option>
+                    ))}
+                  </datalist>
                 </div>
                 <div>
                   <label className="block text-[10px] font-bold text-slate-600 uppercase mb-1">Matrícula Condutor</label>
@@ -339,13 +388,21 @@ export const TripSignatureModal: React.FC<TripSignatureModalProps> = ({
                   />
                 </div>
                 <div>
-                  <label className="block text-[10px] font-bold text-slate-600 uppercase mb-1">Placa</label>
+                  <label className="block text-[10px] font-bold text-slate-600 uppercase mb-1">Placa (Vínculo 1:1)</label>
                   <input
                     type="text"
+                    list="signature-modal-plate-list"
                     value={signatureData.placa}
-                    onChange={(e) => setSignatureData({ ...signatureData, placa: e.target.value.toUpperCase() })}
+                    onChange={(e) => handlePlateChange(e.target.value)}
                     className="w-full px-2.5 py-1.5 bg-white border border-slate-300 rounded text-xs font-mono font-bold"
                   />
+                  <datalist id="signature-modal-plate-list">
+                    {VEHICLES.map(v => (
+                      <option key={v.id} value={v.placa}>
+                        {v.prefixo} • {v.modelo}
+                      </option>
+                    ))}
+                  </datalist>
                 </div>
                 <div>
                   <label className="block text-[10px] font-bold text-slate-600 uppercase mb-1">Destino</label>

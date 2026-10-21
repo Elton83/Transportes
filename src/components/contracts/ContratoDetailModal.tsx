@@ -264,7 +264,7 @@ export const ContratoDetailModal: React.FC<ContratoDetailModalProps> = ({
                   <div className="flex items-center gap-2">
                     <ShieldCheck className="w-4 h-4 text-sky-700" />
                     <h4 className="text-xs font-bold text-sky-950 uppercase tracking-wide">
-                      Apólice Coletiva da Frota TJPR (250 Veículos)
+                      Apólice Coletiva da Frota TJPR (22 Veículos)
                     </h4>
                   </div>
                   <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-2.5 text-xs">

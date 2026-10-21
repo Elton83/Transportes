@@ -442,3 +442,6 @@ export const INITIAL_VEHICLES: Vehicle[] = [
     renavam: '01394857222'
   }
 ];
+
+export const VEHICLES = INITIAL_VEHICLES;
+

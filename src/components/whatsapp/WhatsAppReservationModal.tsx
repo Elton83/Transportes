@@ -72,7 +72,7 @@ Informamos que o motorista oficial *${driver?.nome || trip.motoristaNome || 'Des
 
 📍 *Ponto de Embarque:* ${trip.origem}
 ⏰ *Horário Previsto:* ${trip.horaSaida}
-📱 *Contato do Motorista:* ${driver?.telefone || '(41) 99841-2093'}
+📱 *Contato do Motorista:* ${driver?.telefone || '(41) 99914-4544'}
 
 🛰️ *Rastreamento ao Vivo:*
 https://frota.tjpr.jus.br/tracking/${trip.codigo}

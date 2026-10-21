@@ -95,7 +95,7 @@ export const ContratosView: React.FC<ContratosViewProps> = ({
       case 'fornecedor_manutencao':
         return { label: 'Manutenção & Peças', icon: Wrench, color: 'bg-amber-100 text-amber-900 border-amber-300' };
       case 'seguro_frota':
-        return { label: 'Seguro da Frota (250 Veículos)', icon: ShieldCheck, color: 'bg-sky-100 text-sky-950 border-sky-300' };
+        return { label: 'Seguro da Frota (22 Veículos)', icon: ShieldCheck, color: 'bg-sky-100 text-sky-950 border-sky-300' };
       case 'combustivel_pedagio':
         return { label: 'Combustível & Pedágios', icon: Fuel, color: 'bg-purple-100 text-purple-900 border-purple-300' };
       case 'telemetria_rastreamento':
@@ -454,7 +454,7 @@ export const ContratosView: React.FC<ContratosViewProps> = ({
                         <ShieldCheck className="w-4 h-4 text-sky-700 shrink-0" />
                         <div>
                           <strong className="text-sky-950 block">Apólice: {ct.apoliceNumero}</strong>
-                          <span className="text-[10px] text-sky-800">Porto Seguro • 250 Veículos • RCF-V R$ 2M</span>
+                          <span className="text-[10px] text-sky-800">Porto Seguro • 22 Veículos • RCF-V R$ 2M</span>
                         </div>
                       </div>
                       <span className="text-[10px] font-bold text-emerald-800 bg-emerald-100 px-2 py-0.5 rounded">

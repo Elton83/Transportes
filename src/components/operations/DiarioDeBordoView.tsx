@@ -232,10 +232,10 @@ export const DiarioDeBordoView: React.FC<DiarioDeBordoViewProps> = ({
         t.dataSaida,
         t.horaSaida,
         t.horaRetornoEfetiva || t.horaRetornoPrevista,
-        t.veiculoPrefixo || veh?.prefixo || 'TJ-104',
-        veh?.placa || 'BEP-4J21',
-        veh?.modelo || 'Corolla XEi 2.0',
-        t.motoristaNome || drv?.nome || 'Condutor Oficial',
+        t.veiculoPrefixo || veh?.prefixo || 'TJ-101',
+        veh?.placa || 'TZI6J11',
+        veh?.modelo || 'Volkswagen Virtus TSI',
+        t.motoristaNome || drv?.nome || 'Romão Sidney Rigos Junior',
         drv?.matricula || 'TJPR-00.000-0',
         t.solicitanteNome,
         t.solicitanteVara,
@@ -664,21 +664,21 @@ export const DiarioDeBordoView: React.FC<DiarioDeBordoViewProps> = ({
                       <td className="p-2.5 border-r border-slate-100 whitespace-nowrap">
                         <div className="flex items-center gap-1.5">
                           <span className="px-1.5 py-0.5 rounded bg-amber-100 text-amber-950 font-mono font-bold text-[10px] border border-amber-300">
-                            {trip.veiculoPrefixo || veh?.prefixo || 'TJ-104'}
+                            {trip.veiculoPrefixo || veh?.prefixo || 'TJ-101'}
                           </span>
                           <span className="font-mono text-xs text-slate-800 font-semibold">
-                            {veh?.placa || 'BEP-4J21'}
+                            {veh?.placa || 'TZI6J11'}
                           </span>
                         </div>
                         <span className="text-[10px] text-slate-500 block truncate max-w-[130px]">
-                          {veh?.modelo || trip.veiculoModelo || 'Corolla XEi 2.0'}
+                          {veh?.modelo || trip.veiculoModelo || 'Volkswagen Virtus TSI'}
                         </span>
                       </td>
 
                       {/* Condutor Oficial */}
                       <td className="p-2.5 border-r border-slate-100 whitespace-nowrap">
                         <strong className="text-slate-900 block truncate max-w-[140px]">
-                          {trip.motoristaNome || 'Carlos Eduardo Silveira'}
+                          {trip.motoristaNome || 'Romão Sidney Rigos Junior'}
                         </strong>
                         <span className="text-[10px] text-slate-400 font-mono">
                           Matr. {trip.motoristaId === 'drv-1' ? '48.912-3' : '39.810-7'}
@@ -861,42 +861,99 @@ export const DiarioDeBordoView: React.FC<DiarioDeBordoViewProps> = ({
                 </div>
 
                 <div>
-                  <label className="block font-semibold text-slate-700 mb-1">Veículo Oficial *</label>
+                  <div className="flex items-center justify-between mb-1">
+                    <label className="font-semibold text-slate-700">Veículo Oficial *</label>
+                    <span className="text-[10px] text-emerald-700 font-semibold bg-emerald-50 px-1.5 py-0.2 rounded border border-emerald-200">
+                      ⚡ Automático
+                    </span>
+                  </div>
                   <select
                     value={novoVeiculoId}
                     onChange={(e) => {
-                      setNovoVeiculoId(e.target.value);
-                      const found = vehicles.find(v => v.id === e.target.value);
+                      const vId = e.target.value;
+                      setNovoVeiculoId(vId);
+                      const found = vehicles.find(v => v.id === vId);
                       if (found) {
                         setNovoKmInicial(String(found.kmAtual));
                         setNovoKmFinal(String(found.kmAtual + 150));
+                        const linked = drivers.find(d => d.veiculoPrefixoAtual === found.prefixo) ||
+                          drivers[vehicles.findIndex(v => v.id === vId)];
+                        if (linked) {
+                          setNovoMotoristaId(linked.id);
+                        }
                       }
                     }}
                     className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-slate-900 font-semibold focus:outline-none focus:border-[#002B49] cursor-pointer"
                   >
-                    {vehicles.map(v => (
-                      <option key={v.id} value={v.id}>
-                        {v.prefixo} • {v.placa} ({v.modelo})
-                      </option>
-                    ))}
+                    {vehicles.map((v, idx) => {
+                      const linked = drivers.find(d => d.veiculoPrefixoAtual === v.prefixo) || drivers[idx];
+                      return (
+                        <option key={v.id} value={v.id}>
+                          {v.prefixo} • {v.placa} ({v.modelo}) {linked ? `→ Condutor: ${linked.nome.split(' ')[0]}` : ''}
+                        </option>
+                      );
+                    })}
                   </select>
                 </div>
 
                 <div>
-                  <label className="block font-semibold text-slate-700 mb-1">Condutor Oficial *</label>
+                  <div className="flex items-center justify-between mb-1">
+                    <label className="font-semibold text-slate-700">Condutor Oficial *</label>
+                    <span className="text-[10px] text-emerald-700 font-semibold bg-emerald-50 px-1.5 py-0.2 rounded border border-emerald-200">
+                      🔗 Atrelado ao carro
+                    </span>
+                  </div>
                   <select
                     value={novoMotoristaId}
-                    onChange={(e) => setNovoMotoristaId(e.target.value)}
+                    onChange={(e) => {
+                      const dId = e.target.value;
+                      setNovoMotoristaId(dId);
+                      const foundDrv = drivers.find(d => d.id === dId);
+                      if (foundDrv) {
+                        const linkedVeh = vehicles.find(v => v.prefixo === foundDrv.veiculoPrefixoAtual) ||
+                          vehicles[drivers.findIndex(d => d.id === dId)];
+                        if (linkedVeh) {
+                          setNovoVeiculoId(linkedVeh.id);
+                          setNovoKmInicial(String(linkedVeh.kmAtual));
+                          setNovoKmFinal(String(linkedVeh.kmAtual + 150));
+                        }
+                      }
+                    }}
                     className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-slate-900 font-semibold focus:outline-none focus:border-[#002B49] cursor-pointer"
                   >
-                    {drivers.map(d => (
-                      <option key={d.id} value={d.id}>
-                        {d.nome} (Matr. {d.matricula})
-                      </option>
-                    ))}
+                    {drivers.map((d, idx) => {
+                      const linkedVeh = vehicles.find(v => v.prefixo === d.veiculoPrefixoAtual) || vehicles[idx];
+                      return (
+                        <option key={d.id} value={d.id}>
+                          {d.nome} {linkedVeh ? `(${linkedVeh.prefixo} • ${linkedVeh.placa})` : ''}
+                        </option>
+                      );
+                    })}
                   </select>
                 </div>
               </div>
+
+              {/* Banner de Feedback da Vinculação Automática */}
+              {(() => {
+                const curVeh = vehicles.find(v => v.id === novoVeiculoId);
+                const curDrv = drivers.find(d => d.id === novoMotoristaId);
+                if (!curVeh || !curDrv) return null;
+                return (
+                  <div className="p-2.5 bg-emerald-50 border border-emerald-200 rounded-xl flex items-center justify-between text-xs text-emerald-950">
+                    <div className="flex items-center gap-2">
+                      <Check className="w-4 h-4 text-emerald-600 shrink-0" />
+                      <span>
+                        <strong>Vínculo Fixo:</strong> {curVeh.prefixo} ({curVeh.placa} - {curVeh.modelo}) atrelado ao condutor <strong>{curDrv.nome}</strong>
+                      </span>
+                    </div>
+                    {curDrv.telefone && curDrv.telefone !== '—' && (
+                      <span className="font-mono text-[11px] font-bold bg-white px-2 py-0.5 rounded border border-emerald-200 text-emerald-800 shrink-0">
+                        {curDrv.telefone}
+                      </span>
+                    )}
+                  </div>
+                );
+              })()}
 
               {/* Linha 2: Solicitante e Vara */}
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5 text-xs">

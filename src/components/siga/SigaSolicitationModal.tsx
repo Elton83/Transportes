@@ -441,10 +441,10 @@ export const SigaSolicitationModal: React.FC<SigaSolicitationModalProps> = ({
                   onChange={(e) => setTipoVeiculoSugerido(e.target.value as VehicleType)}
                   className="w-full px-3 py-1.5 bg-slate-50 border border-slate-200 rounded-lg text-xs text-slate-800 focus:outline-hidden focus:border-[#002B49]"
                 >
-                  <option value="Sedan Executivo">Sedan Executivo (Corolla / BYD)</option>
-                  <option value="SUV Operacional">SUV Operacional (Jeep Compass)</option>
-                  <option value="Camionete Diligências">Camionete Diligências 4x4 (Ranger)</option>
-                  <option value="Van Transporte Coletivo">Van Transporte Coletivo (Spin / Sprinter)</option>
+                  <option value="Sedan Executivo">Sedan Executivo (Volkswagen Virtus TSI)</option>
+                  <option value="SUV Operacional">SUV Operacional / Apoio</option>
+                  <option value="Camionete Diligências">Camionete Diligências 4x4</option>
+                  <option value="Van Transporte Coletivo">Van Transporte Coletivo</option>
                 </select>
               </div>
 
