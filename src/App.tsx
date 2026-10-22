@@ -89,8 +89,8 @@ import { TeamsExtractModal } from './components/teams/TeamsExtractModal';
 import { TeamsConfigModal } from './components/teams/TeamsConfigModal';
 import { WhatsAppReservationModal } from './components/whatsapp/WhatsAppReservationModal';
 import { SigaSolicitationModal } from './components/siga/SigaSolicitationModal';
-import { INITIAL_WHATSAPP_LOGS } from './services/whatsappService';
 import { INITIAL_DRIVER_SCHEDULES } from './data/scheduleData';
+import { INITIAL_WHATSAPP_LOGS, formatWhatsAppTripStartNotification } from './services/whatsappService';
 import { 
   isTabAllowedForRole, 
   isDriverRole, 
@@ -102,7 +102,7 @@ import { DriverSessionBar } from './components/common/DriverSessionBar';
 export default function App() {
   // Estado principal de navegação e perfis (Iniciando no Diário de Bordo & Frota unificado)
   const [activeNavTab, setActiveNavTab] = useState<MainNavTab>('operacoes');
-  const [currentRole, setCurrentRole] = useState<Role>('gestor');
+  const [currentRole, setCurrentRole] = useState<Role>('motorista');
   const [selectedComarca, setSelectedComarca] = useState<string>('Todas as Comarcas');
 
   const [vehicles, setVehicles] = useState<Vehicle[]>(INITIAL_VEHICLES);
@@ -117,7 +117,7 @@ export default function App() {
   const [meuBeneficioApiConfig, setMeuBeneficioApiConfig] = useState<MeuBeneficioApiConfig>(INITIAL_MEU_BENEFICIO_CONFIG);
   const [chamados, setChamados] = useState<Chamado[]>(INITIAL_CHAMADOS);
   const [contratos, setContratos] = useState<Contrato[]>(INITIAL_CONTRATOS);
-  const [diarioViewMode, setDiarioViewMode] = useState<'planilha' | 'dashboard' | 'operacional'>('planilha');
+  const [diarioViewMode, setDiarioViewMode] = useState<'planilha' | 'dashboard' | 'operacional'>('operacional');
 
   // Integração com o Microsoft Teams TJPR (Envio de extratos ao demandante e ao coordenador)
   const [teamsConfig, setTeamsConfig] = useState<TeamsIntegrationConfig>(INITIAL_TEAMS_CONFIG);
@@ -138,6 +138,9 @@ export default function App() {
   // Gestão de transição de perfis com verificação estrita de permissões (RBAC)
   const handleRoleChange = (newRole: Role) => {
     setCurrentRole(newRole);
+    if (isDriverRole(newRole)) {
+      setDiarioViewMode('operacional');
+    }
     const allowed = getAllowedTabsForRole(newRole);
     if (!allowed.includes(activeNavTab)) {
       setActiveNavTab(allowed[0]);
@@ -741,40 +744,108 @@ export default function App() {
     if (checklist.tipo === 'saida') {
       // Iniciar a viagem
       const now = new Date().toISOString().replace('T', ' ').substring(0, 16);
+      const vehicle = vehicles.find((v) => v.id === checklistTrip.veiculoId);
+      const driver = drivers.find((d) => d.id === checklistTrip.motoristaId) || currentDriver;
+      const chamadoNumero = checklistTrip.chamadoCodigo || checklistTrip.codigo;
+
       const initialLog: LogEntry = {
         id: `log-${Date.now()}`,
         dataHora: now,
         tipo: 'inicio_viagem',
-        descricao: `Saída autorizada da garagem com checklist de inspeção aprovado. Odômetro: ${checklist.odometro.toLocaleString('pt-BR')} km.`,
+        descricao: `Saída autorizada da garagem com vistoria aprovada. Notificações WhatsApp transmitidas ao Solicitante (${checklistTrip.solicitanteNome}) e ao Supervisor da Frota.`,
         localizacao: checklistTrip.origem,
       };
 
+      // 1. Atualizar status da viagem para em andamento
       setTrips((prev) =>
         prev.map((t) =>
           t.id === checklistTrip.id
             ? {
                 ...t,
                 status: 'em_andamento',
-                kmInicial: checklist.odometro,
+                kmInicial: checklist.odometro || vehicle?.kmAtual || 34250,
                 checklistSaida: checklist,
                 diarioBordo: [initialLog, ...t.diarioBordo],
+                whatsappNotified: true,
+                whatsappDispatchDate: now,
               }
             : t
         )
       );
 
-      // Atualizar status do veículo para 'em_viagem'
+      // 2. Atualizar status do veículo para 'em_viagem'
       if (checklistTrip.veiculoId) {
         setVehicles((prev) =>
           prev.map((v) =>
             v.id === checklistTrip.veiculoId
-              ? { ...v, status: 'em_viagem', nivelCombustivel: checklist.nivelTanque }
+              ? { ...v, status: 'em_viagem', nivelCombustivel: checklist.nivelTanque || v.nivelCombustivel }
               : v
           )
         );
       }
 
-      showToast(`Viagem ${checklistTrip.codigo} iniciada com sucesso! Vistoria pré-viagem assinada.`);
+      // 3. Registrar envio do WhatsApp para o Solicitante
+      const wppLogSolicitante: WhatsAppReservationLog = {
+        id: `wpp-start-sol-${Date.now()}`,
+        tripId: checklistTrip.id,
+        tripCodigo: checklistTrip.codigo,
+        processoSeiOuSiga: chamadoNumero,
+        solicitanteNome: checklistTrip.solicitanteNome,
+        solicitanteTelefone: '(41) 98845-2121',
+        veiculoPrefixo: vehicle?.prefixo || checklistTrip.veiculoPrefixo || 'TJ-101',
+        veiculoModelo: vehicle?.modelo || 'Volkswagen Virtus TSI',
+        placa: vehicle?.placa || 'TZI6J11',
+        motoristaNome: driver?.nome || checklistTrip.motoristaNome || 'Romão Sidney Rigos Junior',
+        motoristaTelefone: driver?.telefone || '(41) 99914-4544',
+        dataSaida: checklistTrip.dataSaida,
+        horaSaida: checklistTrip.horaSaida,
+        origem: checklistTrip.origem,
+        destino: checklistTrip.destino,
+        mensagem: formatWhatsAppTripStartNotification(checklistTrip, vehicle, driver, 'solicitante'),
+        dataEnvio: now,
+        status: 'entregue',
+        metodoEnvio: 'api_tjpr',
+      };
+
+      // 4. Registrar envio do WhatsApp para o Supervisor Operacional
+      const wppLogSupervisor: WhatsAppReservationLog = {
+        id: `wpp-start-sup-${Date.now() + 1}`,
+        tripId: checklistTrip.id,
+        tripCodigo: checklistTrip.codigo,
+        processoSeiOuSiga: chamadoNumero,
+        solicitanteNome: 'Supervisão Operacional de Frotas TJPR',
+        solicitanteTelefone: '(41) 98822-4910',
+        veiculoPrefixo: vehicle?.prefixo || checklistTrip.veiculoPrefixo || 'TJ-101',
+        veiculoModelo: vehicle?.modelo || 'Volkswagen Virtus TSI',
+        placa: vehicle?.placa || 'TZI6J11',
+        motoristaNome: driver?.nome || checklistTrip.motoristaNome || 'Romão Sidney Rigos Junior',
+        motoristaTelefone: driver?.telefone || '(41) 99914-4544',
+        dataSaida: checklistTrip.dataSaida,
+        horaSaida: checklistTrip.horaSaida,
+        origem: checklistTrip.origem,
+        destino: checklistTrip.destino,
+        mensagem: formatWhatsAppTripStartNotification(checklistTrip, vehicle, driver, 'supervisor'),
+        dataEnvio: now,
+        status: 'entregue',
+        metodoEnvio: 'api_tjpr',
+      };
+
+      setWhatsappLogs((prev) => [wppLogSolicitante, wppLogSupervisor, ...prev]);
+
+      // 5. Inserir notificação interna no sistema
+      setNotifications((prev) => [
+        {
+          id: `notif-start-wpp-${Date.now()}`,
+          titulo: `WhatsApp: Viagem Iniciada • Chamado ${chamadoNumero}`,
+          mensagem: `Mensagem WhatsApp disparada ao Solicitante (${checklistTrip.solicitanteNome}) e à Supervisão da Frota informando o início do deslocamento.`,
+          dataHora: `Hoje às ${now.split(' ')[1]}`,
+          lida: false,
+          tipo: 'viagem',
+        },
+        ...prev,
+      ]);
+
+      showToast(`Viagem iniciada! WhatsApp enviado para o Solicitante (${checklistTrip.solicitanteNome.split(' ')[0]}) e para o Supervisor.`);
     } else {
       // Retorno e conclusão da viagem
       const now = new Date().toISOString().replace('T', ' ').substring(0, 16);
@@ -1417,50 +1488,59 @@ export default function App() {
                       <FileSpreadsheet className="w-4 h-4 text-[#05202B]" />
                       Diário de Bordo:
                     </span>
-                    <div className="flex items-center bg-slate-100 p-1 rounded-lg gap-1">
-                      <button
-                        type="button"
-                        id="diario-tab-dashboard"
-                        onClick={() => setDiarioViewMode('dashboard')}
-                        className={`flex items-center gap-1.5 px-3 py-1.5 rounded-md text-xs font-semibold transition-all cursor-pointer ${
-                          diarioViewMode === 'dashboard'
-                            ? 'bg-[#05202B] text-white shadow-xs'
-                            : 'text-slate-600 hover:text-slate-900 hover:bg-slate-200/60'
-                        }`}
-                        title="Painel Executivo da Frota com disponibilidade, indicadores e escala"
-                      >
-                        <LayoutDashboard className="w-3.5 h-3.5" />
-                        <span>Painel da Frota</span>
-                      </button>
-                      <button
-                        type="button"
-                        id="diario-tab-planilha"
-                        onClick={() => setDiarioViewMode('planilha')}
-                        className={`flex items-center gap-1.5 px-3 py-1.5 rounded-md text-xs font-semibold transition-all cursor-pointer ${
-                          diarioViewMode === 'planilha'
-                            ? 'bg-[#05202B] text-white shadow-xs'
-                            : 'text-slate-600 hover:text-slate-900 hover:bg-slate-200/60'
-                        }`}
-                        title="Planilha oficial do Diário de Bordo com odômetro, histórico e assinaturas"
-                      >
-                        <FileSpreadsheet className="w-3.5 h-3.5" />
-                        <span>Planilha Oficial</span>
-                      </button>
-                      <button
-                        type="button"
-                        id="diario-tab-operacional"
-                        onClick={() => setDiarioViewMode('operacional')}
-                        className={`flex items-center gap-1.5 px-3 py-1.5 rounded-md text-xs font-semibold transition-all cursor-pointer ${
-                          diarioViewMode === 'operacional'
-                            ? 'bg-[#05202B] text-white shadow-xs'
-                            : 'text-slate-600 hover:text-slate-900 hover:bg-slate-200/60'
-                        }`}
-                        title="Portal de demandas operacionais do condutor ou gestor"
-                      >
-                        <Car className="w-3.5 h-3.5" />
-                        <span>Portal do {currentRole === 'administrador' || currentRole === 'gestor' ? 'Gestor' : isDriverRole(currentRole) ? 'Motorista' : 'Perfil'}</span>
-                      </button>
-                    </div>
+                    {isDriverRole(currentRole) ? (
+                      /* Portal do Motorista Exclusivo para o Perfil de Condução */
+                      <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-bold bg-[#05202B] text-white shadow-xs">
+                        <Car className="w-3.5 h-3.5 text-amber-300" />
+                        <span>Portal do Motorista</span>
+                      </div>
+                    ) : (
+                      /* Controles Administrativos para Perfis de Gestão */
+                      <div className="flex items-center bg-slate-100 p-1 rounded-lg gap-1">
+                        <button
+                          type="button"
+                          id="diario-tab-dashboard"
+                          onClick={() => setDiarioViewMode('dashboard')}
+                          className={`flex items-center gap-1.5 px-3 py-1.5 rounded-md text-xs font-semibold transition-all cursor-pointer ${
+                            diarioViewMode === 'dashboard'
+                              ? 'bg-[#05202B] text-white shadow-xs'
+                              : 'text-slate-600 hover:text-slate-900 hover:bg-slate-200/60'
+                          }`}
+                          title="Painel Executivo da Frota com disponibilidade, indicadores e escala"
+                        >
+                          <LayoutDashboard className="w-3.5 h-3.5" />
+                          <span>Painel da Frota</span>
+                        </button>
+                        <button
+                          type="button"
+                          id="diario-tab-planilha"
+                          onClick={() => setDiarioViewMode('planilha')}
+                          className={`flex items-center gap-1.5 px-3 py-1.5 rounded-md text-xs font-semibold transition-all cursor-pointer ${
+                            diarioViewMode === 'planilha'
+                              ? 'bg-[#05202B] text-white shadow-xs'
+                              : 'text-slate-600 hover:text-slate-900 hover:bg-slate-200/60'
+                          }`}
+                          title="Planilha oficial do Diário de Bordo com odômetro, histórico e assinaturas"
+                        >
+                          <FileSpreadsheet className="w-3.5 h-3.5" />
+                          <span>Planilha Oficial</span>
+                        </button>
+                        <button
+                          type="button"
+                          id="diario-tab-operacional"
+                          onClick={() => setDiarioViewMode('operacional')}
+                          className={`flex items-center gap-1.5 px-3 py-1.5 rounded-md text-xs font-semibold transition-all cursor-pointer ${
+                            diarioViewMode === 'operacional'
+                              ? 'bg-[#05202B] text-white shadow-xs'
+                              : 'text-slate-600 hover:text-slate-900 hover:bg-slate-200/60'
+                          }`}
+                          title="Portal de demandas operacionais do condutor ou gestor"
+                        >
+                          <Car className="w-3.5 h-3.5" />
+                          <span>Portal do Gestor</span>
+                        </button>
+                      </div>
+                    )}
                   </div>
 
                   <div className="flex items-center gap-3 text-xs text-slate-500 font-mono">
@@ -1475,84 +1555,84 @@ export default function App() {
                   </div>
                 </div>
 
-                {/* 1. VISÃO DO PAINEL DA FROTA ALOCADA DENTRO DO DIÁRIO DE BORDO */}
-                {diarioViewMode === 'dashboard' && (
-                  <ExecutiveFleetDashboard
-                    vehicles={vehicles}
-                    drivers={drivers}
+                {/* 1. SE FOR MOTORISTA: Exibe exclusivamente o Portal do Motorista */}
+                {isDriverRole(currentRole) ? (
+                  <DriverPortal
+                    currentDriver={currentDriver}
                     trips={trips}
+                    vehicles={vehicles}
                     fuelLogs={fuelLogs}
-                    selectedComarca={selectedComarca}
-                    driverSchedules={driverSchedules}
-                    chamados={chamados}
-                    onOpenTripDetails={(trip) => setTripLogTrip(trip)}
-                    onOpenOfficialOrder={(trip) => setOfficialOrderTrip(trip)}
-                    onSaveTripSignature={handleSaveTripSignature}
-                    onOpenWhatsAppReservation={(trip, vehicle, driver) => {
-                      setWhatsappReservationTrip({ trip, vehicle, driver });
-                    }}
-                    onOpenSigaSolicitation={() => setSigaModalOpen(true)}
-                    onNavigateToChamados={() => setActiveNavTab('chamados')}
-                    onOpenNewChamadoModal={() => setNewChamadoModalOpen(true)}
-                    onScheduleNewTrip={() => {
-                      setDiarioViewMode('planilha');
-                    }}
-                    onRegisterNewVehicle={() => setNewVehicleModalOpen(true)}
-                    hideHeader={false}
-                  />
-                )}
-
-                {/* 2. VISÃO DA PLANILHA OFICIAL DO DIÁRIO DE BORDO */}
-                {diarioViewMode === 'planilha' && (
-                  <DiarioDeBordoView
-                    trips={trips}
-                    vehicles={vehicles}
-                    drivers={drivers}
-                    currentRole={currentRole}
-                    restrictedDriver={isDriverRole(currentRole) ? currentDriver : undefined}
+                    onStartTripClick={handleStartTripClick}
+                    onFinishTripClick={handleFinishTripClick}
                     onOpenTripLog={(trip) => setTripLogTrip(trip)}
                     onOpenOfficialOrder={(trip) => setOfficialOrderTrip(trip)}
-                    onOpenTripSignature={(trip) => setSignatureModalTrip(trip)}
-                    onAddTrip={handleAddTrip}
-                    selectedComarca={selectedComarca}
-                    hideHeader={false}
+                    onOpenQuickFuel={() => setQuickFuelOpen(true)}
                   />
-                )}
-
-                {/* 3. VISÃO DO PORTAL OPERACIONAL */}
-                {diarioViewMode === 'operacional' && (
+                ) : (
                   <>
-                    {/* Visualização 1: Operador (Motorista) - Suas Demandas & Diário de Bordo */}
-                    {(currentRole === 'operador' || currentRole === 'motorista') && (
-                      <DriverPortal
-                        currentDriver={currentDriver}
-                        trips={trips}
-                        vehicles={vehicles}
-                        fuelLogs={fuelLogs}
-                        onStartTripClick={handleStartTripClick}
-                        onFinishTripClick={handleFinishTripClick}
-                        onOpenTripLog={(trip) => setTripLogTrip(trip)}
-                        onOpenOfficialOrder={(trip) => setOfficialOrderTrip(trip)}
-                        onOpenQuickFuel={() => setQuickFuelOpen(true)}
-                      />
-                    )}
-
-                    {/* Visualização 2: Administrador da Frota (SIGPAT Transportes TJPR) */}
-                    {(currentRole === 'administrador' || currentRole === 'gestor') && (
-                      <ManagerDashboard
+                    {/* VISÃO DO PAINEL DA FROTA */}
+                    {diarioViewMode === 'dashboard' && (
+                      <ExecutiveFleetDashboard
                         vehicles={vehicles}
                         drivers={drivers}
                         trips={trips}
                         fuelLogs={fuelLogs}
-                        maintenances={maintenances}
-                        onApproveTrip={handleApproveTrip}
-                        onRejectTrip={handleRejectTrip}
+                        selectedComarca={selectedComarca}
+                        driverSchedules={driverSchedules}
+                        chamados={chamados}
+                        onOpenTripDetails={(trip) => setTripLogTrip(trip)}
                         onOpenOfficialOrder={(trip) => setOfficialOrderTrip(trip)}
-                        onOpenNewVehicleModal={() => setNewVehicleModalOpen(true)}
-                        onOpenNewMaintenanceModal={() => setNewMaintenanceModalOpen(true)}
-                        onUpdateVehicleStatus={handleUpdateVehicleStatus}
+                        onSaveTripSignature={handleSaveTripSignature}
+                        onOpenWhatsAppReservation={(trip, vehicle, driver) => {
+                          setWhatsappReservationTrip({ trip, vehicle, driver });
+                        }}
+                        onOpenSigaSolicitation={() => setSigaModalOpen(true)}
+                        onNavigateToChamados={() => setActiveNavTab('chamados')}
+                        onOpenNewChamadoModal={() => setNewChamadoModalOpen(true)}
+                        onScheduleNewTrip={() => {
+                          setDiarioViewMode('planilha');
+                        }}
+                        onRegisterNewVehicle={() => setNewVehicleModalOpen(true)}
+                        hideHeader={false}
                       />
                     )}
+
+                    {/* VISÃO DA PLANILHA OFICIAL DO DIÁRIO DE BORDO */}
+                    {diarioViewMode === 'planilha' && (
+                      <DiarioDeBordoView
+                        trips={trips}
+                        vehicles={vehicles}
+                        drivers={drivers}
+                        currentRole={currentRole}
+                        restrictedDriver={isDriverRole(currentRole) ? currentDriver : undefined}
+                        onOpenTripLog={(trip) => setTripLogTrip(trip)}
+                        onOpenOfficialOrder={(trip) => setOfficialOrderTrip(trip)}
+                        onOpenTripSignature={(trip) => setSignatureModalTrip(trip)}
+                        onAddTrip={handleAddTrip}
+                        selectedComarca={selectedComarca}
+                        hideHeader={false}
+                      />
+                    )}
+
+                    {/* VISÃO DO PORTAL OPERACIONAL */}
+                    {diarioViewMode === 'operacional' && (
+                      <>
+                        {/* Visualização: Administrador da Frota (SIGPAT Transportes TJPR) */}
+                        {(currentRole === 'administrador' || currentRole === 'gestor') && (
+                          <ManagerDashboard
+                            vehicles={vehicles}
+                            drivers={drivers}
+                            trips={trips}
+                            fuelLogs={fuelLogs}
+                            maintenances={maintenances}
+                            onApproveTrip={handleApproveTrip}
+                            onRejectTrip={handleRejectTrip}
+                            onOpenOfficialOrder={(trip) => setOfficialOrderTrip(trip)}
+                            onOpenNewVehicleModal={() => setNewVehicleModalOpen(true)}
+                            onOpenNewMaintenanceModal={() => setNewMaintenanceModalOpen(true)}
+                            onUpdateVehicleStatus={handleUpdateVehicleStatus}
+                          />
+                        )}
 
                     {/* Visualização 3: Supervisor Operacional (Acompanhamento Diário, Chamados e Relatórios) */}
                     {(currentRole === 'coordenador' || currentRole === 'supervisor_operacional') && (
@@ -1603,8 +1683,10 @@ export default function App() {
                     )}
                   </>
                 )}
-              </div>
+              </>
             )}
+          </div>
+        )}
 
             {/* ABA: Calendário de Eventos & Agenda de Serviços (Alimentada Automaticamente) */}
             {activeNavTab === 'calendario' && (

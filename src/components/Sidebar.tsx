@@ -252,22 +252,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
           const isActive = activeNavTab === item.id;
 
           if (!isAllowed) {
-            if (isCollapsed) return null;
-            return (
-              <div
-                key={item.id}
-                className="w-full flex items-center justify-between px-3 py-2 rounded-lg opacity-40 cursor-not-allowed select-none"
-                title={`Módulo restrito para o perfil ${ROLE_CONFIGS[currentRole]?.label || currentRole}`}
-              >
-                <div className="flex items-center gap-2.5 min-w-0">
-                  <Icon className="w-4 h-4 text-[#8E9CA8] shrink-0" />
-                  <span className="text-xs text-[#8E9CA8] truncate">
-                    {label}
-                  </span>
-                </div>
-                <Lock className="w-3.5 h-3.5 text-[#8E9CA8] shrink-0" />
-              </div>
-            );
+            return null;
           }
 
           return (

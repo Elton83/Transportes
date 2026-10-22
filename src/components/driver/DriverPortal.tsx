@@ -89,27 +89,79 @@ export const DriverPortal: React.FC<DriverPortalProps> = ({
       <div className="bg-white rounded-xl shadow-xs border border-slate-200 p-5 sm:p-6 relative overflow-hidden">
         <div className="absolute top-0 right-0 w-32 h-32 bg-blue-50 rounded-full blur-2xl -mr-10 -mt-10 pointer-events-none" />
         
-        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-          <div className="flex items-start gap-4">
-            <div className="relative">
-              <div className="w-14 h-14 rounded-xl bg-[#002B49] text-white flex items-center justify-center font-bold text-lg shadow-md border-2 border-[#C4A052]">
+        <div className="flex flex-col xl:flex-row xl:items-center justify-between gap-4">
+          <div className="flex items-start gap-4 flex-1 min-w-0">
+            {/* Foto de Perfil com status de condução */}
+            <div className="relative shrink-0">
+              {currentDriver.foto ? (
+                <img
+                  src={currentDriver.foto}
+                  alt={currentDriver.nome}
+                  className="w-16 h-16 rounded-xl object-cover shadow-md border-2 border-[#C4A052] ring-2 ring-amber-400/30"
+                  onError={(e) => {
+                    (e.target as HTMLElement).style.display = 'none';
+                    const fallback = (e.target as HTMLElement).nextElementSibling as HTMLElement;
+                    if (fallback) fallback.style.display = 'flex';
+                  }}
+                />
+              ) : null}
+              <div
+                style={{ display: currentDriver.foto ? 'none' : 'flex' }}
+                className="w-16 h-16 rounded-xl bg-[#002B49] text-white items-center justify-center font-bold text-lg shadow-md border-2 border-[#C4A052]"
+              >
                 {driverInitials}
               </div>
-              <div className="absolute -bottom-1 -right-1 w-4 h-4 bg-emerald-500 rounded-full border-2 border-white" title="Disponível" />
+              <div className="absolute -bottom-1 -right-1 w-4 h-4 bg-emerald-500 rounded-full border-2 border-white shadow-xs" title="Pronto para Condução • Disponível" />
             </div>
 
-            <div>
-              <div className="flex items-center gap-2 flex-wrap">
-                <h2 className="text-lg sm:text-xl font-bold text-slate-900">
-                  Olá, {currentDriver.nome}
-                </h2>
-                <span className="bg-emerald-100 text-emerald-800 text-xs font-bold px-2 py-0.5 rounded-full flex items-center gap-1">
-                  <CheckCircle2 className="w-3 h-3" />
-                  Pronto para Condução
-                </span>
+            <div className="flex-1 min-w-0">
+              {/* Linha superior: Saudação + Bloco com Informações do Veículo Vinculado no Campo em Branco */}
+              <div className="flex flex-col 2xl:flex-row 2xl:items-center justify-between gap-3">
+                <div className="flex items-center gap-2 flex-wrap">
+                  <h2 className="text-lg sm:text-xl font-bold text-slate-900 truncate">
+                    Olá, {currentDriver.nome}
+                  </h2>
+                  <span className="bg-emerald-100 text-emerald-800 text-xs font-bold px-2.5 py-0.5 rounded-full flex items-center gap-1 shrink-0">
+                    <CheckCircle2 className="w-3.5 h-3.5 text-emerald-600" />
+                    Pronto para Condução
+                  </span>
+                </div>
+
+                {/* CAMPO EM BRANCO PREENCHIDO: INFORMAÇÕES DO VEÍCULO VINCULADO */}
+                {assignedVehicle && (
+                  <div className="flex items-center gap-3 bg-slate-50 hover:bg-blue-50/40 transition-colors border border-slate-200/90 rounded-xl px-3.5 py-1.5 shadow-2xs">
+                    <div className="w-8 h-8 rounded-lg bg-[#002B49] text-amber-300 flex items-center justify-center shrink-0 border border-[#C4A052]/50 shadow-xs">
+                      <Car className="w-4 h-4" />
+                    </div>
+                    <div className="leading-tight">
+                      <div className="flex items-center gap-1.5 flex-wrap">
+                        <span className="text-[10px] font-bold text-slate-500 uppercase tracking-wider">Veículo Oficial:</span>
+                        <span className="text-xs font-mono font-extrabold text-[#002B49] bg-white px-1.5 py-0.5 rounded border border-slate-300 shadow-2xs">
+                          {assignedVehicle.prefixo}
+                        </span>
+                        <span className="text-xs font-mono font-bold text-slate-700 bg-slate-200/80 px-1.5 py-0.5 rounded">
+                          {assignedVehicle.placa}
+                        </span>
+                        <span className="text-[10px] font-bold px-1.5 py-0.5 rounded bg-emerald-100 text-emerald-800">
+                          {assignedVehicle.status === 'disponivel' ? 'Disponível' : assignedVehicle.status === 'em_viagem' ? 'Em Viagem' : 'Em Uso'}
+                        </span>
+                      </div>
+                      <div className="text-xs font-semibold text-slate-800 mt-1 flex items-center gap-2 flex-wrap">
+                        <span className="font-bold text-slate-900">{assignedVehicle.modelo}</span>
+                        <span className="text-slate-300">•</span>
+                        <span className="font-mono text-slate-600">{assignedVehicle.kmAtual.toLocaleString('pt-BR')} km</span>
+                        <span className="text-slate-300">•</span>
+                        <span className="text-emerald-700 font-medium flex items-center gap-1">
+                          <Fuel className="w-3 h-3 text-emerald-600" />
+                          Tanque {assignedVehicle.nivelCombustivel}% ({assignedVehicle.combustivelTipo.split(' ')[0]})
+                        </span>
+                      </div>
+                    </div>
+                  </div>
+                )}
               </div>
               
-              <p className="text-xs text-slate-500 mt-0.5">
+              <p className="text-xs text-slate-500 mt-1">
                 Condutor Oficial TJPR • Matrícula: <strong className="text-slate-800">{currentDriver.matricula}</strong> • Lotação: {currentDriver.comarca}
               </p>
 
@@ -129,11 +181,11 @@ export const DriverPortal: React.FC<DriverPortalProps> = ({
             </div>
           </div>
 
-          <div className="flex items-center gap-2.5">
+          <div className="flex items-center gap-2.5 shrink-0">
             <button
               id="driver-quick-fuel-btn"
               onClick={onOpenQuickFuel}
-              className="px-3.5 py-2 bg-emerald-700 hover:bg-emerald-800 text-white rounded-lg text-xs font-bold shadow-xs transition-colors flex items-center gap-1.5"
+              className="px-3.5 py-2.5 bg-emerald-700 hover:bg-emerald-800 text-white rounded-lg text-xs font-bold shadow-xs transition-colors flex items-center gap-1.5 cursor-pointer"
             >
               <Fuel className="w-4 h-4" />
               Lançar Abastecimento
@@ -165,7 +217,7 @@ export const DriverPortal: React.FC<DriverPortalProps> = ({
 
             <div className="flex items-center gap-2">
               <span className="text-[11px] text-blue-200">
-                Processo SEI: <strong className="text-white font-mono">{currentFeaturedTrip.processoSei}</strong>
+                Nº do Chamado: <strong className="text-white font-mono">{currentFeaturedTrip.chamadoCodigo || currentFeaturedTrip.codigo}</strong>
               </span>
             </div>
           </div>
@@ -268,10 +320,10 @@ export const DriverPortal: React.FC<DriverPortalProps> = ({
                   <button
                     id="start-trip-btn"
                     onClick={() => onStartTripClick(currentFeaturedTrip)}
-                    className="px-4 py-2 bg-[#002B49] hover:bg-[#003d66] text-white rounded-lg text-xs font-bold shadow-md transition-all flex items-center gap-2 hover:scale-[1.02]"
+                    className="px-4 py-2 bg-[#002B49] hover:bg-[#003d66] text-white rounded-lg text-xs font-bold shadow-md transition-all flex items-center gap-2 hover:scale-[1.02] cursor-pointer"
                   >
                     <Play className="w-4 h-4 fill-amber-400 text-amber-400" />
-                    Iniciar Viagem & Vistoria Pré-Viagem
+                    Iniciar Viagem
                   </button>
                 )}
 

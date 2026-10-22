@@ -503,23 +503,31 @@ export const Header: React.FC<HeaderProps> = ({
 
             {/* Usuário / Avatar */}
             <div className="flex items-center gap-2 pl-1.5 border-l border-white/20">
-              <div className={`w-8 h-8 rounded-full flex items-center justify-center font-bold text-xs shadow-sm ${
-                isDriver 
-                  ? 'bg-amber-400 text-slate-950 font-mono ring-2 ring-amber-300/40' 
-                  : currentRole === 'visitante'
-                  ? 'bg-emerald-500 text-white font-mono ring-2 ring-emerald-300/40'
-                  : 'bg-gradient-to-br from-[#0084C7] to-[#005a8e] text-white'
-              }`}>
-                {isDriver
-                  ? 'MO'
-                  : currentRole === 'supervisor_operacional' || currentRole === 'coordenador'
-                  ? 'SO'
-                  : currentRole === 'supervisor_administrativo' || currentRole === 'solicitante'
-                  ? 'SA'
-                  : currentRole === 'visitante'
-                  ? 'SV'
-                  : 'AD'}
-              </div>
+              {isDriver && currentDriver?.foto ? (
+                <img
+                  src={currentDriver.foto}
+                  alt={currentDriver.nome}
+                  className="w-8 h-8 rounded-full object-cover ring-2 ring-amber-300 shadow-sm"
+                />
+              ) : (
+                <div className={`w-8 h-8 rounded-full flex items-center justify-center font-bold text-xs shadow-sm ${
+                  isDriver 
+                    ? 'bg-amber-400 text-slate-950 font-mono ring-2 ring-amber-300/40' 
+                    : currentRole === 'visitante'
+                    ? 'bg-emerald-500 text-white font-mono ring-2 ring-emerald-300/40'
+                    : 'bg-gradient-to-br from-[#0084C7] to-[#005a8e] text-white'
+                }`}>
+                  {isDriver
+                    ? 'MO'
+                    : currentRole === 'supervisor_operacional' || currentRole === 'coordenador'
+                    ? 'SO'
+                    : currentRole === 'supervisor_administrativo' || currentRole === 'solicitante'
+                    ? 'SA'
+                    : currentRole === 'visitante'
+                    ? 'SV'
+                    : 'AD'}
+                </div>
+              )}
               <div className="hidden xl:block text-left">
                 <p className="text-xs font-semibold text-white leading-tight truncate max-w-[140px]">
                   {isDriver

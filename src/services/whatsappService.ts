@@ -122,6 +122,67 @@ export const formatWhatsAppOfficialOrderValidationMessage = (
 Status: VÁLIDO E AUTENTICADO DIGITALMENTE VIA WHATSAPP.`;
 };
 
+export const formatWhatsAppTripStartNotification = (
+  trip: Trip,
+  vehicle?: Vehicle,
+  driver?: Driver,
+  target: 'solicitante' | 'supervisor' = 'solicitante'
+): string => {
+  const solicitante = trip.solicitanteNome || 'Autoridade Solicitante';
+  const chamadoCodigo = trip.chamadoCodigo || trip.codigo;
+  const veicModelo = vehicle?.modelo || trip.veiculoModelo || 'Volkswagen Virtus TSI';
+  const veicPrefixo = vehicle?.prefixo || trip.veiculoPrefixo || 'TJ-101';
+  const veicPlaca = vehicle?.placa || trip.veiculoPlaca || 'TZI6J11';
+  const condutor = driver?.nome || trip.motoristaNome || 'Romão Sidney Rigos Junior';
+  const condutorMatr = driver?.matricula || '48.912-3';
+  const condutorTel = driver?.telefone || '(41) 99914-4544';
+
+  if (target === 'supervisor') {
+    return `⚠️ *TRIBUNAL DE JUSTIÇA DO PARANÁ*
+*AVISO AO SUPERVISOR OPERACIONAL | VIAGEM EM ANDAMENTO*
+
+Supervisor(a) de Frotas TJPR,
+A viagem correspondente ao Chamado *${chamadoCodigo}* foi *INICIADA* com vistoria pré-viagem aprovada.
+
+📋 *Nº do Chamado:* ${chamadoCodigo}
+🏷️ *Ordem de Tráfego:* ${trip.codigo}
+🚘 *Veículo Oficial:* ${veicPrefixo} • ${veicPlaca} (${veicModelo})
+👤 *Condutor:* ${condutor} (Matrícula: ${condutorMatr})
+🏛️ *Solicitante:* ${solicitante} (${trip.solicitanteVara})
+📍 *Trajeto:* ${trip.origem} ➔ ${trip.destino}
+⏰ *Saída:* ${trip.dataSaida} às ${trip.horaSaida}
+⏱️ *Previsão de Retorno:* ${trip.horaRetornoPrevista}
+
+🛰️ *Monitoramento GPS Ativo:*
+https://frota.tjpr.jus.br/tracking/${trip.codigo}
+
+Divisão de Transportes e Frotas TJPR`;
+  }
+
+  return `🚗 *TRIBUNAL DE JUSTIÇA DO PARANÁ*
+*DIVISÃO DE TRANSPORTES | VIAGEM INICIADA*
+
+Prezado(a) *${solicitante}*,
+Informamos que o seu transporte oficial foi *INICIADO* com sucesso pelo condutor!
+
+📋 *Nº do Chamado:* ${chamadoCodigo}
+🏷️ *Ordem de Tráfego:* ${trip.codigo}
+
+🚘 *Veículo Oficial:* ${veicPrefixo} • ${veicPlaca} (${veicModelo})
+👤 *Condutor Oficial:* *${condutor}*
+📱 *Contato do Condutor:* ${condutorTel}
+
+📍 *Local de Partida:* ${trip.origem}
+🎯 *Destino:* ${trip.destino}
+⏰ *Horário de Saída:* ${trip.horaSaida}
+⏱️ *Previsão de Retorno:* ${trip.horaRetornoPrevista}
+
+🛰️ *Acompanhe em Tempo Real:*
+https://frota.tjpr.jus.br/tracking/${trip.codigo}
+
+Divisão de Transportes e Frotas TJPR | Central: (41) 3200-2100`;
+};
+
 export const formatWhatsAppDriverScheduleMessage = (
   driver: Driver,
   scheduleItem?: {

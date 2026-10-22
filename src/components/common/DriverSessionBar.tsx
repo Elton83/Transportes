@@ -49,9 +49,17 @@ export const DriverSessionBar: React.FC<DriverSessionBarProps> = ({
       <div className="max-w-7xl mx-auto flex flex-col md:flex-row md:items-center justify-between gap-3">
         {/* Lado Esquerdo: Identificação do Motorista e Matrícula */}
         <div className="flex items-center gap-3">
-          <div className="w-8 h-8 rounded-lg bg-amber-500/20 border border-amber-400/40 flex items-center justify-center shrink-0">
-            <Car className="w-4 h-4 text-amber-300" />
-          </div>
+          {currentDriver.foto ? (
+            <img
+              src={currentDriver.foto}
+              alt={currentDriver.nome}
+              className="w-8 h-8 rounded-lg object-cover border border-amber-400/60 shadow-xs shrink-0"
+            />
+          ) : (
+            <div className="w-8 h-8 rounded-lg bg-amber-500/20 border border-amber-400/40 flex items-center justify-center shrink-0">
+              <Car className="w-4 h-4 text-amber-300" />
+            </div>
+          )}
 
           <div className="flex items-center gap-2 flex-wrap">
             <span className="text-[10px] uppercase font-bold tracking-wider px-2 py-0.5 rounded bg-amber-400 text-slate-950">
