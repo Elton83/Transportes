@@ -266,6 +266,25 @@ export const ExecutiveFleetDashboard: React.FC<ExecutiveFleetDashboardProps> = (
               </select>
             </div>
 
+            {/* Botão Acompanhamento Multi-GPS Simultâneo */}
+            <button
+              type="button"
+              onClick={() => {
+                const targetTrip = trips.find(t => t.status === 'em_andamento') || trips[0];
+                const targetVeh = vehicles.find(v => v.id === targetTrip?.veiculoId || v.prefixo === targetTrip?.veiculoPrefixo) || vehicles[1];
+                const targetDrv = drivers.find(d => d.id === targetTrip?.motoristaId || d.nome === targetTrip?.motoristaNome);
+                setTrackingModalData({ vehicle: targetVeh, trip: targetTrip, driver: targetDrv });
+              }}
+              className="flex items-center gap-1.5 px-3 py-1.5 bg-[#002B49] hover:bg-[#003C66] text-white rounded-lg text-xs font-bold shadow-xs transition-all border border-amber-300/40 cursor-pointer"
+              title="Abrir tela de monitoramento de múltiplos veículos simultaneamente"
+            >
+              <Smartphone className="w-3.5 h-3.5 text-emerald-300 animate-pulse" />
+              <span>Multi-GPS Simultâneo</span>
+              <span className="bg-emerald-500/20 text-emerald-300 text-[10px] px-1.5 py-0.2 rounded-full font-mono border border-emerald-400/40">
+                {trips.filter(t => t.status === 'em_andamento').length || 2} ativos
+              </span>
+            </button>
+
             {/* Botão Nova Viagem */}
             {onScheduleNewTrip && (
               <button
@@ -320,6 +339,21 @@ export const ExecutiveFleetDashboard: React.FC<ExecutiveFleetDashboardProps> = (
                 ))}
               </select>
             </div>
+
+            <button
+              type="button"
+              onClick={() => {
+                const targetTrip = trips.find(t => t.status === 'em_andamento') || trips[0];
+                const targetVeh = vehicles.find(v => v.id === targetTrip?.veiculoId || v.prefixo === targetTrip?.veiculoPrefixo) || vehicles[1];
+                const targetDrv = drivers.find(d => d.id === targetTrip?.motoristaId || d.nome === targetTrip?.motoristaNome);
+                setTrackingModalData({ vehicle: targetVeh, trip: targetTrip, driver: targetDrv });
+              }}
+              className="flex items-center gap-1.5 px-3 py-1 bg-[#002B49] hover:bg-[#003C66] text-white rounded-lg text-xs font-bold shadow-2xs transition-all border border-amber-300/40 cursor-pointer"
+              title="Abrir tela de monitoramento de múltiplos veículos simultaneamente"
+            >
+              <Smartphone className="w-3.5 h-3.5 text-emerald-300 animate-pulse" />
+              <span>Multi-GPS</span>
+            </button>
 
             {onScheduleNewTrip && (
               <button
@@ -1584,6 +1618,9 @@ export const ExecutiveFleetDashboard: React.FC<ExecutiveFleetDashboardProps> = (
           vehicle={trackingModalData.vehicle}
           trip={trackingModalData.trip}
           driver={trackingModalData.driver}
+          allVehicles={vehicles}
+          allTrips={trips}
+          allDrivers={drivers}
           onOpenOfficialOrder={onOpenOfficialOrder}
           onSaveTripSignature={onSaveTripSignature}
         />

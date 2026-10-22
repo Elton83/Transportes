@@ -12,7 +12,9 @@ import {
   Shield,
   FileSpreadsheet,
   LayoutDashboard,
-  SlidersHorizontal
+  SlidersHorizontal,
+  Bell,
+  X
 } from 'lucide-react';
 import { 
   INITIAL_DRIVERS, 
@@ -68,6 +70,7 @@ import { ContratosView } from './components/contracts/ContratosView';
 import { CalendarEventsView } from './components/calendar/CalendarEventsView';
 import { DiarioDeBordoView } from './components/operations/DiarioDeBordoView';
 import { TripSignatureModal } from './components/dashboard/TripSignatureModal';
+import { SatisfactionSurveyModal } from './components/satisfaction/SatisfactionSurveyModal';
 import { NewChamadoModal } from './components/coordinator/NewChamadoModal';
 import { 
   INITIAL_WORKSHOPS, 
@@ -170,9 +173,202 @@ export default function App() {
   // Banner informativo temporário
   const [toastMessage, setToastMessage] = useState<string | null>(null);
 
+  // Estado para a Pesquisa de Satisfação com Carinhas de 1 a 5 (Finalização de Chamados)
+  const [satisfactionSurveyData, setSatisfactionSurveyData] = useState<{
+    trip?: Trip | null;
+    chamadoCodigo: string;
+    chamadoId?: string;
+    solicitanteNome?: string;
+    motoristaNome?: string;
+    veiculoPrefixo?: string;
+    origem?: string;
+    destino?: string;
+  } | null>(null);
+
+  // Aviso no sistema para o Solicitante de viagem finalizada aguardando avaliação
+  const [pendingEvaluationNotice, setPendingEvaluationNotice] = useState<{
+    trip: Trip;
+    chamadoCodigo: string;
+    chamadoId?: string;
+    solicitanteNome?: string;
+    motoristaNome?: string;
+    veiculoPrefixo?: string;
+    origem?: string;
+    destino?: string;
+  } | null>(null);
+
   const showToast = (msg: string) => {
     setToastMessage(msg);
     setTimeout(() => setToastMessage(null), 4500);
+  };
+
+  // Finalização da viagem pelo motorista na ordem de serviço com notificação WhatsApp e aviso no sistema
+  const handleCompleteTripAndNotify = (trip: Trip, chamadoNumero: string, whatsappMsg: string) => {
+    const now = new Date().toISOString().replace('T', ' ').substring(0, 16);
+
+    // 1. Atualizar a viagem para 'concluida'
+    setTrips((prev) =>
+      prev.map((t) =>
+        t.id === trip.id
+          ? {
+              ...t,
+              status: 'concluida',
+              dataRetornoEfetiva: now.split(' ')[0],
+              horaRetornoEfetiva: now.split(' ')[1],
+              whatsappNotified: true,
+              whatsappDispatchDate: now,
+            }
+          : t
+      )
+    );
+
+    // 2. Liberar veículo para 'disponivel'
+    if (trip.veiculoId) {
+      setVehicles((prev) =>
+        prev.map((v) =>
+          v.id === trip.veiculoId ? { ...v, status: 'disponivel' } : v
+        )
+      );
+    }
+
+    // 3. Atualizar total de viagens do condutor
+    if (trip.motoristaId) {
+      setDrivers((prev) =>
+        prev.map((d) =>
+          d.id === trip.motoristaId ? { ...d, totalViagens: d.totalViagens + 1 } : d
+        )
+      );
+    }
+
+    // 4. Localizar chamado vinculado e registrar resposta de encerramento
+    const matchedChamado = chamados.find(
+      (c) => c.tripIdVinculada === trip.id || c.codigo === chamadoNumero || (c.processoSei && c.processoSei === trip.processoSei)
+    );
+
+    if (matchedChamado) {
+      setChamados((prev) =>
+        prev.map((c) =>
+          c.id === matchedChamado.id
+            ? {
+                ...c,
+                atividadeConcluida: true,
+                respostas: [
+                  ...c.respostas,
+                  {
+                    id: `resp-${Date.now()}`,
+                    autor: trip.motoristaNome || 'Motorista Oficial TJPR',
+                    cargo: 'Condutor Oficial',
+                    dataHora: now,
+                    mensagem: `Viagem oficial ${trip.codigo} concluída com sucesso. Notificação gerada no WhatsApp do solicitante (${trip.solicitanteNome}). Demanda aguardando validação e pesquisa de satisfação de 1 a 5 carinhas.`,
+                    isAdmin: false,
+                  },
+                ],
+              }
+            : c
+        )
+      );
+    }
+
+    // 5. Inserir notificação no sistema para o solicitante com flag de avaliação
+    const evalNotification: NotificationItem = {
+      id: `notif-eval-${Date.now()}`,
+      titulo: `Viagem Finalizada • Chamado ${chamadoNumero}`,
+      mensagem: `O condutor oficial ${trip.motoristaNome || 'designado'} concluiu o transporte (${trip.codigo}). Clique aqui para finalizar o chamado e responder à pesquisa de satisfação (1 a 5 carinhas).`,
+      dataHora: now,
+      lida: false,
+      tipo: 'chamado',
+      tripId: trip.id,
+      chamadoId: matchedChamado?.id,
+      chamadoCodigo: chamadoNumero,
+      requiresEvaluation: true,
+    };
+    setNotifications((prev) => [evalNotification, ...prev]);
+
+    // 6. Configurar aviso pendente do sistema
+    setPendingEvaluationNotice({
+      trip,
+      chamadoCodigo: chamadoNumero,
+      chamadoId: matchedChamado?.id,
+      solicitanteNome: trip.solicitanteNome,
+      motoristaNome: trip.motoristaNome,
+      veiculoPrefixo: trip.veiculoPrefixo,
+      origem: trip.origem,
+      destino: trip.destino,
+    });
+
+    // 7. Toast informativo
+    showToast(`Viagem ${trip.codigo} finalizada! Notificação WhatsApp disparada e aviso gerado no sistema para o Solicitante.`);
+  };
+
+  // Envio da Pesquisa de Satisfação com Carinhas de 1 a 5 e encerramento definitivo do chamado
+  const handleSubmitSatisfactionSurvey = (data: {
+    tripId?: string;
+    chamadoCodigo: string;
+    chamadoId?: string;
+    rating: number; // 1 a 5
+    ratingLabel: string;
+    tags: string[];
+    comentario: string;
+  }) => {
+    const now = new Date().toISOString().replace('T', ' ').substring(0, 16);
+
+    // 1. Atualizar chamado para 'concluido' com dados da pesquisa
+    setChamados((prev) =>
+      prev.map((c) => {
+        const isMatch = (data.chamadoId && c.id === data.chamadoId) || c.codigo === data.chamadoCodigo || (data.tripId && c.tripIdVinculada === data.tripId);
+        if (!isMatch) return c;
+
+        return {
+          ...c,
+          status: 'concluido',
+          atividadeConcluida: true,
+          avaliacaoNota: data.rating,
+          avaliacaoCarinhas: data.rating,
+          avaliacaoLabel: data.ratingLabel,
+          avaliacaoComentario: data.comentario,
+          avaliacaoTags: data.tags,
+          dataAvaliacao: now,
+          finalizadoPorSolicitante: true,
+          dataEncerramento: now,
+          encerradoPor: `${c.solicitanteNome} (Solicitante via Pesquisa de Satisfação)`,
+          justificativaEncerramento: `Chamado finalizado pelo Solicitante com avaliação ${data.rating}/5 (${data.ratingLabel}). ${data.comentario ? `Comentário: "${data.comentario}"` : ''}`,
+          respostas: [
+            ...c.respostas,
+            {
+              id: `resp-eval-${Date.now()}`,
+              autor: `${c.solicitanteNome} (Solicitante)`,
+              cargo: 'Avaliação do Usuário',
+              dataHora: now,
+              mensagem: `Chamado encerrado pelo solicitante com nota ${data.rating}/5 (${data.ratingLabel}). Tags: ${data.tags.join(', ') || 'Nenhuma'}. ${data.comentario ? `Comentário: "${data.comentario}"` : ''}`,
+              isAdmin: false,
+            },
+          ],
+        };
+      })
+    );
+
+    // 2. Atualizar viagem se houver
+    if (data.tripId) {
+      setTrips((prev) =>
+        prev.map((t) =>
+          t.id === data.tripId ? { ...t, status: 'concluida' } : t
+        )
+      );
+    }
+
+    // 3. Limpar aviso pendente
+    setPendingEvaluationNotice(null);
+
+    // 4. Marcar notificação de avaliação como lida
+    setNotifications((prev) =>
+      prev.map((n) =>
+        n.chamadoCodigo === data.chamadoCodigo || n.tripId === data.tripId
+          ? { ...n, lida: true }
+          : n
+      )
+    );
+
+    showToast(`Chamado ${data.chamadoCodigo} finalizado com sucesso! Avaliação ${data.rating}/5 registrada no SIGPAT.`);
   };
 
   // Confirmação e registro de envio de reserva via WhatsApp
@@ -1087,6 +1283,20 @@ export default function App() {
           onSelectDriver={(drv) => setSelectedDriverId(drv.id)}
           totalVehicles={vehicles.length}
           assignedVehicle={currentDriverAssignedVehicle}
+          onOpenSatisfactionSurvey={(n) => {
+            const targetTrip = trips.find((t) => t.id === n.tripId || t.codigo === n.tripId);
+            const targetChamado = chamados.find((c) => (n.chamadoId && c.id === n.chamadoId) || c.codigo === n.chamadoCodigo);
+            setSatisfactionSurveyData({
+              trip: targetTrip,
+              chamadoCodigo: n.chamadoCodigo || targetChamado?.codigo || 'CHA-2026-0839',
+              chamadoId: n.chamadoId || targetChamado?.id,
+              solicitanteNome: targetChamado?.solicitanteNome || targetTrip?.solicitanteNome || 'Solicitante TJPR',
+              motoristaNome: targetTrip?.motoristaNome,
+              veiculoPrefixo: targetTrip?.veiculoPrefixo,
+              origem: targetTrip?.origem,
+              destino: targetTrip?.destino,
+            });
+          }}
         />
 
       {/* 2. Barra de Contexto e Status Institucional TJPR (Leve, Moderna e Sem Peso Visual) */}
@@ -1119,6 +1329,62 @@ export default function App() {
           </div>
         </div>
       </div>
+
+      {/* Banner de Aviso no Sistema: Viagem Finalizada pelo Motorista aguardando Encerramento e Avaliação pelo Solicitante */}
+      {pendingEvaluationNotice && (
+        <div className="bg-gradient-to-r from-amber-500 via-amber-600 to-amber-700 text-slate-950 px-4 sm:px-6 py-3.5 shadow-md border-b-2 border-amber-300 animate-in slide-in-from-top-3 duration-300">
+          <div className="max-w-7xl mx-auto flex flex-col md:flex-row items-start md:items-center justify-between gap-3">
+            <div className="flex items-center gap-3">
+              <div className="w-10 h-10 rounded-xl bg-white/20 backdrop-blur-xs flex items-center justify-center shrink-0 border border-white/30 text-white shadow-inner">
+                <Bell className="w-5 h-5 text-amber-100 animate-bounce" />
+              </div>
+              <div>
+                <div className="flex items-center gap-2 flex-wrap">
+                  <span className="font-extrabold uppercase text-[10px] tracking-wider bg-white/30 text-slate-950 px-2 py-0.5 rounded-full border border-white/40">
+                    Aviso do Sistema • Viagem Concluída
+                  </span>
+                  <span className="font-bold text-sm text-white">
+                    Chamado {pendingEvaluationNotice.chamadoCodigo} ({pendingEvaluationNotice.trip.codigo})
+                  </span>
+                </div>
+                <p className="text-xs text-amber-100 font-medium mt-0.5">
+                  O condutor oficial <strong className="text-white">{pendingEvaluationNotice.motoristaNome || 'designado'}</strong> encerrou o transporte. Solicitante <strong className="text-white">{pendingEvaluationNotice.solicitanteNome || 'do TJPR'}</strong>, finalize o chamado e avalie com as <strong>carinhas de 1 a 5</strong>.
+                </p>
+              </div>
+            </div>
+
+            <div className="flex items-center gap-2 w-full md:w-auto shrink-0 justify-end">
+              <button
+                type="button"
+                onClick={() => {
+                  setSatisfactionSurveyData({
+                    trip: pendingEvaluationNotice.trip,
+                    chamadoCodigo: pendingEvaluationNotice.chamadoCodigo,
+                    chamadoId: pendingEvaluationNotice.chamadoId,
+                    solicitanteNome: pendingEvaluationNotice.solicitanteNome,
+                    motoristaNome: pendingEvaluationNotice.motoristaNome,
+                    veiculoPrefixo: pendingEvaluationNotice.veiculoPrefixo,
+                    origem: pendingEvaluationNotice.origem,
+                    destino: pendingEvaluationNotice.destino,
+                  });
+                }}
+                className="flex-1 md:flex-initial px-4 py-2 bg-slate-950 hover:bg-slate-900 text-amber-300 hover:text-white font-extrabold text-xs rounded-xl shadow-lg border border-amber-400/50 flex items-center justify-center gap-2 transition-all cursor-pointer hover:scale-[1.02]"
+              >
+                <span className="text-base">⭐</span>
+                <span>Finalizar Chamado & Avaliar (1 a 5)</span>
+              </button>
+              <button
+                type="button"
+                onClick={() => setPendingEvaluationNotice(null)}
+                className="p-2 text-slate-900 hover:text-white hover:bg-black/20 rounded-xl transition-colors cursor-pointer"
+                title="Dispensar aviso da barra superior"
+              >
+                <X className="w-4 h-4" />
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* 3. Toast Notificação Flutuante */}
       {toastMessage && (
@@ -1308,6 +1574,19 @@ export default function App() {
                         onOpenTripSignature={(trip) => setSignatureModalTrip(trip)}
                         onOpenTeamsExtract={handleOpenTeamsExtract}
                         onOpenTeamsConfig={() => setTeamsConfigModalOpen(true)}
+                        onOpenSatisfactionSurvey={(chamado) => {
+                          const targetTrip = trips.find((t) => t.id === chamado.tripIdVinculada || (chamado.processoSei && t.processoSei === chamado.processoSei));
+                          setSatisfactionSurveyData({
+                            trip: targetTrip,
+                            chamadoCodigo: chamado.codigo,
+                            chamadoId: chamado.id,
+                            solicitanteNome: chamado.solicitanteNome,
+                            motoristaNome: chamado.motoristaNome || targetTrip?.motoristaNome,
+                            veiculoPrefixo: chamado.veiculoPrefixo || targetTrip?.veiculoPrefixo,
+                            origem: targetTrip?.origem || 'Fórum / Palácio da Justiça TJPR',
+                            destino: targetTrip?.destino || 'Destino Oficial',
+                          });
+                        }}
                       />
                     )}
 
@@ -1365,6 +1644,19 @@ export default function App() {
                 onOpenTripSignature={(trip) => setSignatureModalTrip(trip)}
                 onOpenTeamsExtract={handleOpenTeamsExtract}
                 onOpenTeamsConfig={() => setTeamsConfigModalOpen(true)}
+                onOpenSatisfactionSurvey={(chamado) => {
+                  const targetTrip = trips.find((t) => t.id === chamado.tripIdVinculada || (chamado.processoSei && t.processoSei === chamado.processoSei));
+                  setSatisfactionSurveyData({
+                    trip: targetTrip,
+                    chamadoCodigo: chamado.codigo,
+                    chamadoId: chamado.id,
+                    solicitanteNome: chamado.solicitanteNome,
+                    motoristaNome: chamado.motoristaNome || targetTrip?.motoristaNome,
+                    veiculoPrefixo: chamado.veiculoPrefixo || targetTrip?.veiculoPrefixo,
+                    origem: targetTrip?.origem || 'Fórum / Palácio da Justiça TJPR',
+                    destino: targetTrip?.destino || 'Destino Oficial',
+                  });
+                }}
               />
             )}
 
@@ -1512,11 +1804,14 @@ export default function App() {
         />
       )}
 
-      {/* Modal de Ordem de Tráfego Oficial TJPR com QR Code */}
+      {/* Modal de Ordem de Tráfego Oficial TJPR com QR Code e Validação WhatsApp */}
       {officialOrderTrip && (
         <OfficialOrderModal
           trip={officialOrderTrip}
-          vehicle={vehicles.find((v) => v.id === officialOrderTrip.veiculoId)}
+          vehicle={vehicles.find((v) => v.id === officialOrderTrip.veiculoId || v.prefixo === officialOrderTrip.veiculoPrefixo)}
+          drivers={drivers}
+          chamados={chamados}
+          onCompleteTripAndNotify={handleCompleteTripAndNotify}
           onClose={() => setOfficialOrderTrip(null)}
         />
       )}
@@ -1613,6 +1908,23 @@ export default function App() {
           defaultComarca={selectedComarca}
           onSubmitSigaSolicitation={handleSubmitSigaSolicitation}
           onClose={() => setSigaModalOpen(false)}
+        />
+      )}
+
+      {/* Modal de Pesquisa de Satisfação com Carinhas de 1 a 5 (Finalização pelo Solicitante) */}
+      {satisfactionSurveyData && (
+        <SatisfactionSurveyModal
+          isOpen={true}
+          chamadoCodigo={satisfactionSurveyData.chamadoCodigo}
+          chamadoId={satisfactionSurveyData.chamadoId}
+          trip={satisfactionSurveyData.trip}
+          solicitanteNome={satisfactionSurveyData.solicitanteNome}
+          motoristaNome={satisfactionSurveyData.motoristaNome}
+          veiculoPrefixo={satisfactionSurveyData.veiculoPrefixo}
+          origem={satisfactionSurveyData.origem}
+          destino={satisfactionSurveyData.destino}
+          onSubmitEvaluation={handleSubmitSatisfactionSurvey}
+          onClose={() => setSatisfactionSurveyData(null)}
         />
       )}
 

@@ -25,7 +25,8 @@ import {
   Compass,
   UserPlus,
   FileSignature,
-  CalendarDays
+  CalendarDays,
+  Type
 } from 'lucide-react';
 import { Driver, NotificationItem, Role, Vehicle } from '../types';
 import { 
@@ -70,6 +71,7 @@ interface HeaderProps {
   drivers?: Driver[];
   onSelectDriver?: (driver: Driver) => void;
   assignedVehicle?: Vehicle;
+  onOpenSatisfactionSurvey?: (notification: NotificationItem) => void;
 }
 
 export const Header: React.FC<HeaderProps> = ({
@@ -94,10 +96,30 @@ export const Header: React.FC<HeaderProps> = ({
   drivers = [],
   onSelectDriver,
   assignedVehicle,
+  onOpenSatisfactionSurvey,
 }) => {
   const [showNotifications, setShowNotifications] = useState(false);
   const unreadCount = notifications.filter(n => !n.lida).length;
   const isDriver = isDriverRole(currentRole);
+
+  // Controle de Tamanho de Fonte (Acessibilidade e Alta Visibilidade)
+  const [fontScale, setFontScale] = useState<'sm' | 'md' | 'lg' | 'xl'>('md');
+
+  React.useEffect(() => {
+    const saved = (localStorage.getItem('sigpat_font_scale') as 'sm' | 'md' | 'lg' | 'xl') || 'md';
+    setFontScale(saved);
+    const root = document.documentElement;
+    root.classList.remove('font-scale-sm', 'font-scale-md', 'font-scale-lg', 'font-scale-xl');
+    root.classList.add(`font-scale-${saved}`);
+  }, []);
+
+  const handleSetFontScale = (scale: 'sm' | 'md' | 'lg' | 'xl') => {
+    setFontScale(scale);
+    localStorage.setItem('sigpat_font_scale', scale);
+    const root = document.documentElement;
+    root.classList.remove('font-scale-sm', 'font-scale-md', 'font-scale-lg', 'font-scale-xl');
+    root.classList.add(`font-scale-${scale}`);
+  };
 
   const comarcas = [
     'Todas as Comarcas',
@@ -355,6 +377,43 @@ export const Header: React.FC<HeaderProps> = ({
               </div>
             )}
 
+            {/* Widget de Zoom / Tamanho da Fonte (Acessibilidade) */}
+            <div className="flex items-center bg-white/5 rounded-lg border border-white/10 px-1.5 py-0.5 text-xs text-slate-300 gap-1" title="Ajuste do tamanho da fonte para alta legibilidade">
+              <span className="text-[11px] font-semibold text-slate-400 hidden xl:flex items-center gap-1">
+                <Type className="w-3 h-3 text-[#C4A052]" />
+                Fonte:
+              </span>
+              <button
+                type="button"
+                onClick={() => {
+                  if (fontScale === 'xl') handleSetFontScale('lg');
+                  else if (fontScale === 'lg') handleSetFontScale('md');
+                  else if (fontScale === 'md') handleSetFontScale('sm');
+                }}
+                disabled={fontScale === 'sm'}
+                className="w-5 h-5 flex items-center justify-center rounded hover:bg-white/10 disabled:opacity-30 cursor-pointer font-bold text-xs"
+                title="Diminuir tamanho da fonte"
+              >
+                A-
+              </button>
+              <span className="font-mono text-amber-300 font-bold px-1 text-[11px]">
+                {fontScale === 'sm' ? '100%' : fontScale === 'md' ? '115%' : fontScale === 'lg' ? '130%' : '145%'}
+              </span>
+              <button
+                type="button"
+                onClick={() => {
+                  if (fontScale === 'sm') handleSetFontScale('md');
+                  else if (fontScale === 'md') handleSetFontScale('lg');
+                  else if (fontScale === 'lg') handleSetFontScale('xl');
+                }}
+                disabled={fontScale === 'xl'}
+                className="w-5 h-5 flex items-center justify-center rounded hover:bg-white/10 disabled:opacity-30 cursor-pointer font-bold text-xs"
+                title="Aumentar tamanho da fonte"
+              >
+                A+
+              </button>
+            </div>
+
             {/* Notificações */}
             <div className="relative">
               <button
@@ -409,15 +468,31 @@ export const Header: React.FC<HeaderProps> = ({
                           <p className="text-slate-600 text-[11px] leading-relaxed mb-1.5">
                             {n.mensagem}
                           </p>
-                          {!n.lida && (
-                            <button
-                              onClick={() => onMarkNotificationRead(n.id)}
-                              className="inline-flex items-center gap-1 text-[10px] font-semibold text-[#0084C7] hover:underline cursor-pointer"
-                            >
-                              <CheckCircle2 className="w-3 h-3" />
-                              Marcar lida
-                            </button>
-                          )}
+                          <div className="flex items-center justify-between gap-2 mt-1">
+                            {n.requiresEvaluation && onOpenSatisfactionSurvey && (
+                              <button
+                                type="button"
+                                onClick={() => {
+                                  onMarkNotificationRead(n.id);
+                                  setShowNotifications(false);
+                                  onOpenSatisfactionSurvey(n);
+                                }}
+                                className="px-2.5 py-1 bg-amber-500 hover:bg-amber-600 text-slate-950 font-bold text-[10px] rounded-lg shadow-2xs flex items-center gap-1 transition-all cursor-pointer"
+                              >
+                                <span>⭐ Finalizar & Avaliar Atendimento</span>
+                              </button>
+                            )}
+
+                            {!n.lida && (
+                              <button
+                                onClick={() => onMarkNotificationRead(n.id)}
+                                className="inline-flex items-center gap-1 text-[10px] font-semibold text-[#0084C7] hover:underline cursor-pointer ml-auto"
+                              >
+                                <CheckCircle2 className="w-3 h-3" />
+                                Marcar lida
+                              </button>
+                            )}
+                          </div>
                         </div>
                       ))
                     )}

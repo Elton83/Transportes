@@ -12,7 +12,9 @@ import {
   Calendar, 
   Car, 
   User, 
-  ExternalLink 
+  ExternalLink,
+  Bookmark,
+  BookOpen
 } from 'lucide-react';
 import { OfficialDocument } from '../../types';
 
@@ -67,6 +69,8 @@ export const DocumentPreviewModal: React.FC<DocumentPreviewModalProps> = ({
                     ? 'DOCUMENTAÇÃO VEICULAR' 
                     : document.categoria === 'motorista' 
                     ? 'DOCUMENTAÇÃO DO CONDUTOR' 
+                    : document.categoria === 'legislacao_normas'
+                    ? 'REPOSITÓRIO NORMATIVO • TJPR'
                     : 'ATO ADMINISTRATIVO / REGULAMENTAR'}
                 </span>
                 <span className="text-xs text-blue-200 font-mono">
@@ -225,8 +229,56 @@ export const DocumentPreviewModal: React.FC<DocumentPreviewModalProps> = ({
               )}
             </div>
 
+            {/* Ementa / Síntese Normativa Oficial */}
+            {document.ementa && (
+              <div className="bg-amber-50/70 border border-amber-200/80 rounded-xl p-4 mb-4 text-xs">
+                <span className="text-[10px] font-bold text-amber-900 uppercase tracking-wider block mb-1">
+                  Ementa / Síntese Oficial do Ato
+                </span>
+                <p className="text-slate-800 leading-relaxed font-serif italic text-xs">
+                  "{document.ementa}"
+                </p>
+              </div>
+            )}
+
+            {/* Artigos em Destaque Aplicáveis à Frota */}
+            {document.artigosDestaque && document.artigosDestaque.length > 0 && (
+              <div className="bg-white p-4 rounded-xl border border-slate-200 mb-4 text-xs">
+                <span className="font-bold text-slate-900 flex items-center gap-1.5 mb-2.5">
+                  <Bookmark className="w-3.5 h-3.5 text-[#002B49]" />
+                  Disposições & Artigos Chave Aplicáveis aos Veículos e Condutores:
+                </span>
+                <div className="space-y-1.5">
+                  {document.artigosDestaque.map((art, i) => (
+                    <div key={i} className="text-xs text-slate-700 flex items-start gap-2 bg-slate-50 p-2 rounded-lg border border-slate-100">
+                      <span className="w-1.5 h-1.5 rounded-full bg-[#002B49] mt-1.5 flex-shrink-0" />
+                      <span>{art}</span>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {/* Link Oficial de Consulta */}
+            {document.linkConsultaOficial && (
+              <div className="mb-4 flex items-center justify-between bg-blue-50/60 p-3 rounded-lg border border-blue-200/60 text-xs">
+                <span className="text-slate-600 font-medium">
+                  Publicação em Diário Oficial / Repositório Institucional:
+                </span>
+                <a
+                  href={document.linkConsultaOficial}
+                  target="_blank"
+                  rel="noreferrer"
+                  className="inline-flex items-center gap-1 text-[#002B49] hover:text-[#0084C7] font-bold underline underline-offset-2"
+                >
+                  <ExternalLink className="w-3.5 h-3.5" />
+                  Abrir Íntegra Oficial
+                </a>
+              </div>
+            )}
+
             {/* Observations / Legal remarks */}
-            {document.observacoes && (
+            {document.observacoes && !document.ementa && (
               <div className="bg-white p-3.5 rounded-lg border border-slate-200 text-xs text-slate-700 leading-relaxed mb-4">
                 <span className="font-bold text-slate-900 block mb-1">Observações Legais e Administrativas:</span>
                 {document.observacoes}

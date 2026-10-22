@@ -361,6 +361,7 @@ export const INITIAL_TRIPS: Trip[] = [
   {
     id: 'trip-101',
     codigo: 'TRP-2026-0842',
+    chamadoCodigo: 'CHA-2026-0842',
     processoSei: '0019283-44.2026.8.16.6000',
     solicitanteNome: 'Dra. Mariana Vasconcellos',
     solicitanteCargo: 'Juíza de Direito Substituta',
@@ -387,6 +388,7 @@ export const INITIAL_TRIPS: Trip[] = [
   {
     id: 'trip-102',
     codigo: 'TRP-2026-0839',
+    chamadoCodigo: 'CHA-2026-0839',
     processoSei: '0018442-12.2026.8.16.6000',
     solicitanteNome: 'Des. Gilberto Silveira Neto',
     solicitanteCargo: 'Desembargador do TJPR',
@@ -731,6 +733,7 @@ export const INITIAL_TRIPS: Trip[] = [
   {
     id: 'trip-107',
     codigo: 'TRP-2026-0844',
+    chamadoCodigo: 'CHA-2026-0844',
     processoSei: '0019910-33.2026.8.16.6000',
     solicitanteNome: 'Dr. Valter Silveira',
     solicitanteCargo: 'Juiz Substituto de Entrância Final',
@@ -787,6 +790,7 @@ export const INITIAL_TRIPS: Trip[] = [
   {
     id: 'trip-108',
     codigo: 'TRP-2026-0845',
+    chamadoCodigo: 'CHA-2026-0845',
     processoSei: '0020341-80.2026.8.16.6000',
     solicitanteNome: 'Dra. Fernanda Siqueira',
     solicitanteCargo: 'Juíza Substituta de 2º Grau',

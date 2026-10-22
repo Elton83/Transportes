@@ -16,7 +16,10 @@ import {
   ExternalLink, 
   FileCheck, 
   Calendar, 
-  Plus 
+  Plus,
+  BookOpen,
+  Scale,
+  Bookmark
 } from 'lucide-react';
 import { 
   OfficialDocument, 
@@ -64,7 +67,8 @@ export const DocumentosView: React.FC<DocumentosViewProps> = ({
           (assignedVehicle && doc.veiculoId === assignedVehicle.id)
         );
         const isPermit = doc.subtipo === 'autorizacao_trafego_especial';
-        return isDriverDoc || isVehicleDoc || isPermit;
+        const isNorma = doc.categoria === 'legislacao_normas';
+        return isDriverDoc || isVehicleDoc || isPermit || isNorma;
       })
     : documents;
 
@@ -84,6 +88,7 @@ export const DocumentosView: React.FC<DocumentosViewProps> = ({
   const docsCarro = baseDocuments.filter(d => d.categoria === 'carro').length;
   const docsMotorista = baseDocuments.filter(d => d.categoria === 'motorista').length;
   const docsDemais = baseDocuments.filter(d => d.categoria === 'demais_situacoes').length;
+  const docsNormas = baseDocuments.filter(d => d.categoria === 'legislacao_normas').length;
   const docsAVencer = baseDocuments.filter(d => d.statusValidade === 'a_vencer').length;
   const docsVencidos = baseDocuments.filter(d => d.statusValidade === 'vencido').length;
 
@@ -91,8 +96,8 @@ export const DocumentosView: React.FC<DocumentosViewProps> = ({
   const filteredDocs = baseDocuments.filter(doc => {
     const matchesCategory = activeCategory === 'todos' || doc.categoria === activeCategory;
     const matchesValidity = validityFilter === 'todos' || doc.statusValidade === validityFilter;
-    const matchesVehicle = selectedVehicleFilter === 'todos' || doc.veiculoId === selectedVehicleFilter;
-    const matchesDriver = selectedDriverFilter === 'todos' || doc.motoristaId === selectedDriverFilter;
+    const matchesVehicle = selectedVehicleFilter === 'todos' || doc.veiculoId === selectedVehicleFilter || activeCategory === 'legislacao_normas';
+    const matchesDriver = selectedDriverFilter === 'todos' || doc.motoristaId === selectedDriverFilter || activeCategory === 'legislacao_normas';
 
     const matchesSearch = 
       doc.titulo.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -100,7 +105,8 @@ export const DocumentosView: React.FC<DocumentosViewProps> = ({
       doc.orgaoEmissor.toLowerCase().includes(searchTerm.toLowerCase()) ||
       (doc.veiculoPrefixo && doc.veiculoPrefixo.toLowerCase().includes(searchTerm.toLowerCase())) ||
       (doc.motoristaNome && doc.motoristaNome.toLowerCase().includes(searchTerm.toLowerCase())) ||
-      (doc.processoSei && doc.processoSei.toLowerCase().includes(searchTerm.toLowerCase()));
+      (doc.processoSei && doc.processoSei.toLowerCase().includes(searchTerm.toLowerCase())) ||
+      (doc.ementa && doc.ementa.toLowerCase().includes(searchTerm.toLowerCase()));
 
     return matchesCategory && matchesValidity && matchesVehicle && matchesDriver && matchesSearch;
   });
@@ -146,7 +152,7 @@ export const DocumentosView: React.FC<DocumentosViewProps> = ({
         </div>
 
         {/* Metrics Grid */}
-        <div className="grid grid-cols-2 sm:grid-cols-5 gap-3 mt-6 pt-5 border-t border-white/15 text-white">
+        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3 mt-6 pt-5 border-t border-white/15 text-white">
           <div className="bg-white/5 backdrop-blur-sm rounded-xl p-3 border border-white/10">
             <span className="text-[11px] text-blue-200 block">Total Arquivados</span>
             <div className="flex items-baseline gap-2 mt-1">
@@ -179,6 +185,17 @@ export const DocumentosView: React.FC<DocumentosViewProps> = ({
             </div>
           </div>
 
+          <div className="bg-white/5 backdrop-blur-sm rounded-xl p-3 border border-amber-300/30 bg-amber-400/5">
+            <span className="text-[11px] text-amber-200 block flex items-center gap-1">
+              <BookOpen className="w-3 h-3 text-[#C4A052]" />
+              Leis & Manuais
+            </span>
+            <div className="flex items-baseline gap-2 mt-1">
+              <span className="text-xl font-black text-[#C4A052]">{docsNormas}</span>
+              <span className="text-[10px] text-amber-100">repositório</span>
+            </div>
+          </div>
+
           <div className="bg-white/5 backdrop-blur-sm rounded-xl p-3 border border-white/10">
             <span className="text-[11px] text-blue-200 block">Alertas de Vencimento</span>
             <div className="flex items-baseline gap-2 mt-1">
@@ -191,73 +208,86 @@ export const DocumentosView: React.FC<DocumentosViewProps> = ({
         </div>
       </div>
 
-      {/* Categories Navigation Bar */}
-      <div className="bg-white rounded-xl shadow-sm border border-slate-200 p-2 flex flex-wrap items-center justify-between gap-2">
-        <div className="flex flex-wrap items-center gap-1">
+      {/* Categories Navigation Bar - Todas as categorias em uma única linha */}
+      <div className="bg-white rounded-xl shadow-sm border border-slate-200 p-2 overflow-x-auto no-scrollbar">
+        <div className="flex items-center gap-1.5 min-w-max">
           <button
             onClick={() => setActiveCategory('todos')}
-            className={`flex items-center gap-2 px-3.5 py-2 rounded-lg text-xs font-bold transition-all ${
+            className={`flex items-center gap-2 px-3.5 py-2 rounded-lg text-xs font-bold transition-all cursor-pointer whitespace-nowrap shrink-0 ${
               activeCategory === 'todos'
                 ? 'bg-[#002B49] text-white shadow'
                 : 'text-slate-600 hover:bg-slate-100'
             }`}
           >
-            <FileText className="w-4 h-4" />
-            Todos os Documentos ({totalDocs})
+            <FileText className="w-4 h-4 shrink-0" />
+            <span>Todos os Documentos ({totalDocs})</span>
           </button>
 
           <button
             onClick={() => setActiveCategory('carro')}
-            className={`flex items-center gap-2 px-3.5 py-2 rounded-lg text-xs font-bold transition-all ${
+            className={`flex items-center gap-2 px-3.5 py-2 rounded-lg text-xs font-bold transition-all cursor-pointer whitespace-nowrap shrink-0 ${
               activeCategory === 'carro'
                 ? 'bg-[#002B49] text-white shadow'
                 : 'text-slate-600 hover:bg-slate-100'
             }`}
           >
-            <Car className="w-4 h-4" />
-            Documentação do Carro ({docsCarro})
+            <Car className="w-4 h-4 shrink-0" />
+            <span>Documentação do Carro ({docsCarro})</span>
           </button>
 
           <button
             onClick={() => setActiveCategory('motorista')}
-            className={`flex items-center gap-2 px-3.5 py-2 rounded-lg text-xs font-bold transition-all ${
+            className={`flex items-center gap-2 px-3.5 py-2 rounded-lg text-xs font-bold transition-all cursor-pointer whitespace-nowrap shrink-0 ${
               activeCategory === 'motorista'
                 ? 'bg-[#002B49] text-white shadow'
                 : 'text-slate-600 hover:bg-slate-100'
             }`}
           >
-            <User className="w-4 h-4" />
-            Documentação do Motorista ({docsMotorista})
+            <User className="w-4 h-4 shrink-0" />
+            <span>Documentação do Motorista ({docsMotorista})</span>
           </button>
 
           <button
             onClick={() => setActiveCategory('demais_situacoes')}
-            className={`flex items-center gap-2 px-3.5 py-2 rounded-lg text-xs font-bold transition-all ${
+            className={`flex items-center gap-2 px-3.5 py-2 rounded-lg text-xs font-bold transition-all cursor-pointer whitespace-nowrap shrink-0 ${
               activeCategory === 'demais_situacoes'
                 ? 'bg-[#002B49] text-white shadow'
                 : 'text-slate-600 hover:bg-slate-100'
             }`}
           >
-            <Shield className="w-4 h-4" />
-            Demais Situações & Regulamentações ({docsDemais})
+            <Shield className="w-4 h-4 shrink-0" />
+            <span>Demais Situações & Regulamentações ({docsDemais})</span>
+          </button>
+
+          <button
+            onClick={() => setActiveCategory('legislacao_normas')}
+            className={`flex items-center gap-2 px-3.5 py-2 rounded-lg text-xs font-bold transition-all cursor-pointer whitespace-nowrap shrink-0 ${
+              activeCategory === 'legislacao_normas'
+                ? 'bg-[#002B49] text-white shadow ring-2 ring-[#C4A052]'
+                : 'text-slate-700 hover:bg-amber-50 hover:text-[#002B49] border border-amber-300/40 bg-amber-50/30'
+            }`}
+            title="Repositório Interno de Leis, Normas, Portarias e Manuais Oficiais do TJPR"
+          >
+            <BookOpen className="w-4 h-4 text-[#C4A052] shrink-0" />
+            <span>Leis, Normas, Portarias & Manuais ({docsNormas})</span>
           </button>
         </div>
+      </div>
 
-        {/* Search */}
-        <div className="relative w-full sm:w-64">
+      {/* Advanced Filters & Search Bar */}
+      <div className="flex flex-col md:flex-row items-stretch md:items-center justify-between gap-3 bg-slate-50 p-3 rounded-xl border border-slate-200 text-xs">
+        {/* Search Input */}
+        <div className="relative w-full md:w-80 shrink-0">
           <Search className="w-4 h-4 absolute left-3 top-2.5 text-slate-400" />
           <input
             type="text"
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
-            placeholder="Buscar por placa, CNH, SEI..."
-            className="w-full text-xs rounded-lg border border-slate-200 pl-9 pr-3 py-2 focus:ring-2 focus:ring-[#002B49] focus:outline-none"
+            placeholder="Buscar por placa, CNH, SEI, lei, manual..."
+            className="w-full text-xs rounded-lg border border-slate-200 pl-9 pr-3 py-2 bg-white focus:ring-2 focus:ring-[#002B49] focus:outline-none"
           />
         </div>
-      </div>
 
-      {/* Advanced Filters */}
-      <div className="flex flex-wrap items-center justify-between gap-3 bg-slate-50 p-3.5 rounded-xl border border-slate-200 text-xs">
         <div className="flex flex-wrap items-center gap-2">
           <Filter className="w-4 h-4 text-slate-400" />
           <span className="font-semibold text-slate-700">Filtros:</span>
@@ -276,31 +306,35 @@ export const DocumentosView: React.FC<DocumentosViewProps> = ({
           </select>
 
           {/* Vehicle Filter */}
-          <select
-            value={selectedVehicleFilter}
-            onChange={(e) => setSelectedVehicleFilter(e.target.value)}
-            className="bg-white border border-slate-200 rounded-lg px-2.5 py-1.5 text-xs text-slate-700 focus:outline-none focus:ring-1 focus:ring-[#002B49]"
-          >
-            <option value="todos">Filtrar por Veículo (Todos)</option>
-            {vehicles.map(v => (
-              <option key={v.id} value={v.id}>{v.prefixo} ({v.placa}) - {v.modelo.substring(0, 20)}</option>
-            ))}
-          </select>
+          {activeCategory !== 'legislacao_normas' && (
+            <select
+              value={selectedVehicleFilter}
+              onChange={(e) => setSelectedVehicleFilter(e.target.value)}
+              className="bg-white border border-slate-200 rounded-lg px-2.5 py-1.5 text-xs text-slate-700 focus:outline-none focus:ring-1 focus:ring-[#002B49]"
+            >
+              <option value="todos">Filtrar por Veículo (Todos)</option>
+              {vehicles.map(v => (
+                <option key={v.id} value={v.id}>{v.prefixo} ({v.placa}) - {v.modelo.substring(0, 20)}</option>
+              ))}
+            </select>
+          )}
 
           {/* Driver Filter */}
-          <select
-            value={selectedDriverFilter}
-            onChange={(e) => setSelectedDriverFilter(e.target.value)}
-            className="bg-white border border-slate-200 rounded-lg px-2.5 py-1.5 text-xs text-slate-700 focus:outline-none focus:ring-1 focus:ring-[#002B49]"
-          >
-            <option value="todos">Filtrar por Motorista (Todos)</option>
-            {drivers.map(d => (
-              <option key={d.id} value={d.id}>{d.nome} (Matr. {d.matricula})</option>
-            ))}
-          </select>
+          {activeCategory !== 'legislacao_normas' && (
+            <select
+              value={selectedDriverFilter}
+              onChange={(e) => setSelectedDriverFilter(e.target.value)}
+              className="bg-white border border-slate-200 rounded-lg px-2.5 py-1.5 text-xs text-slate-700 focus:outline-none focus:ring-1 focus:ring-[#002B49]"
+            >
+              <option value="todos">Filtrar por Motorista (Todos)</option>
+              {drivers.map(d => (
+                <option key={d.id} value={d.id}>{d.nome} (Matr. {d.matricula})</option>
+              ))}
+            </select>
+          )}
         </div>
 
-        <span className="text-slate-500 font-medium">
+        <span className="text-slate-500 font-medium shrink-0">
           Exibindo <strong>{filteredDocs.length}</strong> de <strong>{totalDocs}</strong> documentos
         </span>
       </div>
@@ -317,6 +351,7 @@ export const DocumentosView: React.FC<DocumentosViewProps> = ({
           filteredDocs.map((doc) => {
             const isCarro = doc.categoria === 'carro';
             const isMotorista = doc.categoria === 'motorista';
+            const isNorma = doc.categoria === 'legislacao_normas';
             const isValido = doc.statusValidade === 'valido' || doc.statusValidade === 'permanente';
             const isAVencer = doc.statusValidade === 'a_vencer';
             const isVencido = doc.statusValidade === 'vencido';
@@ -324,7 +359,11 @@ export const DocumentosView: React.FC<DocumentosViewProps> = ({
             return (
               <div
                 key={doc.id}
-                className="bg-white rounded-xl border border-slate-200 hover:border-[#002B49] shadow-sm hover:shadow-md transition-all p-5 flex flex-col justify-between space-y-4"
+                className={`bg-white rounded-xl border transition-all p-5 flex flex-col justify-between space-y-4 shadow-sm hover:shadow-md ${
+                  isNorma 
+                    ? 'border-amber-300/80 hover:border-[#002B49] bg-gradient-to-b from-amber-50/20 to-white' 
+                    : 'border-slate-200 hover:border-[#002B49]'
+                }`}
               >
                 {/* Top Section of Card */}
                 <div className="space-y-3">
@@ -335,16 +374,26 @@ export const DocumentosView: React.FC<DocumentosViewProps> = ({
                           ? 'bg-blue-100 text-[#002B49]' 
                           : isMotorista 
                           ? 'bg-amber-100 text-amber-800' 
+                          : isNorma
+                          ? 'bg-[#002B49] text-[#C4A052] border border-[#C4A052]/40 shadow-xs'
                           : 'bg-emerald-100 text-emerald-800'
                       }`}>
                         {isCarro && <Car className="w-4 h-4" />}
                         {isMotorista && <User className="w-4 h-4" />}
-                        {!isCarro && !isMotorista && <Shield className="w-4 h-4" />}
+                        {isNorma && <BookOpen className="w-4 h-4" />}
+                        {!isCarro && !isMotorista && !isNorma && <Shield className="w-4 h-4" />}
                       </div>
 
-                      <span className="text-[10px] font-bold uppercase tracking-wider text-slate-500">
-                        {doc.orgaoEmissor}
-                      </span>
+                      <div className="flex flex-col">
+                        <span className="text-[10px] font-bold uppercase tracking-wider text-slate-500">
+                          {doc.orgaoEmissor}
+                        </span>
+                        {isNorma && doc.normaTipo && (
+                          <span className="text-[9px] font-extrabold uppercase text-[#002B49] bg-amber-100 px-1.5 py-0.2 rounded w-fit border border-amber-300/60 mt-0.5">
+                            {doc.normaTipo === 'resolucao' ? 'Resolução TJPR' : doc.normaTipo === 'portaria' ? 'Portaria Presidencial' : doc.normaTipo === 'lei' ? 'Legislação / CTB' : doc.normaTipo === 'manual' ? 'Manual Técnico' : 'Instrução Normativa'}
+                          </span>
+                        )}
+                      </div>
                     </div>
 
                     {/* Validity Badge */}
@@ -372,7 +421,23 @@ export const DocumentosView: React.FC<DocumentosViewProps> = ({
                   </div>
 
                   {/* Association details */}
-                  <div className="bg-slate-50 rounded-lg p-2.5 text-xs space-y-1 border border-slate-100">
+                  <div className="bg-slate-50 rounded-lg p-2.5 text-xs space-y-1.5 border border-slate-100">
+                    {doc.ementa && (
+                      <div className="text-[11px] text-slate-700 italic bg-amber-50/80 p-2 rounded-md border border-amber-200/70 leading-relaxed">
+                        "{doc.ementa}"
+                      </div>
+                    )}
+
+                    {doc.artigosDestaque && doc.artigosDestaque.length > 0 && (
+                      <div className="text-[10px] text-slate-700 bg-white p-2 rounded-md border border-slate-200 space-y-0.5">
+                        <span className="font-bold text-[#002B49] flex items-center gap-1 uppercase tracking-wider text-[9px]">
+                          <Bookmark className="w-3 h-3 text-[#C4A052]" />
+                          Destaque do Regulamento:
+                        </span>
+                        <p className="line-clamp-2 italic">{doc.artigosDestaque[0]}</p>
+                      </div>
+                    )}
+
                     {doc.veiculoPrefixo && (
                       <div className="flex items-center gap-1.5 text-slate-700">
                         <Car className="w-3.5 h-3.5 text-slate-400 flex-shrink-0" />

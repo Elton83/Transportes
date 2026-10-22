@@ -92,6 +92,36 @@ Sua solicitação de transporte oficial foi protocolada com êxito no sistema SI
 Central de Gestão e Logística TJPR: (41) 3200-2100 | Plantão: (41) 98822-4910`;
 };
 
+export const formatWhatsAppOfficialOrderValidationMessage = (
+  trip: Trip,
+  chamadoCodigo: string,
+  vehicle?: Vehicle
+): string => {
+  const veicPrefixo = vehicle?.prefixo || trip.veiculoPrefixo || 'TJ-101';
+  const veicPlaca = vehicle?.placa || trip.veiculoPlaca || 'TZI6J11';
+  const veicModelo = vehicle?.modelo || trip.veiculoModelo || 'Volkswagen Virtus TSI';
+  const condutor = trip.motoristaNome || 'Motorista Oficial TJPR';
+  const solicitante = trip.solicitanteNome || 'Autoridade Solicitante';
+
+  return `⚖️ *TRIBUNAL DE JUSTIÇA DO ESTADO DO PARANÁ*
+*VALIDAÇÃO DE ORDEM DE TRÁFEGO VIA WHATSAPP (SIGPAT TJPR)*
+
+✅ *DOCUMENTO OFICIAL AUTENTICADO*
+📋 *Ordem de Tráfego:* ${trip.codigo}
+🎫 *Nº do Chamado (Sistema):* ${chamadoCodigo}
+
+🚘 *Veículo Oficial:* ${veicPrefixo} • ${veicPlaca} (${veicModelo})
+👤 *Condutor Autorizado:* ${condutor}
+🏛️ *Autoridade Solicitante:* ${solicitante} (${trip.solicitanteVara})
+
+📍 *Itinerário:* ${trip.origem} ➔ ${trip.destino}
+🗓️ *Período:* ${trip.dataSaida} às ${trip.horaSaida} | Retorno Previsto: ${trip.dataRetornoPrevista} às ${trip.horaRetornoPrevista}
+
+🔐 *Autenticação Digital:* WPP-TJPR-${trip.codigo.replace('TRP-', '')}-VALIDADO
+📱 *Canal Oficial:* Divisão de Transportes e Frotas TJPR (WhatsApp Oficial: (41) 99820-1122)
+Status: VÁLIDO E AUTENTICADO DIGITALMENTE VIA WHATSAPP.`;
+};
+
 export const formatWhatsAppDriverScheduleMessage = (
   driver: Driver,
   scheduleItem?: {

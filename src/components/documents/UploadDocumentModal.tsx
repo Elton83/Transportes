@@ -8,7 +8,9 @@ import {
   Car, 
   User, 
   Shield, 
-  Calendar 
+  Calendar,
+  BookOpen,
+  Scale
 } from 'lucide-react';
 import { 
   OfficialDocument, 
@@ -66,6 +68,11 @@ export const UploadDocumentModal: React.FC<UploadDocumentModalProps> = ({
       setSubtipo('cnh_digital');
       setOrgaoEmissor('Senatran / Detran-PR');
       setTitulo('CNH Digital Atualizada');
+    } else if (newCat === 'legislacao_normas') {
+      setSubtipo('resolucao_tjpr');
+      setOrgaoEmissor('Tribunal Pleno / TJPR');
+      setTitulo('Resolução Normativa da Frota TJPR');
+      setTemValidade(false);
     } else {
       setSubtipo('autorizacao_trafego_especial');
       setOrgaoEmissor('TJPR / GSI');
@@ -117,7 +124,7 @@ export const UploadDocumentModal: React.FC<UploadDocumentModalProps> = ({
     const driver = drivers.find(d => d.id === selectedDriverId);
 
     let statusValidade: 'valido' | 'a_vencer' | 'vencido' | 'permanente' = 'valido';
-    if (!temValidade || !dataValidade) {
+    if (!temValidade || !dataValidade || categoria === 'legislacao_normas') {
       statusValidade = 'permanente';
     } else {
       const today = new Date();
@@ -132,15 +139,26 @@ export const UploadDocumentModal: React.FC<UploadDocumentModalProps> = ({
       }
     }
 
+    let normaTipo: 'lei' | 'resolucao' | 'portaria' | 'manual' | 'instrucao' | 'decreto' | undefined;
+    if (categoria === 'legislacao_normas') {
+      if (subtipo === 'resolucao_tjpr') normaTipo = 'resolucao';
+      else if (subtipo === 'portaria_presidencia') normaTipo = 'portaria';
+      else if (subtipo === 'lei_estadual' || subtipo === 'codigo_transito_brasileiro') normaTipo = 'lei';
+      else if (subtipo === 'manual_procedimento' || subtipo === 'guia_condutor_tjpr') normaTipo = 'manual';
+      else if (subtipo === 'instrucao_normativa') normaTipo = 'instrucao';
+      else if (subtipo === 'decreto_estadual') normaTipo = 'decreto';
+    }
+
     const newDoc: OfficialDocument = {
       id: `doc-${Date.now()}`,
       titulo: titulo.trim(),
       categoria,
       subtipo,
+      normaTipo,
       numeroDocumento: numeroDocumento.trim(),
       orgaoEmissor: orgaoEmissor.trim() || 'TJPR',
       dataEmissao,
-      dataValidade: temValidade && dataValidade ? dataValidade : undefined,
+      dataValidade: temValidade && dataValidade && categoria !== 'legislacao_normas' ? dataValidade : undefined,
       statusValidade,
       veiculoId: categoria === 'carro' ? vehicle?.id : undefined,
       veiculoPrefixo: categoria === 'carro' ? vehicle?.prefixo : undefined,
@@ -148,6 +166,7 @@ export const UploadDocumentModal: React.FC<UploadDocumentModalProps> = ({
       motoristaId: categoria === 'motorista' ? driver?.id : undefined,
       motoristaNome: categoria === 'motorista' ? driver?.nome : undefined,
       processoSei: processoSei.trim() || undefined,
+      ementa: observacoes.trim() || undefined,
       arquivoNome: fileName || `${titulo.replace(/\s+/g, '_')}.pdf`,
       arquivoTamanho: fileSizeStr || '650 KB',
       formato: fileName.toLowerCase().endsWith('.png') ? 'PNG' : fileName.toLowerCase().endsWith('.jpg') ? 'JPG' : 'PDF',
@@ -159,9 +178,10 @@ export const UploadDocumentModal: React.FC<UploadDocumentModalProps> = ({
           { rotulo: 'Registro / Nº', valor: numeroDocumento.trim() },
           { rotulo: 'Órgão Emissor', valor: orgaoEmissor.trim() || 'TJPR' },
           { rotulo: 'Emissão', valor: dataEmissao },
-          ...(temValidade && dataValidade ? [{ rotulo: 'Vigência Até', valor: dataValidade }] : [{ rotulo: 'Vigência', valor: 'Permanente' }]),
+          ...(temValidade && dataValidade && categoria !== 'legislacao_normas' ? [{ rotulo: 'Vigência Até', valor: dataValidade }] : [{ rotulo: 'Vigência', valor: 'Permanente / Vigente' }]),
           ...(categoria === 'carro' && vehicle ? [{ rotulo: 'Veículo', valor: `${vehicle.prefixo} (${vehicle.placa})` }] : []),
           ...(categoria === 'motorista' && driver ? [{ rotulo: 'Condutor', valor: `${driver.nome} (Matr. ${driver.matricula})` }] : []),
+          ...(categoria === 'legislacao_normas' ? [{ rotulo: 'Classificação', valor: normaTipo ? normaTipo.toUpperCase() : 'NORMA OFICIAL' }] : []),
         ],
         autenticidadeCodigo: `TJPR-DOC-${Math.floor(100000 + Math.random() * 900000)}-AUT`,
         qrcodeSimulado: true,
@@ -209,7 +229,7 @@ export const UploadDocumentModal: React.FC<UploadDocumentModalProps> = ({
             <label className="block text-xs font-semibold text-slate-700 mb-1.5">
               Categoria do Documento *
             </label>
-            <div className="grid grid-cols-3 gap-2">
+            <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
               <button
                 type="button"
                 onClick={() => handleCategoryChange('carro')}
@@ -247,6 +267,19 @@ export const UploadDocumentModal: React.FC<UploadDocumentModalProps> = ({
               >
                 <Shield className="w-4 h-4" />
                 Demais Situações
+              </button>
+
+              <button
+                type="button"
+                onClick={() => handleCategoryChange('legislacao_normas')}
+                className={`py-2 px-3 rounded-lg border text-xs font-bold flex items-center justify-center gap-1.5 transition-all ${
+                  categoria === 'legislacao_normas'
+                    ? 'border-[#002B49] bg-[#002B49] text-white shadow ring-2 ring-[#C4A052]/40'
+                    : 'border-slate-200 bg-slate-50 text-slate-700 hover:bg-slate-100'
+                }`}
+              >
+                <BookOpen className="w-4 h-4 text-[#C4A052]" />
+                Leis & Manuais
               </button>
             </div>
           </div>
@@ -344,6 +377,19 @@ export const UploadDocumentModal: React.FC<UploadDocumentModalProps> = ({
                     <option value="guia_baixa_patrimonial">Guia de Devolução / Baixa Patrimonial</option>
                   </>
                 )}
+
+                {categoria === 'legislacao_normas' && (
+                  <>
+                    <option value="resolucao_tjpr">Resolução do Tribunal Pleno / TJPR</option>
+                    <option value="portaria_presidencia">Portaria da Presidência / CGF</option>
+                    <option value="manual_procedimento">Manual de Procedimentos Operacionais</option>
+                    <option value="guia_condutor_tjpr">Guia Oficial do Condutor / POP Frota</option>
+                    <option value="instrucao_normativa">Instrução Normativa (IN Conjunta)</option>
+                    <option value="lei_estadual">Lei Estadual / Regulamento Geral</option>
+                    <option value="decreto_estadual">Decreto Estadual do Paraná</option>
+                    <option value="codigo_transito_brasileiro">Código de Trânsito Brasileiro (CTB Anotado)</option>
+                  </>
+                )}
               </select>
             </div>
 
@@ -380,6 +426,19 @@ export const UploadDocumentModal: React.FC<UploadDocumentModalProps> = ({
                     </option>
                   ))}
                 </select>
+              </div>
+            ) : categoria === 'legislacao_normas' ? (
+              <div>
+                <label className="block text-xs font-semibold text-slate-700 mb-1">
+                  Âmbito / Órgão Normativo ou SEI *
+                </label>
+                <input
+                  type="text"
+                  value={processoSei}
+                  onChange={(e) => setProcessoSei(e.target.value)}
+                  placeholder="Ex: TJPR • Tribunal Pleno / Presidência / CGF"
+                  className="w-full text-xs rounded-lg border border-slate-300 p-2.5 focus:ring-2 focus:ring-[#002B49] focus:outline-none"
+                />
               </div>
             ) : (
               <div>

@@ -60,6 +60,14 @@ export interface Chamado {
   atividadeConcluida?: boolean;
   assinaturaSolicitanteData?: string;
   assinaturaSolicitanteHash?: string;
+  // Pesquisa de Satisfação com Carinhas de 1 a 5 pelo Solicitante
+  avaliacaoNota?: number;
+  avaliacaoCarinhas?: number;
+  avaliacaoLabel?: string;
+  avaliacaoComentario?: string;
+  avaliacaoTags?: string[];
+  dataAvaliacao?: string;
+  finalizadoPorSolicitante?: boolean;
 }
 
 export type VehicleStatus = 'disponivel' | 'em_viagem' | 'manutencao' | 'reservado';
@@ -261,7 +269,7 @@ export interface Maintenance {
   itensInspecao?: InspectionCheckItem[];
 }
 
-export type DocumentCategory = 'carro' | 'motorista' | 'demais_situacoes';
+export type DocumentCategory = 'carro' | 'motorista' | 'demais_situacoes' | 'legislacao_normas';
 
 export type DocumentSubtype = 
   // Carro:
@@ -286,7 +294,16 @@ export type DocumentSubtype =
   | 'contrato_frota_ticketlog'
   | 'termo_sinistro_avaria'
   | 'boletim_ocorrencia'
-  | 'guia_baixa_patrimonial';
+  | 'guia_baixa_patrimonial'
+  // Legislação, Normas, Portarias & Manuais:
+  | 'lei_estadual'
+  | 'decreto_estadual'
+  | 'resolucao_tjpr'
+  | 'portaria_presidencia'
+  | 'instrucao_normativa'
+  | 'manual_procedimento'
+  | 'guia_condutor_tjpr'
+  | 'codigo_transito_brasileiro';
 
 export interface OfficialDocument {
   id: string;
@@ -309,6 +326,10 @@ export interface OfficialDocument {
   formato: 'PDF' | 'PNG' | 'JPG';
   observacoes?: string;
   dataUpload: string;
+  ementa?: string;
+  normaTipo?: 'lei' | 'resolucao' | 'portaria' | 'manual' | 'instrucao' | 'decreto';
+  artigosDestaque?: string[];
+  linkConsultaOficial?: string;
   conteudoPrevia?: {
     camposPrincipais: { rotulo: string; valor: string }[];
     autenticidadeCodigo?: string;
@@ -347,6 +368,7 @@ export interface Trip {
   id: string;
   codigo: string; // Ex: TRP-2026-0842
   processoSei: string; // Ex: 0019283-44.2026.8.16.6000
+  chamadoCodigo?: string; // Ex: CHA-2026-0041
   solicitanteNome: string;
   solicitanteCargo: string;
   solicitanteVara: string;
@@ -514,6 +536,10 @@ export interface NotificationItem {
   lida: boolean;
   tipo: 'viagem' | 'manutencao' | 'cnh' | 'alerta' | 'assinatura_solicitante' | 'chamado';
   link?: string;
+  tripId?: string;
+  chamadoId?: string;
+  chamadoCodigo?: string;
+  requiresEvaluation?: boolean;
 }
 
 export type MeuBeneficioTipoCusta = 

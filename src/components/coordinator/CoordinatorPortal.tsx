@@ -73,6 +73,7 @@ interface CoordinatorPortalProps {
   onOpenTeamsConfig?: () => void;
   onOpenWhatsAppReservation?: (trip: Trip, vehicle?: Vehicle, driver?: Driver) => void;
   onOpenSigaSolicitation?: () => void;
+  onOpenSatisfactionSurvey?: (chamado: Chamado) => void;
 }
 
 export const CoordinatorPortal: React.FC<CoordinatorPortalProps> = ({
@@ -95,6 +96,7 @@ export const CoordinatorPortal: React.FC<CoordinatorPortalProps> = ({
   onOpenTeamsConfig,
   onOpenWhatsAppReservation,
   onOpenSigaSolicitation,
+  onOpenSatisfactionSurvey,
 }) => {
   const [activeTab, setActiveTab] = useState<'dia_a_dia' | 'chamados' | 'relatorios_resumo'>('chamados');
   
@@ -929,6 +931,37 @@ export const CoordinatorPortal: React.FC<CoordinatorPortalProps> = ({
                       </div>
                     )}
 
+                    {/* SE HOUVER AVALIAÇÃO DE SATISFAÇÃO (PESQUISA COM CARINHAS 1 A 5) */}
+                    {chamado.avaliacaoNota && (
+                      <div className="mt-3 p-3 bg-amber-50/90 border border-amber-200 rounded-xl text-xs space-y-1 shadow-2xs">
+                        <div className="flex items-center justify-between text-amber-950 font-bold text-[11px]">
+                          <span className="flex items-center gap-1.5">
+                            <span className="text-base leading-none">
+                              {chamado.avaliacaoNota === 5 ? '🤩' : chamado.avaliacaoNota === 4 ? '🙂' : chamado.avaliacaoNota === 3 ? '😐' : chamado.avaliacaoNota === 2 ? '🙁' : '😡'}
+                            </span>
+                            <span>Pesquisa de Satisfação: {chamado.avaliacaoNota}/5 ({chamado.avaliacaoLabel || 'Avaliado'})</span>
+                          </span>
+                          <span className="font-mono text-[10px] text-amber-800">
+                            {chamado.dataAvaliacao || chamado.dataEncerramento}
+                          </span>
+                        </div>
+                        {chamado.avaliacaoComentario && (
+                          <p className="text-[11px] text-slate-700 italic">
+                            Comentário: "{chamado.avaliacaoComentario}"
+                          </p>
+                        )}
+                        {chamado.avaliacaoTags && chamado.avaliacaoTags.length > 0 && (
+                          <div className="flex flex-wrap gap-1 mt-1">
+                            {chamado.avaliacaoTags.map((tag, idx) => (
+                              <span key={idx} className="px-2 py-0.5 bg-amber-100 text-amber-900 rounded-md text-[10px] font-medium border border-amber-200">
+                                {tag}
+                              </span>
+                            ))}
+                          </div>
+                        )}
+                      </div>
+                    )}
+
                     {/* RODAPÉ DO CARD COM AÇÕES DO COORDENADOR */}
                     <div className="mt-4 pt-3 border-t border-slate-100 flex flex-col sm:flex-row sm:items-center justify-between gap-3 text-xs">
                       
@@ -962,9 +995,22 @@ export const CoordinatorPortal: React.FC<CoordinatorPortalProps> = ({
                         )}
                       </div>
 
-                      {/* GRUPO DE AÇÕES EXCLUSIVAS DO COORDENADOR */}
+                      {/* GRUPO DE AÇÕES */}
                       <div className="flex flex-wrap items-center gap-2">
                         
+                        {/* BOTÃO DE AVALIAÇÃO COM CARINHAS (1 A 5) PARA O SOLICITANTE / COORDENAÇÃO */}
+                        {onOpenSatisfactionSurvey && !chamado.avaliacaoNota && (
+                          <button
+                            type="button"
+                            onClick={() => onOpenSatisfactionSurvey(chamado)}
+                            className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-amber-500 hover:bg-amber-600 text-slate-950 font-bold text-xs shadow-xs transition-all cursor-pointer hover:scale-[1.02]"
+                            title="Finalizar e avaliar chamado com carinhas de 1 a 5"
+                          >
+                            <span>⭐</span>
+                            <span>{isConcluido ? 'Avaliar Chamado (1 a 5)' : 'Finalizar & Avaliar'}</span>
+                          </button>
+                        )}
+
                         {/* REQUISITO 2: GERENCIAR & DIRECIONAR (MOTORISTA E VEÍCULO) */}
                         {!isConcluido && (
                           <button
