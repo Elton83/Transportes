@@ -138,7 +138,7 @@ export default function App() {
   // Gestão de transição de perfis com verificação estrita de permissões (RBAC)
   const handleRoleChange = (newRole: Role) => {
     setCurrentRole(newRole);
-    if (isDriverRole(newRole)) {
+    if (isDriverRole(newRole) || newRole === 'supervisor_operacional' || newRole === 'coordenador') {
       setDiarioViewMode('operacional');
     }
     const allowed = getAllowedTabsForRole(newRole);
@@ -1491,34 +1491,38 @@ export default function App() {
                       </span>
                       {/* Controles Administrativos para Perfis de Gestão */}
                       <div className="flex items-center bg-slate-100 p-1 rounded-lg gap-1">
-                        <button
-                          type="button"
-                          id="diario-tab-dashboard"
-                          onClick={() => setDiarioViewMode('dashboard')}
-                          className={`flex items-center gap-1.5 px-3 py-1.5 rounded-md text-xs font-semibold transition-all cursor-pointer ${
-                            diarioViewMode === 'dashboard'
-                              ? 'bg-[#05202B] text-white shadow-xs'
-                              : 'text-slate-600 hover:text-slate-900 hover:bg-slate-200/60'
-                          }`}
-                          title="Painel Executivo da Frota com disponibilidade, indicadores e escala"
-                        >
-                          <LayoutDashboard className="w-3.5 h-3.5" />
-                          <span>Painel da Frota</span>
-                        </button>
-                        <button
-                          type="button"
-                          id="diario-tab-planilha"
-                          onClick={() => setDiarioViewMode('planilha')}
-                          className={`flex items-center gap-1.5 px-3 py-1.5 rounded-md text-xs font-semibold transition-all cursor-pointer ${
-                            diarioViewMode === 'planilha'
-                              ? 'bg-[#05202B] text-white shadow-xs'
-                              : 'text-slate-600 hover:text-slate-900 hover:bg-slate-200/60'
-                          }`}
-                          title="Planilha oficial do Diário de Bordo com odômetro, histórico e assinaturas"
-                        >
-                          <FileSpreadsheet className="w-3.5 h-3.5" />
-                          <span>Planilha Oficial</span>
-                        </button>
+                        {currentRole !== 'supervisor_operacional' && currentRole !== 'coordenador' && (
+                          <>
+                            <button
+                              type="button"
+                              id="diario-tab-dashboard"
+                              onClick={() => setDiarioViewMode('dashboard')}
+                              className={`flex items-center gap-1.5 px-3 py-1.5 rounded-md text-xs font-semibold transition-all cursor-pointer ${
+                                diarioViewMode === 'dashboard'
+                                  ? 'bg-[#05202B] text-white shadow-xs'
+                                  : 'text-slate-600 hover:text-slate-900 hover:bg-slate-200/60'
+                              }`}
+                              title="Painel Executivo da Frota com disponibilidade, indicadores e escala"
+                            >
+                              <LayoutDashboard className="w-3.5 h-3.5" />
+                              <span>Painel da Frota</span>
+                            </button>
+                            <button
+                              type="button"
+                              id="diario-tab-planilha"
+                              onClick={() => setDiarioViewMode('planilha')}
+                              className={`flex items-center gap-1.5 px-3 py-1.5 rounded-md text-xs font-semibold transition-all cursor-pointer ${
+                                diarioViewMode === 'planilha'
+                                  ? 'bg-[#05202B] text-white shadow-xs'
+                                  : 'text-slate-600 hover:text-slate-900 hover:bg-slate-200/60'
+                              }`}
+                              title="Planilha oficial do Diário de Bordo com odômetro, histórico e assinaturas"
+                            >
+                              <FileSpreadsheet className="w-3.5 h-3.5" />
+                              <span>Planilha Oficial</span>
+                            </button>
+                          </>
+                        )}
                         <button
                           type="button"
                           id="diario-tab-operacional"
@@ -1565,7 +1569,7 @@ export default function App() {
                 ) : (
                   <>
                     {/* VISÃO DO PAINEL DA FROTA */}
-                    {diarioViewMode === 'dashboard' && (
+                    {diarioViewMode === 'dashboard' && currentRole !== 'supervisor_operacional' && currentRole !== 'coordenador' && (
                       <ExecutiveFleetDashboard
                         vehicles={vehicles}
                         drivers={drivers}
@@ -1592,7 +1596,7 @@ export default function App() {
                     )}
 
                     {/* VISÃO DA PLANILHA OFICIAL DO DIÁRIO DE BORDO */}
-                    {diarioViewMode === 'planilha' && (
+                    {diarioViewMode === 'planilha' && currentRole !== 'supervisor_operacional' && currentRole !== 'coordenador' && (
                       <DiarioDeBordoView
                         trips={trips}
                         vehicles={vehicles}
@@ -1609,7 +1613,7 @@ export default function App() {
                     )}
 
                     {/* VISÃO DO PORTAL OPERACIONAL */}
-                    {diarioViewMode === 'operacional' && (
+                    {(diarioViewMode === 'operacional' || currentRole === 'supervisor_operacional' || currentRole === 'coordenador') && (
                       <>
                         {/* Visualização: Administrador da Frota (SIGPAT Transportes TJPR) */}
                         {(currentRole === 'administrador' || currentRole === 'gestor') && (
