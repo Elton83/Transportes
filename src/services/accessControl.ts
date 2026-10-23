@@ -265,7 +265,7 @@ export function getTabLabelForRole(tab: MainNavTab, role: Role): { label: string
       };
     case 'operacoes':
       return {
-        label: isDriver ? 'Meu Diário de Bordo' : 'Diário de Bordo',
+        label: 'Rodízio',
         description: isDriver 
           ? 'Minhas demandas, percursos e odômetro' 
           : 'Planilha de percursos e registros',

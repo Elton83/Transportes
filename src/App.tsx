@@ -1481,61 +1481,43 @@ export default function App() {
             {/* ABA UNIFICADA: Diário de Bordo & Rotina Operacional (Com Painel Geral da Frota, Planilha Oficial e Portal Operacional) */}
             {(activeNavTab === 'operacoes' || activeNavTab === 'dashboard') && (
               <div className="space-y-4">
-                {/* Seletor Integrado e Didático no Diário de Bordo (Oculto para perfil Motorista) */}
-                {!isDriverRole(currentRole) && (
+                {/* Seletor Integrado no Rodízio (Oculto para Motorista e Supervisor Operacional) */}
+                {!isDriverRole(currentRole) && currentRole !== 'supervisor_operacional' && currentRole !== 'coordenador' && (
                   <div className="bg-white px-4 py-3 rounded-xl border border-slate-200/90 shadow-2xs flex flex-col md:flex-row md:items-center justify-between gap-3">
                     <div className="flex flex-wrap items-center gap-2">
                       <span className="text-xs font-bold text-slate-800 uppercase tracking-wide flex items-center gap-1.5 mr-1">
                         <FileSpreadsheet className="w-4 h-4 text-[#05202B]" />
-                        Diário de Bordo:
+                        Rodízio:
                       </span>
                       {/* Controles Administrativos para Perfis de Gestão */}
                       <div className="flex items-center bg-slate-100 p-1 rounded-lg gap-1">
-                        {currentRole !== 'supervisor_operacional' && currentRole !== 'coordenador' && (
-                          <>
-                            <button
-                              type="button"
-                              id="diario-tab-dashboard"
-                              onClick={() => setDiarioViewMode('dashboard')}
-                              className={`flex items-center gap-1.5 px-3 py-1.5 rounded-md text-xs font-semibold transition-all cursor-pointer ${
-                                diarioViewMode === 'dashboard'
-                                  ? 'bg-[#05202B] text-white shadow-xs'
-                                  : 'text-slate-600 hover:text-slate-900 hover:bg-slate-200/60'
-                              }`}
-                              title="Painel Executivo da Frota com disponibilidade, indicadores e escala"
-                            >
-                              <LayoutDashboard className="w-3.5 h-3.5" />
-                              <span>Painel da Frota</span>
-                            </button>
-                            <button
-                              type="button"
-                              id="diario-tab-planilha"
-                              onClick={() => setDiarioViewMode('planilha')}
-                              className={`flex items-center gap-1.5 px-3 py-1.5 rounded-md text-xs font-semibold transition-all cursor-pointer ${
-                                diarioViewMode === 'planilha'
-                                  ? 'bg-[#05202B] text-white shadow-xs'
-                                  : 'text-slate-600 hover:text-slate-900 hover:bg-slate-200/60'
-                              }`}
-                              title="Planilha oficial do Diário de Bordo com odômetro, histórico e assinaturas"
-                            >
-                              <FileSpreadsheet className="w-3.5 h-3.5" />
-                              <span>Planilha Oficial</span>
-                            </button>
-                          </>
-                        )}
                         <button
                           type="button"
-                          id="diario-tab-operacional"
-                          onClick={() => setDiarioViewMode('operacional')}
+                          id="diario-tab-dashboard"
+                          onClick={() => setDiarioViewMode('dashboard')}
                           className={`flex items-center gap-1.5 px-3 py-1.5 rounded-md text-xs font-semibold transition-all cursor-pointer ${
-                            diarioViewMode === 'operacional'
+                            diarioViewMode === 'dashboard'
                               ? 'bg-[#05202B] text-white shadow-xs'
                               : 'text-slate-600 hover:text-slate-900 hover:bg-slate-200/60'
                           }`}
-                          title="Portal de demandas operacionais do condutor ou gestor"
+                          title="Painel Executivo da Frota com disponibilidade, indicadores e escala"
                         >
-                          <Car className="w-3.5 h-3.5" />
-                          <span>Portal do Gestor</span>
+                          <LayoutDashboard className="w-3.5 h-3.5" />
+                          <span>Painel da Frota</span>
+                        </button>
+                        <button
+                          type="button"
+                          id="diario-tab-planilha"
+                          onClick={() => setDiarioViewMode('planilha')}
+                          className={`flex items-center gap-1.5 px-3 py-1.5 rounded-md text-xs font-semibold transition-all cursor-pointer ${
+                            diarioViewMode === 'planilha'
+                              ? 'bg-[#05202B] text-white shadow-xs'
+                              : 'text-slate-600 hover:text-slate-900 hover:bg-slate-200/60'
+                          }`}
+                          title="Planilha oficial do Diário de Bordo com odômetro, histórico e assinaturas"
+                        >
+                          <FileSpreadsheet className="w-3.5 h-3.5" />
+                          <span>Planilha Oficial</span>
                         </button>
                       </div>
                     </div>
