@@ -163,89 +163,95 @@ export const OficinasView: React.FC<OficinasViewProps> = ({
   return (
     <div className="space-y-6">
       
-      {/* Top Section / Header */}
-      <div className="bg-gradient-to-r from-[#002B49] to-[#003B64] text-white rounded-2xl p-6 shadow-md border-b-4 border-[#C4A052]">
-        <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
-          <div className="space-y-1">
-            <div className="flex items-center gap-2">
-              <span className="text-[10px] uppercase font-bold tracking-widest bg-amber-400/20 text-amber-300 px-2 py-0.5 rounded border border-amber-300/30 font-mono">
-                {isDriver ? 'CONSERVAÇÃO & MANUTENÇÃO DO VEÍCULO' : 'MÓDULO DE OFICINAS & FROTAS'}
-              </span>
-              <span className="text-xs text-blue-200">
-                {isDriver ? `Veículo Conduzido: ${driverPrefixo}` : 'Divisão de Gestão de Transportes • TJPR'}
+      {/* 1. Cabeçalho Limpo e Moderno TJPR */}
+      <div className="bg-white rounded-2xl p-4 sm:p-5 border border-slate-200/90 shadow-2xs flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+        <div className="flex items-center gap-3.5">
+          <div className="w-11 h-11 rounded-xl bg-[#002B49] text-amber-300 flex items-center justify-center shrink-0 shadow-xs border border-[#C4A052]/30">
+            <Wrench className="w-5 h-5 text-amber-300" />
+          </div>
+          <div>
+            <div className="flex items-center gap-2 flex-wrap">
+              <h2 className="text-lg sm:text-xl font-bold tracking-tight text-slate-900">
+                {isDriver ? `Manutenção do Veículo ${driverPrefixo}` : 'Manutenção & Oficinas'}
+              </h2>
+              <span className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full text-[10px] font-semibold bg-emerald-50 text-emerald-700 border border-emerald-200">
+                <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
+                {isDriver ? `Veículo ${driverPrefixo}` : 'Controle Mecânico'}
               </span>
             </div>
-            <h2 className="text-2xl font-black text-white tracking-tight flex items-center gap-2.5">
-              <Wrench className="w-6 h-6 text-[#C4A052]" />
-              {isDriver ? `Manutenção do Veículo ${driverPrefixo}` : 'Gestão de Oficinas, Inspeções e Laudos Técnicos'}
-            </h2>
-            <p className="text-xs text-slate-200 max-w-2xl leading-relaxed">
+            <p className="text-xs text-slate-500 mt-0.5">
               {isDriver
-                ? `Acompanhamento das ordens de serviço, revisões preventivas periódicas e laudos de aptidão técnica do veículo oficial sob sua condução.`
-                : 'Controle centralizado de manutenções preventivas e corretivas, checklists de inspeção mecânica, emissão de laudos de aptidão veicular e upload de notas fiscais / orçamentos credenciados.'}
+                ? 'Ordens de serviço, revisões periódicas e laudos de aptidão veicular'
+                : 'Ordens de serviço, vistorias técnicas, credenciadas e notas fiscais'}
             </p>
-          </div>
-
-          {/* Quick Action Buttons */}
-          <div className="flex flex-wrap items-center gap-2.5">
-            {!isDriver && (
-              <button
-                onClick={() => handleOpenUploadInvoice()}
-                className="px-3.5 py-2 rounded-xl bg-white/10 hover:bg-white/20 border border-white/20 text-white text-xs font-semibold flex items-center gap-2 transition-all shadow-sm cursor-pointer"
-              >
-                <Upload className="w-4 h-4 text-amber-300" />
-                Upload Nota Fiscal
-              </button>
-            )}
-            <button
-              onClick={onOpenNewMaintenanceModal}
-              className="px-4 py-2 rounded-xl bg-[#0084C7] hover:bg-[#0070AA] text-white text-xs font-bold flex items-center gap-2 transition-all shadow-md cursor-pointer"
-            >
-              <Plus className="w-4 h-4" />
-              {isDriver ? 'Reportar Ocorrência / Solicitar Revisão' : 'Nova Ordem de Serviço'}
-            </button>
           </div>
         </div>
 
-        {/* Metrics Bar */}
-        <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 mt-6 pt-5 border-t border-white/15 text-white">
-          <div className="bg-white/5 backdrop-blur-sm rounded-xl p-3 border border-white/10">
-            <span className="text-[11px] text-blue-200 block">Em Execução na Oficina</span>
-            <div className="flex items-baseline gap-2 mt-1">
-              <span className="text-xl font-black text-amber-300">{totalEmExecucao}</span>
-              <span className="text-[10px] text-slate-300">{isDriver ? 'no seu veículo' : 'veículos em reparo'}</span>
-            </div>
-          </div>
+        {/* Botões de Ação */}
+        <div className="flex flex-wrap items-center gap-2.5 shrink-0">
+          {!isDriver && (
+            <button
+              onClick={() => handleOpenUploadInvoice()}
+              className="h-9 sm:h-10 px-3.5 rounded-xl bg-slate-100 hover:bg-slate-200 border border-slate-200 text-slate-700 text-xs font-semibold flex items-center gap-2 transition-all shadow-2xs cursor-pointer"
+            >
+              <Upload className="w-4 h-4 text-[#002B49]" />
+              <span>Nota Fiscal</span>
+            </button>
+          )}
+          <button
+            onClick={onOpenNewMaintenanceModal}
+            className="h-9 sm:h-10 px-4 rounded-xl bg-[#002B49] hover:bg-[#003860] text-white font-semibold text-xs flex items-center gap-2 transition-all shadow-xs cursor-pointer hover:shadow-md"
+          >
+            <Plus className="w-4 h-4 text-amber-300" />
+            <span>{isDriver ? 'Solicitar Revisão' : 'Nova Ordem'}</span>
+          </button>
+        </div>
+      </div>
 
-          <div className="bg-white/5 backdrop-blur-sm rounded-xl p-3 border border-white/10">
-            <span className="text-[11px] text-blue-200 block">Agendadas / Aguardando</span>
-            <div className="flex items-baseline gap-2 mt-1">
-              <span className="text-xl font-black text-blue-300">{totalAgendadas}</span>
-              <span className="text-[10px] text-slate-300">ordens programadas</span>
-            </div>
+      {/* 2. Cards de Métricas Limpos */}
+      <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+        <div className="bg-white rounded-xl p-3.5 border border-slate-200 shadow-2xs">
+          <span className="text-[10px] font-bold uppercase tracking-wider text-amber-600 block">Em Execução</span>
+          <div className="flex items-baseline gap-1.5 mt-1">
+            <span className="text-xl font-extrabold text-amber-600">{totalEmExecucao}</span>
+            <span className="text-[10px] text-slate-500">{isDriver ? 'no seu carro' : 'na oficina'}</span>
           </div>
+        </div>
 
-          <div className="bg-white/5 backdrop-blur-sm rounded-xl p-3 border border-white/10">
-            <span className="text-[11px] text-blue-200 block">{isDriver ? 'Concluídas com Sucesso' : 'Notas & Orçamentos'}</span>
-            <div className="flex items-baseline gap-2 mt-1">
-              <span className="text-xl font-black text-emerald-300">{isDriver ? totalConcluidas : allInvoices.length}</span>
-              <span className="text-[10px] text-slate-300">{isDriver ? 'revisões realizadas' : 'comprovantes fiscais'}</span>
-            </div>
+        <div className="bg-white rounded-xl p-3.5 border border-slate-200 shadow-2xs">
+          <span className="text-[10px] font-bold uppercase tracking-wider text-blue-600 block">Agendadas</span>
+          <div className="flex items-baseline gap-1.5 mt-1">
+            <span className="text-xl font-extrabold text-blue-600">{totalAgendadas}</span>
+            <span className="text-[10px] text-slate-500">programadas</span>
           </div>
+        </div>
 
-          <div className="bg-white/5 backdrop-blur-sm rounded-xl p-3 border border-white/10">
-            <span className="text-[11px] text-blue-200 block">{isDriver ? 'Veículo Vinculado' : 'Investimento Registrado'}</span>
-            <div className="flex items-baseline gap-2 mt-1">
-              {isDriver ? (
-                <span className="text-base font-black text-white font-mono">
-                  {driverPrefixo}
-                </span>
-              ) : (
-                <span className="text-lg font-black text-white font-mono">
-                  R$ {totalValorInvestido.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
-                </span>
-              )}
-            </div>
+        <div className="bg-white rounded-xl p-3.5 border border-slate-200 shadow-2xs">
+          <span className="text-[10px] font-bold uppercase tracking-wider text-emerald-600 block">
+            {isDriver ? 'Concluídas' : 'Comprovantes Fiscais'}
+          </span>
+          <div className="flex items-baseline gap-1.5 mt-1">
+            <span className="text-xl font-extrabold text-emerald-600">
+              {isDriver ? totalConcluidas : allInvoices.length}
+            </span>
+            <span className="text-[10px] text-slate-500">{isDriver ? 'revisões' : 'notas'}</span>
+          </div>
+        </div>
+
+        <div className="bg-white rounded-xl p-3.5 border border-slate-200 shadow-2xs">
+          <span className="text-[10px] font-bold uppercase tracking-wider text-slate-400 block">
+            {isDriver ? 'Veículo Vinculado' : 'Investimento Acumulado'}
+          </span>
+          <div className="flex items-baseline gap-1.5 mt-1">
+            {isDriver ? (
+              <span className="text-xl font-extrabold text-[#002B49] font-mono">
+                {driverPrefixo}
+              </span>
+            ) : (
+              <span className="text-xl font-extrabold text-slate-900 font-mono">
+                R$ {totalValorInvestido.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
+              </span>
+            )}
           </div>
         </div>
       </div>

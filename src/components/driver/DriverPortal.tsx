@@ -47,7 +47,7 @@ export const DriverPortal: React.FC<DriverPortalProps> = ({
   onOpenOfficialOrder,
   onOpenQuickFuel,
 }) => {
-  const [activeTab, setActiveTab] = useState<'viagens' | 'veiculo' | 'abastecimentos' | 'suporte'>('viagens');
+  const [activeTab, setActiveTab] = useState<'viagens' | 'abastecimentos' | 'suporte'>('viagens');
   const [tripFilter, setTripFilter] = useState<'todas' | 'em_andamento' | 'agendadas' | 'concluidas'>('todas');
 
   // Viagens atribuídas ao motorista logado
@@ -115,50 +115,15 @@ export const DriverPortal: React.FC<DriverPortalProps> = ({
             </div>
 
             <div className="flex-1 min-w-0">
-              {/* Linha superior: Saudação + Bloco com Informações do Veículo Vinculado no Campo em Branco */}
-              <div className="flex flex-col 2xl:flex-row 2xl:items-center justify-between gap-3">
-                <div className="flex items-center gap-2 flex-wrap">
-                  <h2 className="text-lg sm:text-xl font-bold text-slate-900 truncate">
-                    Olá, {currentDriver.nome}
-                  </h2>
-                  <span className="bg-emerald-100 text-emerald-800 text-xs font-bold px-2.5 py-0.5 rounded-full flex items-center gap-1 shrink-0">
-                    <CheckCircle2 className="w-3.5 h-3.5 text-emerald-600" />
-                    Pronto para Condução
-                  </span>
-                </div>
-
-                {/* CAMPO EM BRANCO PREENCHIDO: INFORMAÇÕES DO VEÍCULO VINCULADO */}
-                {assignedVehicle && (
-                  <div className="flex items-center gap-3 bg-slate-50 hover:bg-blue-50/40 transition-colors border border-slate-200/90 rounded-xl px-3.5 py-1.5 shadow-2xs">
-                    <div className="w-8 h-8 rounded-lg bg-[#002B49] text-amber-300 flex items-center justify-center shrink-0 border border-[#C4A052]/50 shadow-xs">
-                      <Car className="w-4 h-4" />
-                    </div>
-                    <div className="leading-tight">
-                      <div className="flex items-center gap-1.5 flex-wrap">
-                        <span className="text-[10px] font-bold text-slate-500 uppercase tracking-wider">Veículo Oficial:</span>
-                        <span className="text-xs font-mono font-extrabold text-[#002B49] bg-white px-1.5 py-0.5 rounded border border-slate-300 shadow-2xs">
-                          {assignedVehicle.prefixo}
-                        </span>
-                        <span className="text-xs font-mono font-bold text-slate-700 bg-slate-200/80 px-1.5 py-0.5 rounded">
-                          {assignedVehicle.placa}
-                        </span>
-                        <span className="text-[10px] font-bold px-1.5 py-0.5 rounded bg-emerald-100 text-emerald-800">
-                          {assignedVehicle.status === 'disponivel' ? 'Disponível' : assignedVehicle.status === 'em_viagem' ? 'Em Viagem' : 'Em Uso'}
-                        </span>
-                      </div>
-                      <div className="text-xs font-semibold text-slate-800 mt-1 flex items-center gap-2 flex-wrap">
-                        <span className="font-bold text-slate-900">{assignedVehicle.modelo}</span>
-                        <span className="text-slate-300">•</span>
-                        <span className="font-mono text-slate-600">{assignedVehicle.kmAtual.toLocaleString('pt-BR')} km</span>
-                        <span className="text-slate-300">•</span>
-                        <span className="text-emerald-700 font-medium flex items-center gap-1">
-                          <Fuel className="w-3 h-3 text-emerald-600" />
-                          Tanque {assignedVehicle.nivelCombustivel}% ({assignedVehicle.combustivelTipo.split(' ')[0]})
-                        </span>
-                      </div>
-                    </div>
-                  </div>
-                )}
+              {/* Linha superior: Saudação */}
+              <div className="flex items-center gap-2 flex-wrap">
+                <h2 className="text-lg sm:text-xl font-bold text-slate-900 truncate">
+                  Olá, {currentDriver.nome}
+                </h2>
+                <span className="bg-emerald-100 text-emerald-800 text-xs font-bold px-2.5 py-0.5 rounded-full flex items-center gap-1 shrink-0">
+                  <CheckCircle2 className="w-3.5 h-3.5 text-emerald-600" />
+                  Pronto para Condução
+                </span>
               </div>
               
               <p className="text-xs text-slate-500 mt-1">
@@ -372,18 +337,6 @@ export const DriverPortal: React.FC<DriverPortalProps> = ({
           </button>
 
           <button
-            onClick={() => setActiveTab('veiculo')}
-            className={`pb-3 border-b-2 flex items-center gap-2 transition-colors ${
-              activeTab === 'veiculo'
-                ? 'border-[#002B49] text-[#002B49]'
-                : 'border-transparent text-slate-500 hover:text-slate-800'
-            }`}
-          >
-            <Car className="w-4 h-4" />
-            Meu Veículo da Escala ({assignedVehicle.prefixo})
-          </button>
-
-          <button
             onClick={() => setActiveTab('abastecimentos')}
             className={`pb-3 border-b-2 flex items-center gap-2 transition-colors ${
               activeTab === 'abastecimentos'
@@ -535,96 +488,7 @@ export const DriverPortal: React.FC<DriverPortalProps> = ({
         </div>
       )}
 
-      {/* Aba: Meu Veículo da Escala */}
-      {activeTab === 'veiculo' && (
-        <div className="bg-white rounded-b-xl shadow-xs border border-slate-200 border-t-0 p-6 space-y-6">
-          <div className="flex flex-col md:flex-row items-start justify-between gap-6">
-            
-            <div className="space-y-4 flex-1">
-              <div>
-                <div className="flex items-center gap-2">
-                  <span className="px-2.5 py-1 bg-[#002B49] text-white rounded font-mono font-bold text-xs">
-                    {assignedVehicle.prefixo}
-                  </span>
-                  <span className="text-sm font-bold text-slate-900">
-                    {assignedVehicle.modelo} ({assignedVehicle.ano})
-                  </span>
-                </div>
-                <p className="text-xs text-slate-500 mt-1">
-                  Veículo Oficial Permanente TJPR • Placa Oficial Mercosul: <strong className="text-slate-800 font-mono">{assignedVehicle.placa}</strong>
-                </p>
-              </div>
 
-              <div className="grid grid-cols-2 sm:grid-cols-3 gap-3 text-xs">
-                <div className="p-3 bg-slate-50 rounded-lg border border-slate-200">
-                  <span className="text-slate-400 block text-[10px] uppercase font-semibold">Odômetro Atual</span>
-                  <span className="font-mono font-bold text-base text-slate-900">
-                    {assignedVehicle.kmAtual.toLocaleString('pt-BR')} km
-                  </span>
-                </div>
-
-                <div className="p-3 bg-slate-50 rounded-lg border border-slate-200">
-                  <span className="text-slate-400 block text-[10px] uppercase font-semibold">Nível Combustível</span>
-                  <span className="font-mono font-bold text-base text-emerald-700">
-                    {assignedVehicle.nivelCombustivel}%
-                  </span>
-                </div>
-
-                <div className="p-3 bg-slate-50 rounded-lg border border-slate-200">
-                  <span className="text-slate-400 block text-[10px] uppercase font-semibold">Próxima Revisão</span>
-                  <span className="font-mono font-bold text-base text-amber-700">
-                    {assignedVehicle.proximaRevisaoKm.toLocaleString('pt-BR')} km
-                  </span>
-                </div>
-
-                <div className="p-3 bg-slate-50 rounded-lg border border-slate-200">
-                  <span className="text-slate-400 block text-[10px] uppercase font-semibold">Combustível</span>
-                  <span className="font-semibold text-slate-800">{assignedVehicle.combustivelTipo}</span>
-                </div>
-
-                <div className="p-3 bg-slate-50 rounded-lg border border-slate-200">
-                  <span className="text-slate-400 block text-[10px] uppercase font-semibold">Vencimento Seguro</span>
-                  <span className="font-semibold text-slate-800">
-                    {new Date(assignedVehicle.seguroVencimento).toLocaleDateString('pt-BR')}
-                  </span>
-                </div>
-
-                <div className="p-3 bg-slate-50 rounded-lg border border-slate-200">
-                  <span className="text-slate-400 block text-[10px] uppercase font-semibold">Renavam</span>
-                  <span className="font-mono text-slate-800 text-[11px]">{assignedVehicle.renavam}</span>
-                </div>
-              </div>
-
-              {/* Dicas de Calibragem & Manutenção Preventiva do TJPR */}
-              <div className="p-4 bg-amber-50/70 border border-amber-200 rounded-xl text-xs text-amber-950 space-y-1">
-                <p className="font-bold flex items-center gap-1.5 text-amber-900">
-                  <AlertCircle className="w-4 h-4 text-amber-700" />
-                  Instruções de Calibragem e Pneus Oficiais TJPR
-                </p>
-                <p className="text-[11px] text-amber-800">
-                  Pressão recomendada para este modelo: <strong>32 PSI (dianteiros)</strong> e <strong>32 PSI (traseiros)</strong> com carga normal; <strong>35 PSI</strong> com 4 passageiros e bagagens. Calibrar o estepe semanalmente com <strong>38 PSI</strong>.
-                </p>
-              </div>
-            </div>
-
-            {/* Ilustração e Card de Apoio */}
-            <div className="w-full md:w-64 bg-slate-50 p-4 rounded-xl border border-slate-200 text-xs space-y-3">
-              <div className="h-32 bg-white rounded-lg border border-slate-200 flex flex-col items-center justify-center text-slate-400 p-2">
-                <Car className="w-16 h-16 text-[#002B49] stroke-[1.5]" />
-                <span className="text-[10px] font-mono font-bold text-slate-600 mt-1">Frota TJPR • {assignedVehicle.placa}</span>
-              </div>
-
-              <div className="space-y-1.5 text-[11px]">
-                <p className="font-semibold text-slate-800">Cartão Combustível:</p>
-                <p className="text-slate-600 font-mono">Ticket Log Matriz: 4819-2049-1120</p>
-                <p className="font-semibold text-slate-800 mt-2">Garagem de Guarda:</p>
-                <p className="text-slate-600">Garagem Oficial TJPR - Palácio da Justiça (Centro Cívico)</p>
-              </div>
-            </div>
-
-          </div>
-        </div>
-      )}
 
       {/* Aba: Comprovantes de Abastecimento */}
       {activeTab === 'abastecimentos' && (

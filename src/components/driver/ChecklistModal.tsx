@@ -1,7 +1,6 @@
 import React, { useState } from 'react';
 import { 
   AlertTriangle, 
-  Check, 
   CheckCircle2, 
   ClipboardCheck, 
   Droplet, 
@@ -286,11 +285,6 @@ export const ChecklistModal: React.FC<ChecklistModalProps> = ({
                   </span>
                 </div>
               </div>
-
-              <span className="inline-flex items-center gap-1 text-[11px] font-bold text-emerald-800 bg-emerald-100/90 border border-emerald-300/80 px-2.5 py-1.5 rounded-lg shadow-2xs">
-                <Check className="w-3.5 h-3.5 text-emerald-700" />
-                Autenticação TJPR
-              </span>
             </div>
           </div>
 

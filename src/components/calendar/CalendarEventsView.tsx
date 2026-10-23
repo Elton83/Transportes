@@ -664,33 +664,31 @@ export const CalendarEventsView: React.FC<CalendarEventsViewProps> = ({
     <div className="space-y-5 animate-in fade-in duration-200">
 
       {/* ------------------------------------------------------------- */}
-      {/* 1. CABEÇALHO DO CALENDÁRIO COM METADADOS E CONTROLE PRINCIPAL */}
+      {/* 1. CABEÇALHO DO CALENDÁRIO COM VISUAL MODERNO E LIMPO        */}
       {/* ------------------------------------------------------------- */}
-      <div className="bg-[#05202B] rounded-2xl p-5 text-white shadow-md border border-white/10 flex flex-col lg:flex-row lg:items-center justify-between gap-4">
+      <div className="bg-white rounded-2xl p-4 sm:p-5 border border-slate-200/90 shadow-2xs flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div className="flex items-center gap-3.5">
-          <div className="w-11 h-11 rounded-2xl bg-white/10 backdrop-blur-md flex items-center justify-center shrink-0 border border-white/15 text-amber-300 shadow-inner">
-            <CalendarDays className="w-6 h-6" />
+          <div className="w-11 h-11 rounded-xl bg-[#002B49] text-amber-300 flex items-center justify-center shrink-0 shadow-xs border border-[#C4A052]/30">
+            <CalendarDays className="w-5 h-5 text-amber-300" />
           </div>
           <div>
             <div className="flex items-center gap-2 flex-wrap">
-              <span className="text-[10px] font-extrabold uppercase tracking-widest bg-amber-400/20 text-amber-300 px-2.5 py-0.5 rounded border border-amber-400/30">
-                Alimentação Automática em Tempo Real
-              </span>
-              <span className="text-xs text-blue-200">
-                Divisão de Transportes • TJPR
+              <h1 className="text-lg sm:text-xl font-bold tracking-tight text-slate-900">
+                Calendário e Agenda de Serviços
+              </h1>
+              <span className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full text-[10px] font-semibold bg-emerald-50 text-emerald-700 border border-emerald-200">
+                <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
+                Tempo Real
               </span>
             </div>
-            <h1 className="text-lg sm:text-xl font-bold tracking-tight text-white mt-0.5">
-              Calendário de Eventos & Agenda de Serviços
-            </h1>
-            <p className="text-xs text-slate-300">
-              Sincronização contínua de viagens, reservas, manutenções em oficinas, chamados e escalas de condutores.
+            <p className="text-xs text-slate-500 mt-0.5">
+              Escala de viagens, manutenções preventivas e eventos operacionais
             </p>
           </div>
         </div>
 
-        {/* Botão de Novo Agendamento e Modos de Visão */}
-        <div className="flex items-center gap-2 flex-wrap shrink-0">
+        {/* Botão de Ação Principal */}
+        <div className="flex items-center gap-2 shrink-0">
           <button
             type="button"
             onClick={() => {
@@ -698,9 +696,9 @@ export const CalendarEventsView: React.FC<CalendarEventsViewProps> = ({
               setNewEvtDataFim(selectedDayDate);
               setIsNewEventModalOpen(true);
             }}
-            className="h-9 px-3.5 rounded-xl bg-amber-400 hover:bg-amber-300 text-slate-950 font-bold text-xs flex items-center gap-1.5 transition-all shadow-xs cursor-pointer whitespace-nowrap"
+            className="h-9 sm:h-10 px-4 rounded-xl bg-[#002B49] hover:bg-[#003860] text-white font-semibold text-xs flex items-center gap-2 transition-all shadow-xs cursor-pointer hover:shadow-md"
           >
-            <Plus className="w-4 h-4 text-slate-950" />
+            <Plus className="w-4 h-4 text-amber-300" />
             <span>Novo Evento Operacional</span>
           </button>
         </div>

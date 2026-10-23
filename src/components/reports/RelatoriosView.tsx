@@ -270,79 +270,70 @@ export const RelatoriosView: React.FC<RelatoriosViewProps> = ({
     <div className="space-y-6">
       
       {/* 1. Header do Módulo de Relatórios */}
-      <div className="bg-white rounded-2xl p-6 border border-slate-200 shadow-xs">
-        <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-5">
-          <div className="flex items-start gap-3.5">
-            <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-[#002B49] to-[#004B80] border border-[#C4A052]/40 shadow-sm flex items-center justify-center shrink-0 text-[#C4A052]">
-              <BarChart3 className="w-6 h-6 text-[#C4A052]" />
-            </div>
-            <div>
-              <div className="flex flex-wrap items-center gap-2">
-                <span className="text-[10px] uppercase font-bold tracking-widest px-2.5 py-0.5 rounded-full bg-[#002B49]/10 text-[#002B49] border border-[#002B49]/20">
-                  Item Obrigatório no Menu
-                </span>
-                <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-amber-50 text-amber-800 border border-amber-200">
-                  Validação SEI / TCE-PR
-                </span>
-                <span className="text-[11px] text-slate-400 font-mono">
-                  Gerado em: {reportGeneratedAt}
-                </span>
-              </div>
-              <h1 className="text-xl font-bold text-slate-900 mt-1">
-                Central de Relatórios Oficiais & Prestação de Contas
+      <div className="bg-white rounded-2xl p-4 sm:p-5 border border-slate-200/90 shadow-2xs flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+        <div className="flex items-center gap-3.5">
+          <div className="w-11 h-11 rounded-xl bg-[#002B49] text-amber-300 flex items-center justify-center shrink-0 shadow-xs border border-[#C4A052]/30">
+            <BarChart3 className="w-5 h-5 text-amber-300" />
+          </div>
+          <div>
+            <div className="flex items-center gap-2 flex-wrap">
+              <h1 className="text-lg sm:text-xl font-bold tracking-tight text-slate-900">
+                Relatórios Oficiais & Prestação de Contas
               </h1>
-              <p className="text-xs text-slate-500 mt-1 max-w-3xl">
-                Extração e auditoria de dados operacionais da frota do Tribunal de Justiça do Estado do Paraná. Geração de relatórios analíticos, espelhos homologados para processos SEI e exportação para planilhas.
-              </p>
+              <span className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full text-[10px] font-semibold bg-emerald-50 text-emerald-700 border border-emerald-200">
+                <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
+                SEI / TCE-PR
+              </span>
             </div>
+            <p className="text-xs text-slate-500 mt-0.5">
+              Auditoria de frotas, espelhos para processos SEI e exportação para planilhas
+            </p>
+          </div>
+        </div>
+
+        {/* Botões de Ação de Exportação e Visualização */}
+        <div className="flex flex-wrap items-center gap-2 shrink-0">
+          {/* Alternador de Modo: Tabela vs Espelho SEI */}
+          <div className="bg-slate-100 p-1 rounded-xl border border-slate-200 flex items-center">
+            <button
+              onClick={() => setViewMode('tabela')}
+              className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all cursor-pointer ${
+                viewMode === 'tabela'
+                  ? 'bg-white text-slate-900 shadow-2xs'
+                  : 'text-slate-600 hover:text-slate-900'
+              }`}
+            >
+              Tabela
+            </button>
+            <button
+              onClick={() => setViewMode('espelho_sei')}
+              className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all cursor-pointer ${
+                viewMode === 'espelho_sei'
+                  ? 'bg-[#002B49] text-white shadow-2xs'
+                  : 'text-slate-600 hover:text-slate-900'
+              }`}
+            >
+              Espelho SEI
+            </button>
           </div>
 
-          {/* Botões de Ação de Exportação e Visualização */}
-          <div className="flex flex-wrap sm:flex-nowrap items-center gap-2.5 shrink-0">
-            
-            {/* Alternador de Modo: Tabela vs Espelho SEI */}
-            <div className="bg-slate-100 p-1 rounded-xl border border-slate-200 flex items-center">
-              <button
-                onClick={() => setViewMode('tabela')}
-                className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all cursor-pointer ${
-                  viewMode === 'tabela'
-                    ? 'bg-white text-slate-900 shadow-xs'
-                    : 'text-slate-600 hover:text-slate-900'
-                }`}
-              >
-                Tabela de Dados
-              </button>
-              <button
-                onClick={() => setViewMode('espelho_sei')}
-                className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all cursor-pointer ${
-                  viewMode === 'espelho_sei'
-                    ? 'bg-[#002B49] text-white shadow-xs'
-                    : 'text-slate-600 hover:text-slate-900'
-                }`}
-              >
-                Espelho Oficial SEI
-              </button>
-            </div>
+          <button
+            onClick={handleExportCSV}
+            className="h-9 sm:h-10 px-3.5 rounded-xl bg-slate-100 hover:bg-slate-200 border border-slate-200 text-slate-700 text-xs font-semibold flex items-center gap-2 transition-all shadow-2xs cursor-pointer"
+            title="Baixar planilha CSV compatível com Excel"
+          >
+            <FileSpreadsheet className="w-4 h-4 text-emerald-600" />
+            <span>Excel</span>
+          </button>
 
-            <button
-              onClick={handleExportCSV}
-              className="flex items-center justify-center gap-2 px-3.5 py-2 bg-emerald-700 hover:bg-emerald-800 text-white rounded-xl text-xs font-bold shadow-xs transition-all cursor-pointer"
-              title="Baixar planilha CSV compatível com Excel"
-            >
-              <FileSpreadsheet className="w-4 h-4 text-emerald-200" />
-              <span>Exportar Excel</span>
-            </button>
-
-            <button
-              onClick={handlePrint}
-              className="flex items-center justify-center gap-2 px-3.5 py-2 bg-[#002B49] hover:bg-[#003B66] text-white rounded-xl text-xs font-bold shadow-xs transition-all cursor-pointer"
-              title="Imprimir relatório oficial ou salvar como PDF"
-            >
-              <Printer className="w-4 h-4 text-amber-300" />
-              <span>Imprimir / PDF</span>
-            </button>
-
-          </div>
+          <button
+            onClick={handlePrint}
+            className="h-9 sm:h-10 px-4 rounded-xl bg-[#002B49] hover:bg-[#003860] text-white font-semibold text-xs flex items-center gap-2 transition-all shadow-xs cursor-pointer hover:shadow-md"
+            title="Imprimir relatório oficial ou salvar como PDF"
+          >
+            <Printer className="w-4 h-4 text-amber-300" />
+            <span>Imprimir</span>
+          </button>
         </div>
       </div>
 

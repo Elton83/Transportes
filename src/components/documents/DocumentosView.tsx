@@ -119,91 +119,92 @@ export const DocumentosView: React.FC<DocumentosViewProps> = ({
   return (
     <div className="space-y-6">
       
-      {/* Top Banner / Header TJPR */}
-      <div className="bg-gradient-to-r from-[#002B49] to-[#003B64] text-white rounded-2xl p-6 shadow-md border-b-4 border-[#C4A052]">
-        <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
-          <div className="space-y-1">
-            <div className="flex items-center gap-2">
-              <span className="text-[10px] uppercase font-bold tracking-widest bg-amber-400/20 text-amber-300 px-2 py-0.5 rounded border border-amber-300/30 font-mono">
-                {isDriver ? 'DOCUMENTAÇÃO OFICIAL DO CONDUTOR' : 'CENTRAL DE DOCUMENTAÇÃO TJPR'}
-              </span>
-              <span className="text-xs text-blue-200">
-                {isDriver ? 'Porte Obrigatório Digital & Habilitação' : 'Arquivo Digital Unificado • Conformidade & Auditoria'}
+      {/* 1. Cabeçalho Limpo e Moderno TJPR */}
+      <div className="bg-white rounded-2xl p-4 sm:p-5 border border-slate-200/90 shadow-2xs flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+        <div className="flex items-center gap-3.5">
+          <div className="w-11 h-11 rounded-xl bg-[#002B49] text-amber-300 flex items-center justify-center shrink-0 shadow-xs border border-[#C4A052]/30">
+            <FileText className="w-5 h-5 text-amber-300" />
+          </div>
+          <div>
+            <div className="flex items-center gap-2 flex-wrap">
+              <h2 className="text-lg sm:text-xl font-bold tracking-tight text-slate-900">
+                {isDriver ? 'Documentos Oficiais do Condutor' : 'Documentos Oficiais'}
+              </h2>
+              <span className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full text-[10px] font-semibold bg-blue-50 text-blue-700 border border-blue-200">
+                {isDriver ? 'Porte Obrigatório Digital' : 'Arquivo Digital Unificado'}
               </span>
             </div>
-            <h2 className="text-2xl font-black text-white tracking-tight flex items-center gap-2.5">
-              <FileText className="w-6 h-6 text-[#C4A052]" />
-              {isDriver ? 'Documentos Oficiais do Condutor' : 'Gestão de Documentos Oficiais'}
-            </h2>
-            <p className="text-xs text-slate-200 max-w-2xl leading-relaxed">
+            <p className="text-xs text-slate-500 mt-0.5">
               {isDriver && restrictedDriver
-                ? `Prontuário funcional e habilitação de ${restrictedDriver.nome} (Matrícula ${restrictedDriver.matricula}), além de CRLV-e e apólice de seguro do veículo oficial ${driverPrefixo}.`
-                : 'Repositório digital para prontuários de condutores, CRLV e seguros dos veículos da frota, autorizações de tráfego, portarias administrativas e termos de sinistro.'}
+                ? `Prontuário funcional, certidões e documentação do veículo oficial ${driverPrefixo}`
+                : 'Prontuários de condutores, CRLV, seguros e normas da frota oficial TJPR'}
             </p>
           </div>
-
-          <button
-            onClick={() => setIsUploadOpen(true)}
-            className="px-4 py-2.5 rounded-xl bg-[#C4A052] hover:bg-[#B08D41] text-[#002B49] text-xs font-black flex items-center gap-2 transition-all shadow-md self-start md:self-center cursor-pointer"
-          >
-            <Plus className="w-4 h-4 stroke-[3]" />
-            {isDriver ? 'Anexar Certificado / CNH' : 'Novo Upload de Documento'}
-          </button>
         </div>
 
-        {/* Metrics Grid */}
-        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3 mt-6 pt-5 border-t border-white/15 text-white">
-          <div className="bg-white/5 backdrop-blur-sm rounded-xl p-3 border border-white/10">
-            <span className="text-[11px] text-blue-200 block">Total Arquivados</span>
-            <div className="flex items-baseline gap-2 mt-1">
-              <span className="text-xl font-black text-white">{totalDocs}</span>
-              <span className="text-[10px] text-slate-300">documentos</span>
-            </div>
-          </div>
+        <button
+          onClick={() => setIsUploadOpen(true)}
+          className="h-9 sm:h-10 px-4 rounded-xl bg-[#002B49] hover:bg-[#003860] text-white font-semibold text-xs flex items-center gap-2 transition-all shadow-xs cursor-pointer hover:shadow-md shrink-0"
+        >
+          <Plus className="w-4 h-4 text-amber-300" />
+          <span>{isDriver ? 'Anexar Documento' : 'Novo Upload'}</span>
+        </button>
+      </div>
 
-          <div className="bg-white/5 backdrop-blur-sm rounded-xl p-3 border border-white/10">
-            <span className="text-[11px] text-blue-200 block">Do Veículo (CRLV/Seguros)</span>
-            <div className="flex items-baseline gap-2 mt-1">
-              <span className="text-xl font-black text-blue-300">{docsCarro}</span>
-              <span className="text-[10px] text-slate-300">veiculares</span>
-            </div>
+      {/* 2. Cards de Métricas Limpos */}
+      <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3">
+        <div className="bg-white rounded-xl p-3.5 border border-slate-200 shadow-2xs">
+          <span className="text-[10px] font-bold uppercase tracking-wider text-slate-400 block">Total Arquivados</span>
+          <div className="flex items-baseline gap-1.5 mt-1">
+            <span className="text-xl font-extrabold text-slate-900">{totalDocs}</span>
+            <span className="text-[10px] text-slate-500">docs</span>
           </div>
+        </div>
 
-          <div className="bg-white/5 backdrop-blur-sm rounded-xl p-3 border border-white/10">
-            <span className="text-[11px] text-blue-200 block">Do Condutor (CNH/Toxicológico)</span>
-            <div className="flex items-baseline gap-2 mt-1">
-              <span className="text-xl font-black text-amber-300">{docsMotorista}</span>
-              <span className="text-[10px] text-slate-300">prontuários</span>
-            </div>
+        <div className="bg-white rounded-xl p-3.5 border border-slate-200 shadow-2xs">
+          <span className="text-[10px] font-bold uppercase tracking-wider text-blue-600 block">Do Veículo</span>
+          <div className="flex items-baseline gap-1.5 mt-1">
+            <span className="text-xl font-extrabold text-blue-600">{docsCarro}</span>
+            <span className="text-[10px] text-slate-500">CRLV / Seg</span>
           </div>
+        </div>
 
-          <div className="bg-white/5 backdrop-blur-sm rounded-xl p-3 border border-white/10">
-            <span className="text-[11px] text-blue-200 block">Demais Situações / Atos</span>
-            <div className="flex items-baseline gap-2 mt-1">
-              <span className="text-xl font-black text-emerald-300">{docsDemais}</span>
-              <span className="text-[10px] text-slate-300">portarias/B.O.</span>
-            </div>
+        <div className="bg-white rounded-xl p-3.5 border border-slate-200 shadow-2xs">
+          <span className="text-[10px] font-bold uppercase tracking-wider text-amber-600 block">Do Condutor</span>
+          <div className="flex items-baseline gap-1.5 mt-1">
+            <span className="text-xl font-extrabold text-amber-600">{docsMotorista}</span>
+            <span className="text-[10px] text-slate-500">CNH / Cursos</span>
           </div>
+        </div>
 
-          <div className="bg-white/5 backdrop-blur-sm rounded-xl p-3 border border-amber-300/30 bg-amber-400/5">
-            <span className="text-[11px] text-amber-200 block flex items-center gap-1">
-              <BookOpen className="w-3 h-3 text-[#C4A052]" />
-              Leis & Manuais
+        <div className="bg-white rounded-xl p-3.5 border border-slate-200 shadow-2xs">
+          <span className="text-[10px] font-bold uppercase tracking-wider text-emerald-600 block">Demais Atos</span>
+          <div className="flex items-baseline gap-1.5 mt-1">
+            <span className="text-xl font-extrabold text-emerald-600">{docsDemais}</span>
+            <span className="text-[10px] text-slate-500">Portarias</span>
+          </div>
+        </div>
+
+        <div className="bg-white rounded-xl p-3.5 border border-slate-200 shadow-2xs">
+          <span className="text-[10px] font-bold uppercase tracking-wider text-purple-600 block flex items-center gap-1">
+            <BookOpen className="w-3 h-3 text-purple-500" />
+            Leis & Manuais
+          </span>
+          <div className="flex items-baseline gap-1.5 mt-1">
+            <span className="text-xl font-extrabold text-purple-600">{docsNormas}</span>
+            <span className="text-[10px] text-slate-500">normas</span>
+          </div>
+        </div>
+
+        <div className="bg-white rounded-xl p-3.5 border border-slate-200 shadow-2xs">
+          <span className={`text-[10px] font-bold uppercase tracking-wider block ${docsAVencer + docsVencidos > 0 ? 'text-amber-600' : 'text-slate-400'}`}>
+            Alertas Vencimento
+          </span>
+          <div className="flex items-baseline gap-1.5 mt-1">
+            <span className={`text-xl font-extrabold ${docsAVencer + docsVencidos > 0 ? 'text-amber-600' : 'text-slate-900'}`}>
+              {docsAVencer + docsVencidos}
             </span>
-            <div className="flex items-baseline gap-2 mt-1">
-              <span className="text-xl font-black text-[#C4A052]">{docsNormas}</span>
-              <span className="text-[10px] text-amber-100">repositório</span>
-            </div>
-          </div>
-
-          <div className="bg-white/5 backdrop-blur-sm rounded-xl p-3 border border-white/10">
-            <span className="text-[11px] text-blue-200 block">Alertas de Vencimento</span>
-            <div className="flex items-baseline gap-2 mt-1">
-              <span className={`text-xl font-black ${docsAVencer + docsVencidos > 0 ? 'text-amber-400' : 'text-slate-300'}`}>
-                {docsAVencer + docsVencidos}
-              </span>
-              <span className="text-[10px] text-slate-300">a renovar</span>
-            </div>
+            <span className="text-[10px] text-slate-500">a renovar</span>
           </div>
         </div>
       </div>

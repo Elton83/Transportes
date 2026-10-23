@@ -1481,21 +1481,15 @@ export default function App() {
             {/* ABA UNIFICADA: Diário de Bordo & Rotina Operacional (Com Painel Geral da Frota, Planilha Oficial e Portal Operacional) */}
             {(activeNavTab === 'operacoes' || activeNavTab === 'dashboard') && (
               <div className="space-y-4">
-                {/* Seletor Integrado e Didático no Diário de Bordo */}
-                <div className="bg-white px-4 py-3 rounded-xl border border-slate-200/90 shadow-2xs flex flex-col md:flex-row md:items-center justify-between gap-3">
-                  <div className="flex flex-wrap items-center gap-2">
-                    <span className="text-xs font-bold text-slate-800 uppercase tracking-wide flex items-center gap-1.5 mr-1">
-                      <FileSpreadsheet className="w-4 h-4 text-[#05202B]" />
-                      Diário de Bordo:
-                    </span>
-                    {isDriverRole(currentRole) ? (
-                      /* Portal do Motorista Exclusivo para o Perfil de Condução */
-                      <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-bold bg-[#05202B] text-white shadow-xs">
-                        <Car className="w-3.5 h-3.5 text-amber-300" />
-                        <span>Portal do Motorista</span>
-                      </div>
-                    ) : (
-                      /* Controles Administrativos para Perfis de Gestão */
+                {/* Seletor Integrado e Didático no Diário de Bordo (Oculto para perfil Motorista) */}
+                {!isDriverRole(currentRole) && (
+                  <div className="bg-white px-4 py-3 rounded-xl border border-slate-200/90 shadow-2xs flex flex-col md:flex-row md:items-center justify-between gap-3">
+                    <div className="flex flex-wrap items-center gap-2">
+                      <span className="text-xs font-bold text-slate-800 uppercase tracking-wide flex items-center gap-1.5 mr-1">
+                        <FileSpreadsheet className="w-4 h-4 text-[#05202B]" />
+                        Diário de Bordo:
+                      </span>
+                      {/* Controles Administrativos para Perfis de Gestão */}
                       <div className="flex items-center bg-slate-100 p-1 rounded-lg gap-1">
                         <button
                           type="button"
@@ -1540,20 +1534,20 @@ export default function App() {
                           <span>Portal do Gestor</span>
                         </button>
                       </div>
-                    )}
-                  </div>
+                    </div>
 
-                  <div className="flex items-center gap-3 text-xs text-slate-500 font-mono">
-                    <span className="flex items-center gap-1.5">
-                      <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
-                      <span>{vehicles.length} veículos</span>
-                    </span>
-                    <span className="text-slate-300">|</span>
-                    <span className="text-amber-700 font-semibold">
-                      {trips.filter(t => t.status === 'em_andamento').length} em trânsito
-                    </span>
+                    <div className="flex items-center gap-3 text-xs text-slate-500 font-mono">
+                      <span className="flex items-center gap-1.5">
+                        <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
+                        <span>{vehicles.length} veículos</span>
+                      </span>
+                      <span className="text-slate-300">|</span>
+                      <span className="text-amber-700 font-semibold">
+                        {trips.filter(t => t.status === 'em_andamento').length} em trânsito
+                      </span>
+                    </div>
                   </div>
-                </div>
+                )}
 
                 {/* 1. SE FOR MOTORISTA: Exibe exclusivamente o Portal do Motorista */}
                 {isDriverRole(currentRole) ? (

@@ -65,35 +65,33 @@ export const AbastecimentosView: React.FC<AbastecimentosViewProps> = ({
   return (
     <div className="space-y-6">
       {/* 1. Header do Módulo de Abastecimentos */}
-      <div className="bg-white rounded-2xl p-6 border border-slate-200/80 shadow-xs flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
-        <div>
-          <div className="flex items-center gap-2">
-            <div className="p-2 bg-amber-500/10 text-amber-600 rounded-xl">
-              <Fuel className="w-6 h-6" />
-            </div>
-            <div>
-              <div className="flex items-center gap-2">
-                <span className="text-[10px] uppercase font-bold tracking-wider px-2 py-0.5 rounded-full bg-amber-100 text-amber-800 border border-amber-200">
-                  Cartão Frota Ticket Log • TJPR
-                </span>
-                <span className="text-xs text-slate-500">• {selectedComarca}</span>
-              </div>
-              <h1 className="text-xl font-bold text-slate-900 mt-0.5">
-                Controle de Abastecimentos & Combustível
-              </h1>
-            </div>
+      <div className="bg-white rounded-2xl p-4 sm:p-5 border border-slate-200/90 shadow-2xs flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+        <div className="flex items-center gap-3.5">
+          <div className="w-11 h-11 rounded-xl bg-[#002B49] text-amber-300 flex items-center justify-center shrink-0 shadow-xs border border-[#C4A052]/30">
+            <Fuel className="w-5 h-5 text-amber-300" />
           </div>
-          <p className="text-xs text-slate-500 mt-2 max-w-2xl">
-            Gestão de despesas de combustível da frota oficial do Tribunal de Justiça do Estado do Paraná. Lançamentos com odômetro, nota fiscal/cupom e prestação de contas vinculada ao Cartão Frota.
-          </p>
+          <div>
+            <div className="flex items-center gap-2 flex-wrap">
+              <h1 className="text-lg sm:text-xl font-bold tracking-tight text-slate-900">
+                Controle de Abastecimentos
+              </h1>
+              <span className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full text-[10px] font-semibold bg-emerald-50 text-emerald-700 border border-emerald-200">
+                <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
+                Ticket Log • {selectedComarca}
+              </span>
+            </div>
+            <p className="text-xs text-slate-500 mt-0.5">
+              Gestão de combustível, cupons fiscais e odômetros da frota oficial TJPR
+            </p>
+          </div>
         </div>
 
-        <div className="flex items-center gap-3 w-full md:w-auto shrink-0">
+        <div className="flex items-center gap-2 shrink-0">
           <button
             onClick={onOpenNewFuelModal}
-            className="flex-1 md:flex-initial flex items-center justify-center gap-2 px-4 py-2.5 bg-amber-500 hover:bg-amber-600 active:bg-amber-700 text-slate-950 rounded-xl text-xs font-bold shadow-sm transition-all cursor-pointer"
+            className="h-9 sm:h-10 px-4 rounded-xl bg-[#002B49] hover:bg-[#003860] text-white font-semibold text-xs flex items-center gap-2 transition-all shadow-xs cursor-pointer hover:shadow-md"
           >
-            <Plus className="w-4 h-4" />
+            <Plus className="w-4 h-4 text-amber-300" />
             <span>Novo Abastecimento</span>
           </button>
         </div>

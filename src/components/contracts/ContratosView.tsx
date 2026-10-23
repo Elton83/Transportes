@@ -158,29 +158,32 @@ export const ContratosView: React.FC<ContratosViewProps> = ({
       {/* ------------------------------------------------------------- */}
       {/* 1. CABEÇALHO DO MÓDULO DE CONTRATOS                           */}
       {/* ------------------------------------------------------------- */}
-      <div className="bg-white rounded-2xl shadow-xs border border-slate-200 p-5 sm:p-6 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
-        <div>
-          <div className="flex items-center gap-2 flex-wrap">
-            <span className="px-2.5 py-0.5 bg-[#002B49] text-white rounded text-xs font-bold uppercase font-mono tracking-wider">
-              Gestão de Contratos TJPR
-            </span>
-            <span className="text-xs text-slate-500 font-semibold">
-              Fornecedores, Seguros da Frota & Serviços Continuados
-            </span>
+      <div className="bg-white rounded-2xl p-4 sm:p-5 border border-slate-200/90 shadow-2xs flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+        <div className="flex items-center gap-3.5">
+          <div className="w-11 h-11 rounded-xl bg-[#002B49] text-amber-300 flex items-center justify-center shrink-0 shadow-xs border border-[#C4A052]/30">
+            <FileSignature className="w-5 h-5 text-amber-300" />
           </div>
-          <h1 className="text-xl sm:text-2xl font-black text-slate-900 mt-1">
-            Contratos, Apólices e Terceirizados Oficiais
-          </h1>
-          <p className="text-xs text-slate-600 mt-0.5 max-w-3xl">
-            Acompanhamento em tempo real da vigência, saldos de empenho, histórico de medições fiscais no SEI, coberturas de seguro e fornecedores credenciados do Tribunal de Justiça do Paraná.
-          </p>
+          <div>
+            <div className="flex items-center gap-2 flex-wrap">
+              <h1 className="text-lg sm:text-xl font-bold tracking-tight text-slate-900">
+                Gestão de Contratos & Apólices
+              </h1>
+              <span className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full text-[10px] font-semibold bg-emerald-50 text-emerald-700 border border-emerald-200">
+                <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
+                Vigência & SEI
+              </span>
+            </div>
+            <p className="text-xs text-slate-500 mt-0.5">
+              Fornecedores, seguros da frota, serviços continuados e histórico de medições fiscais
+            </p>
+          </div>
         </div>
 
-        <div className="flex items-center gap-2.5 shrink-0">
+        <div className="flex items-center gap-2 shrink-0">
           <button
             type="button"
             onClick={() => setNewContratoModalOpen(true)}
-            className="px-4 py-2.5 rounded-xl bg-[#002B49] hover:bg-[#00385F] text-white text-xs font-bold transition-all shadow-md hover:shadow-lg flex items-center gap-2 cursor-pointer hover:scale-[1.01]"
+            className="h-9 sm:h-10 px-4 rounded-xl bg-[#002B49] hover:bg-[#003860] text-white font-semibold text-xs flex items-center gap-2 transition-all shadow-xs cursor-pointer hover:shadow-md"
           >
             <Plus className="w-4 h-4 text-amber-300" />
             <span>Novo Contrato</span>

@@ -199,80 +199,67 @@ export const MeuBeneficioView: React.FC<MeuBeneficioViewProps> = ({
     <div className="space-y-6">
       
       {/* 1. Header do Módulo de Integração com a API Meu Benefício */}
-      <div className="bg-white rounded-2xl p-6 border border-slate-200/90 shadow-xs">
-        <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-5">
-          <div className="flex items-start gap-3.5">
-            <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-[#002B49] to-[#004B80] border border-[#C4A052]/40 shadow-sm flex items-center justify-center shrink-0 text-[#C4A052]">
-              <CreditCard className="w-6 h-6 text-[#C4A052]" />
-            </div>
-            
-            <div>
-              <div className="flex flex-wrap items-center gap-2">
-                <span className="text-[10px] uppercase font-bold tracking-widest px-2.5 py-0.5 rounded-full bg-[#002B49]/10 text-[#002B49] border border-[#002B49]/20">
-                  {isDriver ? 'Cartão do Benefício TJPR' : 'Integração API Corporativa'}
-                </span>
-                
-                {/* Status da Conexão / Cartão */}
-                <div className="flex items-center gap-1.5 px-2 py-0.5 rounded-full bg-emerald-50 border border-emerald-200 text-emerald-700 text-[11px] font-bold">
-                  <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
-                  {isDriver ? 'Cartão Frota Ativo & Liberado' : 'API Meu Benefício • REST Conectada'}
-                </div>
-
-                {!isDriver && (
-                  <span className="text-[11px] text-slate-400 font-mono">
-                    Latência: {apiConfig.latenciaMs}ms
-                  </span>
-                )}
-              </div>
-
-              <h1 className="text-xl font-bold text-slate-900 mt-1">
-                {isDriver ? 'Cartão do Benefício • Meu Benefício TJPR' : 'Auditoria de Despesas & Custas • API Meu Benefício'}
-              </h1>
-              <p className="text-xs text-slate-500 mt-1 max-w-3xl">
-                {isDriver && restrictedDriver
-                  ? `Extrato de abastecimentos, pedágios automáticos (Tags) e custas de viagem debitadas no cartão corporativo de ${restrictedDriver.nome} (Matrícula ${restrictedDriver.matricula}).`
-                  : 'Verificação automatizada e conciliação de todos os abastecimentos, pedágios eletrônicos (Tags), estacionamentos credenciados e despesas de viagem cruzadas em tempo real com as ordens de serviço do TJPR e processos SEI.'}
-              </p>
-            </div>
+      <div className="bg-white rounded-2xl p-4 sm:p-5 border border-slate-200/90 shadow-2xs">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+        <div className="flex items-center gap-3.5">
+          <div className="w-11 h-11 rounded-xl bg-[#002B49] text-amber-300 flex items-center justify-center shrink-0 shadow-xs border border-[#C4A052]/30">
+            <CreditCard className="w-5 h-5 text-amber-300" />
           </div>
-
-          {/* Ações da API / Ações do Motorista */}
-          <div className="flex flex-wrap sm:flex-nowrap items-center gap-2.5 shrink-0">
-            {isDriver ? (
-              <button
-                onClick={onOpenQuickFuel}
-                className="flex items-center justify-center gap-2 px-4 py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl text-xs font-bold shadow-sm transition-all cursor-pointer"
-              >
-                <Fuel className="w-4 h-4" />
-                <span>Lançar Abastecimento</span>
-              </button>
-            ) : (
-              <>
-                <button
-                  onClick={handleTriggerSync}
-                  disabled={isSyncing}
-                  className={`flex items-center justify-center gap-2 px-4 py-2.5 bg-white hover:bg-slate-50 text-slate-700 border border-slate-300 rounded-xl text-xs font-bold shadow-xs transition-all cursor-pointer ${
-                    isSyncing ? 'opacity-70 cursor-wait' : ''
-                  }`}
-                  title="Solicitar atualização imediata via webhook/REST da API Meu Benefício"
-                >
-                  <RefreshCw className={`w-4 h-4 text-blue-600 ${isSyncing ? 'animate-spin' : ''}`} />
-                  <span>{isSyncing ? 'Sincronizando...' : 'Sincronizar API Agora'}</span>
-                </button>
-
-                <button
-                  onClick={() => {
-                    alert(`Relatório sintético de auditoria da API Meu Benefício gerado para instrução no Processo SEI.\nTotal apurado: R$ ${totalGasto.toFixed(2)}.`);
-                  }}
-                  className="flex items-center justify-center gap-2 px-4 py-2.5 bg-[#002B49] hover:bg-[#003B66] text-white rounded-xl text-xs font-bold shadow-sm transition-all cursor-pointer"
-                >
-                  <Download className="w-4 h-4 text-amber-300" />
-                  <span>Exportar para SEI</span>
-                </button>
-              </>
-            )}
+          <div>
+            <div className="flex items-center gap-2 flex-wrap">
+              <h1 className="text-lg sm:text-xl font-bold tracking-tight text-slate-900">
+                {isDriver ? 'Cartão do Benefício' : 'Auditoria de Despesas & Cartão'}
+              </h1>
+              <span className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full text-[10px] font-semibold bg-emerald-50 text-emerald-700 border border-emerald-200">
+                <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
+                {isDriver ? 'Cartão Frota Ativo' : 'API Meu Benefício Conectada'}
+              </span>
+            </div>
+            <p className="text-xs text-slate-500 mt-0.5">
+              {isDriver && restrictedDriver
+                ? `Extrato de abastecimentos, pedágios (Tags) e custas de viagem de ${restrictedDriver.nome}`
+                : 'Conciliação e auditoria de abastecimentos, pedágios eletrônicos e despesas da frota TJPR'}
+            </p>
           </div>
         </div>
+
+        {/* Ações da API / Ações do Motorista */}
+        <div className="flex flex-wrap items-center gap-2 shrink-0">
+          {isDriver ? (
+            <button
+              onClick={onOpenQuickFuel}
+              className="h-9 sm:h-10 px-4 rounded-xl bg-[#002B49] hover:bg-[#003860] text-white font-semibold text-xs flex items-center gap-2 transition-all shadow-xs cursor-pointer hover:shadow-md"
+            >
+              <Fuel className="w-4 h-4 text-amber-300" />
+              <span>Lançar Abastecimento</span>
+            </button>
+          ) : (
+            <>
+              <button
+                onClick={handleTriggerSync}
+                disabled={isSyncing}
+                className={`h-9 sm:h-10 px-3.5 rounded-xl bg-slate-100 hover:bg-slate-200 border border-slate-200 text-slate-700 text-xs font-semibold flex items-center gap-2 transition-all shadow-2xs cursor-pointer ${
+                  isSyncing ? 'opacity-70 cursor-wait' : ''
+                }`}
+                title="Solicitar atualização imediata via webhook/REST da API Meu Benefício"
+              >
+                <RefreshCw className={`w-4 h-4 text-[#002B49] ${isSyncing ? 'animate-spin' : ''}`} />
+                <span>{isSyncing ? 'Sincronizando...' : 'Sincronizar API'}</span>
+              </button>
+
+              <button
+                onClick={() => {
+                  alert(`Relatório sintético de auditoria da API Meu Benefício gerado para instrução no Processo SEI.\nTotal apurado: R$ ${totalGasto.toFixed(2)}.`);
+                }}
+                className="h-9 sm:h-10 px-4 rounded-xl bg-[#002B49] hover:bg-[#003860] text-white font-semibold text-xs flex items-center gap-2 transition-all shadow-xs cursor-pointer hover:shadow-md"
+              >
+                <Download className="w-4 h-4 text-amber-300" />
+                <span>Exportar SEI</span>
+              </button>
+            </>
+          )}
+        </div>
+      </div>
 
         {/* Rodapé do Header com Detalhes da API ou do Cartão do Motorista */}
         <div className="mt-4 pt-3.5 border-t border-slate-100 flex flex-wrap items-center justify-between gap-3 text-[11px] text-slate-500 font-mono">

@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { 
   ArrowRight, 
+  Car,
   Check, 
   Clock, 
   FileText, 
@@ -103,53 +104,46 @@ export const SolicitationPortal: React.FC<SolicitationPortalProps> = ({
     <div className="space-y-6">
       
       {/* Banner Institucional do Solicitante */}
-      <div className="bg-white rounded-xl shadow-xs border border-slate-200 p-6 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
-        <div>
-          <div className="flex items-center gap-2 flex-wrap">
-            <span className="px-2.5 py-0.5 bg-blue-100 text-[#002B49] rounded text-xs font-bold uppercase font-mono">
-              Módulo Solicitante TJPR
-            </span>
-            <span className="text-xs text-slate-500 font-medium">Magistrados & Servidores</span>
-            
-            {/* Badge de Integração com o Teams */}
-            {onOpenTeamsConfig && (
-              <button
-                onClick={onOpenTeamsConfig}
-                className="px-2 py-0.5 rounded text-[11px] font-semibold bg-[#464EB8]/10 text-[#464EB8] hover:bg-[#464EB8]/20 border border-[#464EB8]/20 flex items-center gap-1.5 transition-colors cursor-pointer"
-                title="Configurações e Histórico de Extratos do Microsoft Teams"
-              >
-                <span className="w-2 h-2 rounded-full bg-emerald-500"></span>
-                <span>Microsoft Teams Conectado</span>
-              </button>
-            )}
+      <div className="bg-white rounded-2xl p-4 sm:p-5 border border-slate-200/90 shadow-2xs flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+        <div className="flex items-center gap-3.5">
+          <div className="w-11 h-11 rounded-xl bg-[#002B49] text-amber-300 flex items-center justify-center shrink-0 shadow-xs border border-[#C4A052]/30">
+            <Car className="w-5 h-5 text-amber-300" />
           </div>
-          <h2 className="text-lg font-bold text-slate-900 mt-1">
-            Requisição de Veículos Oficiais para Diligências Institucionais
-          </h2>
-          <p className="text-xs text-slate-500 mt-0.5">
-            Solicite transporte oficial com despacho automatizado e extrato em tempo real ao demandante e à coordenação regional via Teams.
-          </p>
+          <div>
+            <div className="flex items-center gap-2 flex-wrap">
+              <h2 className="text-lg sm:text-xl font-bold tracking-tight text-slate-900">
+                Requisição de Veículos Oficiais
+              </h2>
+              <span className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full text-[10px] font-semibold bg-emerald-50 text-emerald-700 border border-emerald-200">
+                <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
+                Teams Conectado
+              </span>
+            </div>
+            <p className="text-xs text-slate-500 mt-0.5">
+              Solicitações de transporte oficial para magistrados e servidores do TJPR
+            </p>
+          </div>
         </div>
 
         <div className="flex items-center gap-2 shrink-0">
           {onOpenTeamsConfig && (
             <button
               onClick={onOpenTeamsConfig}
-              className="px-3 py-2.5 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-lg text-xs font-semibold flex items-center gap-1.5 transition-colors cursor-pointer"
+              className="h-9 sm:h-10 px-3.5 rounded-xl bg-slate-100 hover:bg-slate-200 border border-slate-200 text-slate-700 text-xs font-semibold flex items-center gap-2 transition-all shadow-2xs cursor-pointer"
               title="Gerenciar envio de extratos do Teams"
             >
               <Radio className="w-3.5 h-3.5 text-[#464EB8]" />
-              Teams
+              <span>Configurar Teams</span>
             </button>
           )}
 
           <button
             id="btn-nova-solicitacao"
             onClick={() => setShowForm(!showForm)}
-            className="px-4 py-2.5 bg-[#002B49] hover:bg-[#003860] text-white rounded-lg text-xs font-bold shadow-xs transition-colors flex items-center gap-2 shrink-0 cursor-pointer"
+            className="h-9 sm:h-10 px-4 rounded-xl bg-[#002B49] hover:bg-[#003860] text-white font-semibold text-xs flex items-center gap-2 transition-all shadow-xs cursor-pointer hover:shadow-md"
           >
-            {showForm ? <X className="w-4 h-4" /> : <Plus className="w-4 h-4 text-[#C4A052]" />}
-            {showForm ? 'Fechar Formulário' : 'Nova Requisição de Transporte'}
+            {showForm ? <X className="w-4 h-4" /> : <Plus className="w-4 h-4 text-amber-300" />}
+            <span>{showForm ? 'Fechar Formulário' : 'Nova Requisição'}</span>
           </button>
         </div>
       </div>
