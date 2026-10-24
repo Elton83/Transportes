@@ -98,7 +98,7 @@ export const CoordinatorPortal: React.FC<CoordinatorPortalProps> = ({
   onOpenSigaSolicitation,
   onOpenSatisfactionSurvey,
 }) => {
-  const [activeTab, setActiveTab] = useState<'dia_a_dia' | 'chamados' | 'relatorios_resumo'>('chamados');
+  const [activeTab, setActiveTab] = useState<'dia_a_dia' | 'chamados'>('chamados');
   
   // 1. Listar os chamados em aberto (Default para 'aberto' para atender diretamente o requisito)
   const [chamadoFilterStatus, setChamadoFilterStatus] = useState<string>('aberto');
@@ -338,14 +338,6 @@ export const CoordinatorPortal: React.FC<CoordinatorPortalProps> = ({
 
           <div className="flex flex-wrap items-center gap-2 shrink-0">
             <button
-              id="coord-btn-ver-relatorios"
-              onClick={onNavigateToRelatorios}
-              className="h-9 sm:h-10 px-3.5 rounded-xl bg-slate-100 hover:bg-slate-200 border border-slate-200 text-slate-700 text-xs font-semibold flex items-center gap-2 transition-all shadow-2xs cursor-pointer"
-            >
-              <BarChart3 className="w-4 h-4 text-[#002B49]" />
-              <span>Relatórios</span>
-            </button>
-            <button
               id="coord-btn-novo-chamado"
               onClick={onOpenNewChamadoModal}
               className="h-9 sm:h-10 px-4 rounded-xl bg-[#002B49] hover:bg-[#003860] text-white font-semibold text-xs flex items-center gap-2 transition-all shadow-xs cursor-pointer hover:shadow-md"
@@ -389,17 +381,7 @@ export const CoordinatorPortal: React.FC<CoordinatorPortalProps> = ({
             <span>Operação do Dia a Dia</span>
           </button>
 
-          <button
-            onClick={() => setActiveTab('relatorios_resumo')}
-            className={`flex items-center gap-2 px-3.5 py-1.5 rounded-lg text-xs font-bold transition-all cursor-pointer ${
-              activeTab === 'relatorios_resumo'
-                ? 'bg-[#002B49] text-white shadow-2xs'
-                : 'text-slate-600 hover:bg-slate-100'
-            }`}
-          >
-            <BarChart3 className="w-3.5 h-3.5" />
-            <span>Relatórios da Comarca</span>
-          </button>
+
         </div>
       </div>
 
@@ -1059,78 +1041,7 @@ export const CoordinatorPortal: React.FC<CoordinatorPortalProps> = ({
         </div>
       )}
 
-      {/* ========================================================= */}
-      {/* ABA 3: RELATÓRIOS DA COMARCA                              */}
-      {/* ========================================================= */}
-      {activeTab === 'relatorios_resumo' && (
-        <div className="bg-white rounded-2xl shadow-xs border border-slate-200 p-6 space-y-6 animate-in fade-in duration-200">
-          <div>
-            <h2 className="text-base font-bold text-[#002B49] flex items-center gap-2">
-              <BarChart3 className="w-5 h-5 text-[#C4A052]" />
-              Relatórios e Indicadores Oficiais da Comarca ({selectedComarca})
-            </h2>
-            <p className="text-xs text-slate-500">
-              Visualize diretamente os extratos requeridos pelo Tribunal de Justiça do Estado do Paraná e Tribunal de Contas.
-            </p>
-          </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-            <div className="p-4 rounded-xl border border-slate-200 bg-slate-50 hover:border-[#002B49] transition-all">
-              <div className="flex items-center justify-between mb-2">
-                <span className="p-2 rounded-lg bg-blue-100 text-[#002B49]">
-                  <Car className="w-4 h-4" />
-                </span>
-                <span className="text-[10px] font-bold text-slate-500">SEI / FROTA</span>
-              </div>
-              <h4 className="font-bold text-xs text-slate-900">Inventário Geral da Comarca</h4>
-              <p className="text-[11px] text-slate-500 mt-1">Relação completa de veículos patrimoniais alocados e odômetro acumulado.</p>
-              <button
-                onClick={onNavigateToRelatorios}
-                className="mt-3 w-full py-1.5 rounded-lg text-xs font-bold text-[#002B49] bg-white border border-slate-300 hover:bg-blue-50 transition-colors flex items-center justify-center gap-1 cursor-pointer"
-              >
-                Abrir Relatório Geral
-                <ExternalLink className="w-3 h-3" />
-              </button>
-            </div>
-
-            <div className="p-4 rounded-xl border border-slate-200 bg-slate-50 hover:border-[#002B49] transition-all">
-              <div className="flex items-center justify-between mb-2">
-                <span className="p-2 rounded-lg bg-emerald-100 text-emerald-800">
-                  <FileText className="w-4 h-4" />
-                </span>
-                <span className="text-[10px] font-bold text-slate-500">AUDITORIA</span>
-              </div>
-              <h4 className="font-bold text-xs text-slate-900">Custas & API Meu Benefício</h4>
-              <p className="text-[11px] text-slate-500 mt-1">Extrato consolidado de abastecimentos, pedágios eletrônicos e manutenções rápidas.</p>
-              <button
-                onClick={onNavigateToRelatorios}
-                className="mt-3 w-full py-1.5 rounded-lg text-xs font-bold text-[#002B49] bg-white border border-slate-300 hover:bg-blue-50 transition-colors flex items-center justify-center gap-1 cursor-pointer"
-              >
-                Auditar Custas
-                <ExternalLink className="w-3 h-3" />
-              </button>
-            </div>
-
-            <div className="p-4 rounded-xl border border-slate-200 bg-slate-50 hover:border-[#002B49] transition-all">
-              <div className="flex items-center justify-between mb-2">
-                <span className="p-2 rounded-lg bg-purple-100 text-purple-800">
-                  <Clock className="w-4 h-4" />
-                </span>
-                <span className="text-[10px] font-bold text-slate-500">TCE-PR</span>
-              </div>
-              <h4 className="font-bold text-xs text-slate-900">Diário Oficial de Viagens</h4>
-              <p className="text-[11px] text-slate-500 mt-1">Espelho de deslocamentos autorizados com check-in, check-out e assinaturas digitais.</p>
-              <button
-                onClick={onNavigateToRelatorios}
-                className="mt-3 w-full py-1.5 rounded-lg text-xs font-bold text-[#002B49] bg-white border border-slate-300 hover:bg-blue-50 transition-colors flex items-center justify-center gap-1 cursor-pointer"
-              >
-                Gerar Espelho SEI
-                <ExternalLink className="w-3 h-3" />
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
 
       {/* ========================================================= */}
       {/* REQUISITO 2: MODAL DE GESTÃO (DIRECIONAR MOTORISTA & VEÍCULO) */}

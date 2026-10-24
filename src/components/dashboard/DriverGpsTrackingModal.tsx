@@ -42,6 +42,7 @@ import {
 import { Driver, Trip, Vehicle, TripSignatureData } from '../../types';
 import { InteractiveSpeedometerCard } from './InteractiveSpeedometerCard';
 import { RequesterTabletSignatureModal } from './RequesterTabletSignatureModal';
+import { ParanaStateMap } from './ParanaStateMap';
 
 export interface GpsCoordinate {
   lat: number;
@@ -161,7 +162,7 @@ export const PRESET_ROUTES: Record<string, RouteConfig> = {
 };
 
 // Interface de Sessão Ativa de Rastreamento
-interface VehicleTrackingSession {
+export interface VehicleTrackingSession {
   vehicle: Vehicle;
   trip: Trip;
   driver?: Driver;
@@ -709,86 +710,12 @@ export const DriverGpsTrackingModal: React.FC<DriverGpsTrackingModalProps> = ({
                   </div>
                 </div>
 
-                {/* Mapa Cartográfico Panorâmico Multi-Veículos */}
-                <div className="relative h-64 sm:h-72 bg-gradient-to-b from-slate-900 via-[#0a2540] to-slate-950 overflow-hidden">
-                  {/* Grid de Coordenadas */}
-                  <div className="absolute inset-0 bg-[radial-gradient(#1e293b_1px,transparent_1px)] [background-size:24px_24px] opacity-40 pointer-events-none" />
-
-                  {/* SVG Rodovias do Paraná e Marcadores */}
-                  <svg className="w-full h-full" viewBox="0 0 1000 360" preserveAspectRatio="none">
-                    <defs>
-                      <linearGradient id="multiRouteGrad" x1="0%" y1="0%" x2="100%" y2="0%">
-                        <stop offset="0%" stopColor="#002B49" />
-                        <stop offset="50%" stopColor="#0284c7" />
-                        <stop offset="100%" stopColor="#10b981" />
-                      </linearGradient>
-                    </defs>
-
-                    {/* Malha Viária Principal (Curitiba - Ponta Grossa - Cascavel - Foz) */}
-                    <path d="M 60,300 Q 250,150 480,210 T 920,80" fill="none" stroke="#334155" strokeWidth="12" strokeLinecap="round" />
-                    <path d="M 60,300 Q 250,150 480,210 T 920,80" fill="none" stroke="#64748b" strokeWidth="2" strokeDasharray="6 6" />
-
-                    {/* Ramal Norte (Londrina / Maringá) */}
-                    <path d="M 300,160 Q 420,70 650,90" fill="none" stroke="#334155" strokeWidth="8" strokeLinecap="round" />
-                    <path d="M 300,160 Q 420,70 650,90" fill="none" stroke="#64748b" strokeWidth="1.5" strokeDasharray="4 4" />
-
-                    {/* Marcadores de Todos os Veículos Rastreados */}
-                    {sessions.map((sess, idx) => {
-                      const t = sess.routeProgress;
-                      // Posicionamento diferenciado por veículo para visualização nítida
-                      const offsetX = idx === 0 ? 0 : idx === 1 ? -60 : 80;
-                      const offsetY = idx === 0 ? 0 : idx === 1 ? 40 : -30;
-                      const carX = Math.max(80, Math.min(920, (idx === 1 ? 200 + t * 450 : 80 + t * 840) + offsetX));
-                      const carY = Math.max(50, Math.min(310, (idx === 1 ? 260 - t * 140 : 300 - t * 220 + Math.sin(t * Math.PI * 2) * 50) + offsetY));
-
-                      return (
-                        <g key={sess.vehicle.prefixo} transform={`translate(${carX}, ${carY})`} className="transition-all duration-700">
-                          {/* Pulso de Rádio */}
-                          <circle r="26" fill={sess.colorTheme.svgColor} opacity="0.2" className="animate-ping" />
-                          <circle r="16" fill={sess.colorTheme.svgColor} opacity="0.35" />
-                          <circle r="11" fill="#002B49" stroke="#ffffff" strokeWidth="2.5" />
-                          <text x="0" y="4" textAnchor="middle" fill="#ffffff" fontSize="9" fontWeight="black" fontFamily="monospace">
-                            {sess.vehicle.prefixo.replace('TJ-', '')}
-                          </text>
-                        </g>
-                      );
-                    })}
-                  </svg>
-
-                  {/* Balões Informativos de Cada Veículo no Mapa */}
-                  {sessions.map((sess, idx) => {
-                    const currentKm = Math.round(sess.routeProgress * sess.routeConfig.distanciaTotalKm);
-                    const isSelected = activeSessionId === sess.vehicle.prefixo;
-
-                    return (
-                      <div
-                        key={sess.vehicle.prefixo}
-                        onClick={() => setActiveSessionId(sess.vehicle.prefixo)}
-                        className={`absolute p-2 rounded-xl shadow-lg border text-xs cursor-pointer transition-all ${
-                          isSelected
-                            ? 'bg-[#002B49] text-white border-amber-300 ring-2 ring-[#C4A052]'
-                            : 'bg-white/95 text-slate-900 border-slate-300 hover:scale-105'
-                        }`}
-                        style={{
-                          left: `${12 + idx * 28}%`,
-                          top: `${16 + (idx % 2) * 44}%`,
-                        }}
-                      >
-                        <div className="flex items-center gap-1.5 font-bold">
-                          <span className={`w-2 h-2 rounded-full ${sess.isPlaying ? 'bg-emerald-400 animate-pulse' : 'bg-slate-400'}`} />
-                          <span className="font-mono text-sm">{sess.vehicle.prefixo}</span>
-                          <span className="opacity-70 font-normal">({sess.vehicle.placa})</span>
-                        </div>
-                        <p className="text-[11px] font-semibold mt-0.5 truncate max-w-[200px]">
-                          {sess.driver?.nome?.split(' ')[0] || 'Condutor'}: <strong>{sess.currentSpeed} km/h</strong> • Km {currentKm}
-                        </p>
-                        <p className="text-[10px] opacity-75 truncate max-w-[200px]">
-                          {sess.trip.destino}
-                        </p>
-                      </div>
-                    );
-                  })}
-                </div>
+                {/* Mapa Cartográfico Panorâmico Multi-Veículos - Estado do Paraná */}
+                <ParanaStateMap
+                  sessions={sessions}
+                  activeSessionId={activeSessionId}
+                  onSelectSession={(prefixo) => setActiveSessionId(prefixo)}
+                />
               </div>
 
               {/* GRID DE COCKPITS SIMULTÂNEOS: 1 COLUNA NO MOBILE / 2 COLUNAS NO DESKTOP */}

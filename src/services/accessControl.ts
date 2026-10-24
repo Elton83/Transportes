@@ -50,14 +50,11 @@ export const ROLE_CONFIGS: Record<Role, RoleConfig> = {
     shortLabel: 'Motorista',
     badgeLabel: 'Condutor Oficial TJPR',
     sub: 'Rotina & Condução',
-    description: 'Acesso estrito às suas demandas, documentos oficiais, manutenção e cartão benefício.',
+    description: 'Acesso estrito ao rodízio de demandas e agenda de viagens oficiais.',
     color: 'amber',
     allowedTabs: [
-      'operacoes',      // Minhas Demandas (Viagens, Diário, Checklists, Ordens)
-      'calendario',     // Minha Agenda de Viagens e Serviços
-      'documentos',     // Documento Oficial (CRLV do veículo e CNH/certidões do condutor)
-      'oficinas',       // Manutenção (Status mecânico e revisões do veículo em uso)
-      'meu_beneficio',  // Cartão do Benefício (Meu Benefício • combustível e pedágio)
+      'operacoes',      // Rodízio (Minhas Demandas, Viagens, Checklists, Ordens)
+      'calendario',     // Agenda de Serviços (Minhas viagens e atividades agendadas)
     ],
     canViewGlobalFleet: false,
     canApproveTrips: false,
@@ -103,7 +100,6 @@ export const ROLE_CONFIGS: Record<Role, RoleConfig> = {
       'chamados',
       'oficinas',
       'abastecer',
-      'documentos',
       'relatorios',
       'visitante',
     ],
@@ -171,7 +167,6 @@ export const ROLE_CONFIGS: Record<Role, RoleConfig> = {
       'chamados',
       'oficinas',
       'abastecer',
-      'documentos',
       'relatorios',
       'visitante',
     ],
@@ -187,14 +182,11 @@ export const ROLE_CONFIGS: Record<Role, RoleConfig> = {
     shortLabel: 'Motorista',
     badgeLabel: 'Condutor Oficial TJPR',
     sub: 'Rotina & Condução',
-    description: 'Acesso estrito às suas demandas, documentos oficiais, manutenção e cartão benefício.',
+    description: 'Acesso estrito ao rodízio de demandas e agenda de viagens oficiais.',
     color: 'amber',
     allowedTabs: [
       'operacoes',
       'calendario',
-      'documentos',
-      'oficinas',
-      'meu_beneficio',
     ],
     canViewGlobalFleet: false,
     canApproveTrips: false,
