@@ -16,7 +16,10 @@ import {
   Target,
   Sparkles,
   ExternalLink,
-  ChevronRight
+  ChevronRight,
+  User,
+  Eye,
+  EyeOff
 } from 'lucide-react';
 import { VehicleTrackingSession } from './DriverGpsTrackingModal';
 
@@ -289,6 +292,8 @@ export const ParanaStateMap: React.FC<ParanaStateMapProps> = ({
   const [hoveredComarca, setHoveredComarca] = useState<string | null>(null);
   const [hoveredVehicle, setHoveredVehicle] = useState<string | null>(null);
   const [isExpanded, setIsExpanded] = useState(false);
+  // Por padrão, exibe apenas a figura/boneco no mapa e o balão do veículo selecionado/hover para despoluir a visualização
+  const [showAllCards, setShowAllCards] = useState<boolean>(false);
 
   // Estados de Controle de Zoom e Pan Interativos
   const [zoom, setZoom] = useState<number>(1.0);
@@ -611,6 +616,21 @@ export const ParanaStateMap: React.FC<ParanaStateMapProps> = ({
             }`}
           >
             Sudoeste
+          </button>
+
+          {/* Botão de Alternar Modo Boneco Simplificado vs Balões Completos */}
+          <button
+            type="button"
+            onClick={() => setShowAllCards(prev => !prev)}
+            className={`px-2.5 py-1 rounded-lg text-[11px] font-bold flex items-center gap-1.5 transition-all cursor-pointer border ml-1 ${
+              showAllCards
+                ? 'bg-amber-400 text-slate-950 border-amber-300 shadow-xs'
+                : 'bg-emerald-500/20 text-emerald-300 border-emerald-400/40 hover:bg-emerald-500/30'
+            }`}
+            title={showAllCards ? 'Alternar para Modo Boneco Simplificado (sem sobreposição)' : 'Exibindo Bonecos Simplificados (Clique em qualquer boneco para ver os dados)'}
+          >
+            <User className="w-3.5 h-3.5 text-current" />
+            <span>{showAllCards ? 'Balões: Todos' : 'Ícone: Boneco Simplificado'}</span>
           </button>
         </div>
 
@@ -964,81 +984,130 @@ export const ParanaStateMap: React.FC<ParanaStateMapProps> = ({
             </g>
           )}
 
-          {/* 7. MARCADORES DINÂMICOS DOS VEÍCULOS EM TEMPO REAL NO MAPA DO PARANÁ */}
+          {/* 7. MARCADORES DINÂMICOS DOS VEÍCULOS (ÍCONE DE BONECO / MOTORISTA OFICIAL TJPR) */}
           {vehiclesOnMap.map((v) => {
             const isSelected = activeSessionId === v.session.vehicle.prefixo;
             const isHovered = hoveredVehicle === v.session.vehicle.prefixo;
-            const rPing = (isSelected ? 30 : 22) / Math.sqrt(zoom);
-            const rMid = (isSelected ? 18 : 14) / Math.sqrt(zoom);
-            const rCore = (isSelected ? 12 : 10) / Math.sqrt(zoom);
+            const scaleFactor = 1 / Math.sqrt(zoom);
+            const rPing = (isSelected ? 32 : 22) * scaleFactor;
+            const rMid = (isSelected ? 18 : 13) * scaleFactor;
+            const themeColor = v.session.colorTheme.svgColor;
 
             return (
               <g
                 key={v.session.vehicle.prefixo}
                 transform={`translate(${v.x}, ${v.y})`}
-                className="cursor-pointer transition-transform duration-700"
+                className="cursor-pointer transition-transform duration-500 group"
                 onClick={() => handleFocusVehicle(v)}
                 onMouseEnter={() => setHoveredVehicle(v.session.vehicle.prefixo)}
                 onMouseLeave={() => setHoveredVehicle(null)}
               >
-                {/* Ondas de Pulso GPS (Radar) */}
+                {/* Ondas de Pulso GPS (Radar na Rodovia) */}
                 <circle
                   r={rPing}
-                  fill={v.session.colorTheme.svgColor}
+                  fill={themeColor}
                   opacity="0.25"
                   className="animate-ping"
                 />
                 <circle
                   r={rMid}
-                  fill={v.session.colorTheme.svgColor}
+                  fill={themeColor}
                   opacity="0.45"
                 />
-
-                {/* Ícone Central do Veículo Oficial TJPR */}
+                {/* Ponto de contato na pista */}
                 <circle
-                  r={rCore}
-                  fill="#002B49"
-                  stroke={isSelected ? '#C4A052' : '#ffffff'}
-                  strokeWidth={(isSelected ? 3 : 2) / Math.sqrt(zoom)}
-                  filter="url(#vehicleGlow)"
+                  r={2.8 * scaleFactor}
+                  fill={isSelected ? '#C4A052' : '#ffffff'}
+                  stroke="#002B49"
+                  strokeWidth={1.2 * scaleFactor}
                 />
 
-                {/* Número do Prefixo do Veículo */}
-                <text
-                  x="0"
-                  y={(3.2) / Math.sqrt(zoom)}
-                  textAnchor="middle"
-                  fill="#ffffff"
-                  fontSize={(8) / Math.sqrt(zoom)}
-                  fontWeight="900"
-                  fontFamily="monospace"
-                >
-                  {v.session.vehicle.prefixo.replace('TJ-', '')}
-                </text>
-
-                {/* Tag Flutuante com Velocidade e Prefixo (Acima do Marcador) */}
-                <g transform={`translate(0, ${-18 / Math.sqrt(zoom)}) scale(${1 / Math.sqrt(zoom)})`}>
-                  <rect
-                    x="-32"
-                    y="-14"
-                    width="64"
-                    height="14"
-                    rx="4"
-                    fill={isSelected ? '#002B49' : '#05202B'}
-                    stroke={isSelected ? '#C4A052' : v.session.colorTheme.svgColor}
-                    strokeWidth="1.2"
+                {/* PINO DO BONECO (MOTORISTA / CONDUTOR OFICIAL) */}
+                <g transform={`translate(0, ${-20 * scaleFactor}) scale(${scaleFactor})`}>
+                  {/* Seta do Pino apontando para a rodovia */}
+                  <polygon
+                    points="-4,11 4,11 0,19"
+                    fill={isSelected ? '#002B49' : '#041c2c'}
+                    stroke={isSelected ? '#C4A052' : themeColor}
+                    strokeWidth="1.6"
                   />
-                  <text
-                    x="0"
-                    y="-4"
-                    textAnchor="middle"
-                    fill="#ffffff"
-                    fontSize="8.5"
-                    fontWeight="bold"
-                    fontFamily="monospace"
-                  >
-                    {v.session.vehicle.prefixo} • {v.session.currentSpeed}k
-                  </text>
+
+                  {/* Círculo Base do Boneco */}
+                  <circle
+                    cx="0"
+                    cy="0"
+                    r={isSelected ? "14.5" : "13"}
+                    fill={isSelected ? '#002B49' : '#052235'}
+                    stroke={isSelected ? '#C4A052' : themeColor}
+                    strokeWidth={isSelected ? '2.5' : '1.8'}
+                    filter="url(#vehicleGlow)"
+                  />
+
+                  {/* Cabeça do Boneco */}
+                  <circle
+                    cx="0"
+                    cy="-2.8"
+                    r="4"
+                    fill={isSelected ? '#fef08a' : '#ffffff'}
+                  />
+
+                  {/* Quepe de Motorista Oficial TJPR */}
+                  <path
+                    d="M -4.8 -4.2 Q 0 -8 4.8 -4.2 Q 6 -3 3.8 -2.4 Q 0 -3.8 -3.8 -2.4 Z"
+                    fill="#C4A052"
+                  />
+                  {/* Aba do quepe */}
+                  <path
+                    d="M 1.5 -3.2 Q 5.2 -3 6.8 -1.4"
+                    stroke="#C4A052"
+                    strokeWidth="1"
+                    strokeLinecap="round"
+                    fill="none"
+                  />
+
+                  {/* Corpo / Ombros do Boneco */}
+                  <path
+                    d="M -7 9.2 C -7 3.8, 7 3.8, 7 9.2 Z"
+                    fill={isSelected ? '#fef08a' : '#ffffff'}
+                  />
+
+                  {/* Gravata Institucional TJPR */}
+                  <polygon
+                    points="-0.8,4.2 0.8,4.2 0.5,7.6 0,8.8 -0.5,7.6"
+                    fill="#C4A052"
+                  />
+
+                  {/* Tag Flutuante com Prefixo e Velocidade */}
+                  <g transform="translate(0, -20)">
+                    <rect
+                      x="-31"
+                      y="-13"
+                      width="62"
+                      height="13"
+                      rx="4.5"
+                      fill={isSelected ? '#002B49' : '#031724'}
+                      stroke={isSelected ? '#C4A052' : themeColor}
+                      strokeWidth="1.2"
+                    />
+                    <circle
+                      cx="-23"
+                      cy="-6.5"
+                      r="2"
+                      fill="#10b981"
+                      className="animate-pulse"
+                    />
+                    <text
+                      x="3"
+                      y="-3.5"
+                      textAnchor="middle"
+                      fill="#ffffff"
+                      fontSize="8"
+                      fontWeight="bold"
+                      fontFamily="monospace"
+                    >
+                      {v.session.vehicle.prefixo} • {v.session.currentSpeed}k
+                    </text>
+                  </g>
                 </g>
               </g>
             );
@@ -1049,7 +1118,14 @@ export const ParanaStateMap: React.FC<ParanaStateMapProps> = ({
         <div className="absolute inset-0 pointer-events-none p-3 overflow-hidden">
           {vehiclesOnMap.map((v) => {
             const isSelected = activeSessionId === v.session.vehicle.prefixo;
+            const isHovered = hoveredVehicle === v.session.vehicle.prefixo;
             
+            // FILTRO DE FACILITAÇÃO DE VISUALIZAÇÃO:
+            // Por padrão, exibe apenas os bonecos no mapa e abre o balão somente quando selecionado ou ao passar o mouse (hover), evitando a sobreposição de caixas!
+            if (!showAllCards && !isSelected && !isHovered) {
+              return null;
+            }
+
             // Posição proporcional na tela levando em conta a viewBox ampliada (Zoom & Pan)
             const screenX = ((v.x - (clampedX - viewW / 2)) / viewW) * 100;
             const screenY = ((v.y - (clampedY - viewH / 2)) / viewH) * 100;
@@ -1066,34 +1142,39 @@ export const ParanaStateMap: React.FC<ParanaStateMapProps> = ({
               <div
                 key={v.session.vehicle.prefixo}
                 onClick={() => handleFocusVehicle(v)}
-                className={`pointer-events-auto absolute p-2.5 rounded-xl border shadow-xl text-xs transition-all cursor-pointer ${
+                className={`pointer-events-auto absolute p-3 rounded-2xl border shadow-2xl text-xs transition-all cursor-pointer ${
                   isSelected
-                    ? 'bg-[#002B49] text-white border-amber-300 ring-2 ring-[#C4A052] scale-105 z-30'
-                    : 'bg-white/95 text-slate-900 border-slate-300 hover:scale-105 hover:bg-white z-20'
+                    ? 'bg-[#002B49] text-white border-amber-300 ring-2 ring-[#C4A052] scale-105 z-40'
+                    : 'bg-white/98 text-slate-900 border-sky-300 hover:scale-105 hover:bg-white z-30'
                 }`}
                 style={{
                   left: alignLeft ? `${Math.max(4, screenX - 25)}%` : `${Math.min(75, screenX + 3)}%`,
                   top: alignTop ? `${Math.max(10, screenY - 20)}%` : `${Math.min(74, screenY + 2)}%`,
-                  maxWidth: '240px',
+                  maxWidth: '250px',
                 }}
               >
-                <div className="flex items-center justify-between gap-1.5 pb-1 border-b border-slate-200/40">
+                <div className="flex items-center justify-between gap-1.5 pb-1.5 border-b border-slate-200/40">
                   <div className="flex items-center gap-1.5 font-bold">
                     <span className={`w-2 h-2 rounded-full ${v.session.isPlaying ? 'bg-emerald-400 animate-pulse' : 'bg-slate-400'}`} />
                     <span className="font-mono text-xs font-black">{v.session.vehicle.prefixo}</span>
                     <span className="text-[10px] opacity-75 font-mono">({v.session.vehicle.placa})</span>
                   </div>
-                  <span className={`text-[9px] font-mono font-bold px-1.5 py-0.2 rounded ${
+                  <span className={`text-[9px] font-mono font-bold px-1.5 py-0.5 rounded ${
                     isSelected ? 'bg-amber-400/20 text-amber-300' : 'bg-slate-100 text-slate-700'
                   }`}>
                     {v.session.currentSpeed} km/h
                   </span>
                 </div>
 
-                <div className="mt-1 space-y-0.5">
-                  <p className="text-[11px] font-semibold truncate">
-                    {v.session.driver?.nome?.split(' ')[0] || 'Condutor'} • {v.session.vehicle.modelo}
-                  </p>
+                <div className="mt-1.5 space-y-1">
+                  <div className="flex items-center gap-1.5">
+                    <div className="w-5 h-5 rounded-full bg-amber-400/20 border border-amber-400/40 flex items-center justify-center text-amber-300 shrink-0">
+                      <User className="w-3 h-3 text-current" />
+                    </div>
+                    <p className="text-[11px] font-semibold truncate">
+                      {v.session.driver?.nome?.split(' ')[0] || 'Condutor'} • {v.session.vehicle.modelo}
+                    </p>
+                  </div>
                   <p className="text-[10px] opacity-80 truncate flex items-center gap-1">
                     <MapPin className="w-3 h-3 text-sky-400 shrink-0" />
                     <span>{v.session.trip.origem.split(' - ')[0]} ➔ {v.session.trip.destino.split(' - ')[0]}</span>

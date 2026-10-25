@@ -14,37 +14,71 @@ export const INITIAL_DRIVER_SCHEDULES: DriverScheduleItem[] = INITIAL_DRIVERS.ma
 
   if (isEmViagem) {
     statusEscala = 'em_viagem';
-    if (drv.id === 'drv-2') {
+    if (drv.id === 'drv-1') {
+      tripIdDesignada = 'trip-101';
+      destinoOuMissao = 'Fórum da Comarca de Paranaguá (PR)';
+      solicitanteNome = 'Dra. Mariana Vasconcellos';
+      observacoes = 'Em trânsito pela BR-277 descendo a Serra do Mar com o Virtus TJ-101.';
+    } else if (drv.id === 'drv-2') {
       tripIdDesignada = 'trip-102';
       destinoOuMissao = 'Fórum Des. Alberto Pacheco - Ponta Grossa (PR)';
       solicitanteNome = 'Des. Gilberto Silveira Neto';
-      observacoes = 'Em trânsito pela BR-277 com o Virtus TJ-102. Retorno previsto para as 16:30.';
+      observacoes = 'Em trânsito pela BR-277 / BR-376 com o Virtus TJ-102. Retorno previsto para as 16:30.';
+    } else if (drv.id === 'drv-3') {
+      tripIdDesignada = 'trip-107';
+      destinoOuMissao = 'Vara Única de Capitão Leônidas Marques (PR)';
+      solicitanteNome = 'Dr. Valter Silveira';
+      observacoes = 'Em trânsito pela BR-277 / PR-592 com o Virtus TJ-103 para inspeção pericial.';
+    } else if (drv.id === 'drv-4') {
+      tripIdDesignada = 'trip-106';
+      destinoOuMissao = 'Fórum da Comarca de Maringá (PR)';
+      solicitanteNome = 'Dr. Roberto Meirelles';
+      observacoes = 'Em trânsito pela BR-369 no eixo Londrina-Maringá com o Virtus TJ-104.';
     } else if (drv.id === 'drv-5') {
       tripIdDesignada = 'trip-108';
       destinoOuMissao = 'Complexo Penitenciário de Piraquara (PR)';
       solicitanteNome = 'Dra. Fernanda Siqueira';
-      observacoes = 'Escalado para missão judicial de custódia extraordinária com escolta no Virtus TJ-105.';
+      observacoes = 'Em trânsito para missão judicial de custódia extraordinária no Virtus TJ-105.';
+    } else if (drv.id === 'drv-6') {
+      tripIdDesignada = 'trip-109';
+      destinoOuMissao = 'Fórum da Comarca de Almirante Tamandaré (PR)';
+      solicitanteNome = 'Desa. Claudia Cristina';
+      observacoes = 'Em trânsito oficial da Corregedoria pela Rodovia dos Minérios no Virtus TJ-106.';
+    } else if (drv.id === 'drv-7') {
+      tripIdDesignada = 'trip-110';
+      destinoOuMissao = 'Fórum da Comarca de Apucarana (PR)';
+      solicitanteNome = 'Dr. Paulo Roberto Ramos';
+      observacoes = 'Em trânsito pela BR-369 com o Virtus TJ-107 para vistoria de obras.';
+    } else if (drv.id === 'drv-8') {
+      tripIdDesignada = 'trip-111';
+      destinoOuMissao = 'Fórum da Comarca de Cornélio Procópio (PR)';
+      solicitanteNome = 'Dra. Beatriz Albuquerque';
+      observacoes = 'Em trânsito pela BR-369 / PR-160 com o Virtus TJ-108.';
+    } else if (drv.id === 'drv-9') {
+      tripIdDesignada = 'trip-112';
+      destinoOuMissao = 'Fórum da Comarca de Campo Mourão (PR)';
+      solicitanteNome = 'Dr. Marcos Vinicius Costa';
+      observacoes = 'Em trânsito pela PR-317 com o Virtus TJ-109 para audiência presencial.';
+    } else if (drv.id === 'drv-10') {
+      tripIdDesignada = 'trip-113';
+      destinoOuMissao = 'Fórum da Comarca de Paranavaí (PR)';
+      solicitanteNome = 'Dra. Luciana Prado';
+      observacoes = 'Em trânsito pela BR-376 Noroeste com o Virtus TJ-110 para atendimento Cejusc.';
+    } else if (drv.id === 'drv-11') {
+      tripIdDesignada = 'trip-114';
+      destinoOuMissao = 'Fórum da Comarca de Toledo (PR)';
+      solicitanteNome = 'Des. Rogério Favreto';
+      observacoes = 'Em trânsito pela BR-467 Oeste com o Virtus TJ-111 para sessão especial.';
+    } else if (drv.id === 'drv-12') {
+      tripIdDesignada = 'trip-115';
+      destinoOuMissao = 'Fórum da Comarca de Foz do Iguaçu (PR)';
+      solicitanteNome = 'Dr. Eduardo Silveira';
+      observacoes = 'Em trânsito pela BR-277 Extremo Oeste com o Virtus TJ-112.';
     }
   } else if (isFolga) {
     statusEscala = 'folga';
     destinoOuMissao = 'Folga regulamentar programada na escala mensal da Divisão de Transportes';
     observacoes = 'Condutor em descanso regulamentar conforme escala do TJPR.';
-  } else if (drv.id === 'drv-1') {
-    statusEscala = 'escalado';
-    tripIdDesignada = 'trip-101';
-    destinoOuMissao = 'Fórum da Comarca de Paranaguá (PR)';
-    solicitanteNome = 'Dra. Mariana Vasconcellos';
-    observacoes = 'Saída programada com o Virtus TJ-101. Checklist de saída pré-aprovado.';
-  } else if (drv.id === 'drv-3') {
-    statusEscala = 'escalado';
-    tripIdDesignada = 'trip-107';
-    destinoOuMissao = 'Vara Única de Capitão Leônidas Marques (PR)';
-    solicitanteNome = 'Dr. Valter Silveira';
-    observacoes = 'Diligência institucional de inspeção pericial com o Virtus TJ-103.';
-  } else if (drv.id === 'drv-4') {
-    statusEscala = 'disponivel_base';
-    destinoOuMissao = 'Pronto na garagem central do Centro Cívico para chamados da coordenação';
-    observacoes = 'Disponível na garagem central do Centro Cívico com o Virtus TJ-104.';
   } else {
     statusEscala = idx % 2 === 0 ? 'escalado' : 'disponivel_base';
   }

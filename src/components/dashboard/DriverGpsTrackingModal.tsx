@@ -78,18 +78,16 @@ export interface DriverGpsTrackingModalProps {
 // Rotas detalhadas simuladas para os veículos oficiais do TJPR
 export const PRESET_ROUTES: Record<string, RouteConfig> = {
   'TJ-101': {
-    nomeRota: 'Curitiba (Palácio da Justiça) ➔ Ponta Grossa (Fórum Des. Alberto Pacheco)',
-    rodovia: 'BR-277 / BR-376 - Rodovia do Café',
-    distanciaTotalKm: 114,
-    limiteVelocidadeKmH: 100,
+    nomeRota: 'Curitiba (Palácio da Justiça) ➔ Paranaguá (Fórum Cândido Ferreira)',
+    rodovia: 'BR-277 - Descida da Serra do Mar',
+    distanciaTotalKm: 92,
+    limiteVelocidadeKmH: 80,
     waypoints: [
       { lat: -25.4198, lng: -49.2705, label: 'Palácio da Justiça (Curitiba)', kmMarca: 0 },
-      { lat: -25.4385, lng: -49.3320, label: 'Parque Barigui / BR-277', kmMarca: 12 },
-      { lat: -25.4590, lng: -49.5280, label: 'Campo Largo - Contorno Norte', kmMarca: 32 },
-      { lat: -25.4410, lng: -49.7210, label: 'São Luiz do Purunã - Serra', kmMarca: 54 },
-      { lat: -25.3980, lng: -49.9120, label: 'Witmarsum - Trevo Rodoviário', kmMarca: 76 },
-      { lat: -25.2650, lng: -50.0890, label: 'Ponta Grossa - Distrito Industrial', kmMarca: 98 },
-      { lat: -25.0950, lng: -50.1620, label: 'Fórum Des. Alberto Pacheco (Ponta Grossa)', kmMarca: 114 },
+      { lat: -25.5410, lng: -49.1250, label: 'São José dos Pinhais - Acesso Serra', kmMarca: 22 },
+      { lat: -25.6120, lng: -48.9140, label: 'Serra do Mar - Viaduto dos Padres', kmMarca: 50 },
+      { lat: -25.5680, lng: -48.6820, label: 'Morretes - Acesso Litoral', kmMarca: 72 },
+      { lat: -25.5205, lng: -48.5090, label: 'Fórum de Paranaguá - Centro Histórico', kmMarca: 92 },
     ]
   },
   'TJ-102': {
@@ -135,28 +133,100 @@ export const PRESET_ROUTES: Record<string, RouteConfig> = {
     ]
   },
   'TJ-105': {
-    nomeRota: 'Foz do Iguaçu (Fórum Central) ➔ Medianeira (Vara Cível)',
-    rodovia: 'BR-277 Fronteira Oeste',
-    distanciaTotalKm: 60,
-    limiteVelocidadeKmH: 100,
-    waypoints: [
-      { lat: -25.5163, lng: -54.5854, label: 'Fórum da Comarca de Foz do Iguaçu', kmMarca: 0 },
-      { lat: -25.4820, lng: -54.4210, label: 'Santa Terezinha de Itaipu', kmMarca: 18 },
-      { lat: -25.4310, lng: -54.2180, label: 'São Miguel do Iguaçu', kmMarca: 40 },
-      { lat: -25.2970, lng: -54.0940, label: 'Fórum da Comarca de Medianeira', kmMarca: 60 },
-    ]
-  },
-  'TJ-108': {
-    nomeRota: 'Curitiba (Palácio da Justiça) ➔ Paranaguá (Fórum Cândido Ferreira)',
-    rodovia: 'BR-277 - Descida da Serra do Mar',
-    distanciaTotalKm: 92,
+    nomeRota: 'Curitiba (Palácio da Justiça) ➔ Piraquara (Complexo Penitenciário)',
+    rodovia: 'PR-415 - Rodovia João Leopoldo Jacomel',
+    distanciaTotalKm: 32,
     limiteVelocidadeKmH: 80,
     waypoints: [
       { lat: -25.4198, lng: -49.2705, label: 'Palácio da Justiça (Curitiba)', kmMarca: 0 },
-      { lat: -25.5410, lng: -49.1250, label: 'São José dos Pinhais - Acesso Serra', kmMarca: 22 },
-      { lat: -25.6120, lng: -48.9140, label: 'Serra do Mar - Viaduto dos Padres', kmMarca: 50 },
-      { lat: -25.5680, lng: -48.6820, label: 'Morretes - Acesso Litoral', kmMarca: 72 },
-      { lat: -25.5205, lng: -48.5090, label: 'Fórum de Paranaguá - Centro Histórico', kmMarca: 92 },
+      { lat: -25.4410, lng: -49.1980, label: 'Pinhais - Trevo Central', kmMarca: 12 },
+      { lat: -25.4380, lng: -49.1120, label: 'Piraquara - Entrada do Município', kmMarca: 22 },
+      { lat: -25.4430, lng: -49.0620, label: 'Complexo Penitenciário de Piraquara', kmMarca: 32 },
+    ]
+  },
+  'TJ-106': {
+    nomeRota: 'Curitiba (Centro Cívico) ➔ Almirante Tamandaré (Fórum Regional)',
+    rodovia: 'PR-092 - Rodovia dos Minérios',
+    distanciaTotalKm: 24,
+    limiteVelocidadeKmH: 70,
+    waypoints: [
+      { lat: -25.4198, lng: -49.2705, label: 'Centro Cívico (Curitiba)', kmMarca: 0 },
+      { lat: -25.3780, lng: -49.2950, label: 'Parque das Pedreiras / Abranches', kmMarca: 8 },
+      { lat: -25.3350, lng: -49.3080, label: 'Trevo Almirante Tamandaré', kmMarca: 16 },
+      { lat: -25.3180, lng: -49.3105, label: 'Fórum Regional de Almirante Tamandaré', kmMarca: 24 },
+    ]
+  },
+  'TJ-107': {
+    nomeRota: 'Londrina (Fórum Central) ➔ Apucarana (Fórum Des. Clotário Portugal)',
+    rodovia: 'BR-369 - Eixo Norte do Paraná',
+    distanciaTotalKm: 58,
+    limiteVelocidadeKmH: 100,
+    waypoints: [
+      { lat: -23.3103, lng: -51.1628, label: 'Fórum de Londrina - Centro', kmMarca: 0 },
+      { lat: -23.3050, lng: -51.2780, label: 'Cambé - Trevo Central', kmMarca: 15 },
+      { lat: -23.4110, lng: -51.4250, label: 'Arapongas - Contorno Sul', kmMarca: 36 },
+      { lat: -23.5515, lng: -51.4612, label: 'Fórum Des. Clotário Portugal (Apucarana)', kmMarca: 58 },
+    ]
+  },
+  'TJ-108': {
+    nomeRota: 'Londrina (Fórum Central) ➔ Cornélio Procópio (Fórum da Comarca)',
+    rodovia: 'BR-369 / PR-160',
+    distanciaTotalKm: 68,
+    limiteVelocidadeKmH: 90,
+    waypoints: [
+      { lat: -23.3103, lng: -51.1628, label: 'Fórum de Londrina - Centro', kmMarca: 0 },
+      { lat: -23.2980, lng: -51.0210, label: 'Ibiporã - Contorno Leste', kmMarca: 18 },
+      { lat: -23.2510, lng: -50.8120, label: 'Jataizinho / Rio Tibagi', kmMarca: 38 },
+      { lat: -23.1812, lng: -50.6480, label: 'Fórum da Comarca de Cornélio Procópio', kmMarca: 68 },
+    ]
+  },
+  'TJ-109': {
+    nomeRota: 'Maringá (Palácio da Justiça) ➔ Campo Mourão (Fórum da Comarca)',
+    rodovia: 'PR-317 - Eixo Central Oeste',
+    distanciaTotalKm: 92,
+    limiteVelocidadeKmH: 100,
+    waypoints: [
+      { lat: -23.4210, lng: -51.9331, label: 'Fórum de Maringá - Av. Pedro Taques', kmMarca: 0 },
+      { lat: -23.5410, lng: -52.0520, label: 'Floresta - Trevo Rodoviário', kmMarca: 28 },
+      { lat: -23.7310, lng: -52.2150, label: 'Peabiru - Contorno Central', kmMarca: 68 },
+      { lat: -24.0450, lng: -52.3780, label: 'Fórum da Comarca de Campo Mourão', kmMarca: 92 },
+    ]
+  },
+  'TJ-110': {
+    nomeRota: 'Maringá (Palácio da Justiça) ➔ Paranavaí (Fórum da Comarca)',
+    rodovia: 'BR-376 - Rodovia do Noroeste Paranaense',
+    distanciaTotalKm: 74,
+    limiteVelocidadeKmH: 100,
+    waypoints: [
+      { lat: -23.4210, lng: -51.9331, label: 'Fórum de Maringá - Centro Cívico', kmMarca: 0 },
+      { lat: -23.3180, lng: -52.0820, label: 'Mandaguaçu - Trevo Rodoviário', kmMarca: 22 },
+      { lat: -23.1850, lng: -52.2910, label: 'Nova Esperança - Contorno', kmMarca: 46 },
+      { lat: -23.0820, lng: -52.4610, label: 'Fórum da Comarca de Paranavaí', kmMarca: 74 },
+    ]
+  },
+  'TJ-111': {
+    nomeRota: 'Cascavel (Fórum Central) ➔ Toledo (Fórum da Comarca)',
+    rodovia: 'BR-467 - Eixo Oeste',
+    distanciaTotalKm: 48,
+    limiteVelocidadeKmH: 110,
+    waypoints: [
+      { lat: -24.9578, lng: -53.4590, label: 'Fórum da Comarca de Cascavel', kmMarca: 0 },
+      { lat: -24.8820, lng: -53.5610, label: 'Sede Alvorada - Trevo BR-467', kmMarca: 20 },
+      { lat: -24.7890, lng: -53.6810, label: 'Entrada de Toledo - Av. Parigot', kmMarca: 38 },
+      { lat: -24.7210, lng: -53.7430, label: 'Fórum da Comarca de Toledo', kmMarca: 48 },
+    ]
+  },
+  'TJ-112': {
+    nomeRota: 'Cascavel (Fórum Central) ➔ Foz do Iguaçu (Fórum Des. Walter Fontana)',
+    rodovia: 'BR-277 - Extremo Oeste Paranaense',
+    distanciaTotalKm: 142,
+    limiteVelocidadeKmH: 100,
+    waypoints: [
+      { lat: -24.9578, lng: -53.4590, label: 'Fórum da Comarca de Cascavel', kmMarca: 0 },
+      { lat: -25.1210, lng: -53.6820, label: 'Céu Azul - Parque Nacional do Iguaçu', kmMarca: 48 },
+      { lat: -25.2970, lng: -54.0940, label: 'Medianeira - Trevo Central', kmMarca: 85 },
+      { lat: -25.4310, lng: -54.2180, label: 'São Miguel do Iguaçu', kmMarca: 105 },
+      { lat: -25.5163, lng: -54.5854, label: 'Fórum Des. Walter Fontana (Foz do Iguaçu)', kmMarca: 142 },
     ]
   }
 };
@@ -198,6 +268,12 @@ const COLOR_PALETTES = [
   { accent: 'bg-purple-800', border: 'border-purple-500', badge: 'bg-purple-100 text-purple-900 border-purple-300', text: 'text-purple-700', svgColor: '#9333ea' },
   { accent: 'bg-rose-800', border: 'border-rose-500', badge: 'bg-rose-100 text-rose-900 border-rose-300', text: 'text-rose-700', svgColor: '#e11d48' },
   { accent: 'bg-teal-800', border: 'border-teal-500', badge: 'bg-teal-100 text-teal-900 border-teal-300', text: 'text-teal-700', svgColor: '#0d9488' },
+  { accent: 'bg-indigo-800', border: 'border-indigo-500', badge: 'bg-indigo-100 text-indigo-900 border-indigo-300', text: 'text-indigo-700', svgColor: '#6366f1' },
+  { accent: 'bg-cyan-800', border: 'border-cyan-500', badge: 'bg-cyan-100 text-cyan-900 border-cyan-300', text: 'text-cyan-700', svgColor: '#06b6d4' },
+  { accent: 'bg-orange-800', border: 'border-orange-500', badge: 'bg-orange-100 text-orange-900 border-orange-300', text: 'text-orange-700', svgColor: '#ea580c' },
+  { accent: 'bg-pink-800', border: 'border-pink-500', badge: 'bg-pink-100 text-pink-900 border-pink-300', text: 'text-pink-700', svgColor: '#db2777' },
+  { accent: 'bg-lime-800', border: 'border-lime-500', badge: 'bg-lime-100 text-lime-900 border-lime-300', text: 'text-lime-700', svgColor: '#65a30d' },
+  { accent: 'bg-sky-800', border: 'border-sky-500', badge: 'bg-sky-100 text-sky-900 border-sky-300', text: 'text-sky-700', svgColor: '#0284c7' },
 ];
 
 export const DriverGpsTrackingModal: React.FC<DriverGpsTrackingModalProps> = ({
@@ -298,20 +374,42 @@ export const DriverGpsTrackingModal: React.FC<DriverGpsTrackingModalProps> = ({
 
   // Lista de Sessões Simultâneas de Rastreamento Ativas
   const [sessions, setSessions] = useState<VehicleTrackingSession[]>(() => {
-    const list: VehicleTrackingSession[] = [createSession(vehicle, trip, driver, 0.58, 0)];
+    const activeTrips = allTrips.filter(t => t.status === 'em_andamento');
+    if (activeTrips.length > 0) {
+      // Prioriza a viagem passada por prop no início da lista caso ela exista
+      const sortedTrips = [
+        ...activeTrips.filter(t => t.id === trip.id || t.veiculoPrefixo === vehicle.prefixo),
+        ...activeTrips.filter(t => t.id !== trip.id && t.veiculoPrefixo !== vehicle.prefixo),
+      ];
 
-    // Se houverem outras viagens ativas na frota, pré-carrega uma segunda viagem para demonstrar o multi-acompanhamento simultâneo imediato
-    const otherActiveTrip = allTrips.find(t => t.id !== trip.id && t.status === 'em_andamento') ||
-      allTrips.find(t => t.veiculoPrefixo === 'TJ-103') ||
-      allTrips.find(t => t.veiculoPrefixo === 'TJ-101');
-
-    if (otherActiveTrip) {
-      const otherVeh = allVehicles.find(v => v.id === otherActiveTrip.veiculoId || v.prefixo === otherActiveTrip.veiculoPrefixo) || allVehicles[0] || vehicle;
-      const otherDrv = allDrivers.find(d => d.id === otherActiveTrip.motoristaId || d.nome === otherActiveTrip.motoristaNome) || allDrivers[0] || driver;
-
-      list.push(createSession(otherVeh, otherActiveTrip, otherDrv, 0.44, 1));
+      return sortedTrips.map((t, idx) => {
+        const v = allVehicles.find(veh => veh.id === t.veiculoId || veh.prefixo === t.veiculoPrefixo) || {
+          id: `veh-${idx + 1}`,
+          prefixo: t.veiculoPrefixo || `TJ-${101 + idx}`,
+          placa: `TZI${7 + (idx % 3)}C${10 + idx}`,
+          modelo: 'Volkswagen Virtus TSI',
+          marca: 'Volkswagen',
+          ano: 2024,
+          tipo: 'Sedan Executivo',
+          comarca: t.comarca || 'Curitiba - Sede Administrativa',
+          kmAtual: 20000 + idx * 1200,
+          status: 'em_viagem' as const,
+          combustivelTipo: 'Flex (Gasolina/Etanol)',
+          capacidadePassageiros: 4,
+          nivelCombustivel: 70 + ((idx * 3) % 25),
+          proximaRevisaoKm: 30000,
+          ultimaManutencaoData: '2026-08-01',
+          seguroVencimento: '2027-04-30',
+          chassi: `9BWAB4BZ0PP0011${String(idx + 1).padStart(2, '0')}`,
+          renavam: `013948572${String(idx + 1).padStart(2, '0')}`
+        };
+        const d = allDrivers.find(drv => drv.id === t.motoristaId || drv.nome === t.motoristaNome) || (t.veiculoPrefixo === vehicle.prefixo ? driver : undefined);
+        const progress = Number((0.22 + ((idx * 0.065) % 0.60)).toFixed(2));
+        return createSession(v, t, d, progress, idx);
+      });
     }
 
+    const list: VehicleTrackingSession[] = [createSession(vehicle, trip, driver, 0.58, 0)];
     return list;
   });
 
