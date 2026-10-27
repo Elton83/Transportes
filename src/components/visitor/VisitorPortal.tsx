@@ -90,8 +90,8 @@ export const VisitorPortal: React.FC<VisitorPortalProps> = ({
   // Controle de Navegação Principal: Formulário, Histórico ou Consulta
   const [activeTab, setActiveTab] = useState<'formulario' | 'historico' | 'consultar'>('formulario');
   
-  // Controle de Telas do Formulário: Etapa 1 (Identificação & Modalidade) e Etapa 2 (Itinerário & Passageiros)
-  const [currentStep, setCurrentStep] = useState<1 | 2>(1);
+  // Feedback de validação do formulário em tela única
+  const [formError, setFormError] = useState<string | null>(null);
 
   // REQUISITO 2: Modalidade do Pedido (Definição Inicial Simples)
   const [tipoServico, setTipoServico] = useState<'com_motorista' | 'reserva_veiculo'>('com_motorista');
@@ -362,26 +362,25 @@ export const VisitorPortal: React.FC<VisitorPortalProps> = ({
     setTimeout(() => setNovoPassageiroFeedback(null), 4500);
   };
 
-  // Avançar da Etapa 1 para a Etapa 2
-  const handleAvancarParaItinerario = (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!solicitanteNome.trim() || !telefone.trim()) {
-      return;
-    }
-    setCurrentStep(2);
-    window.scrollTo({ top: 0, behavior: 'smooth' });
-  };
-
-  // Voltar para a Etapa 1
-  const handleVoltarParaIdentificacao = () => {
-    setCurrentStep(1);
-    window.scrollTo({ top: 0, behavior: 'smooth' });
-  };
-
-  // Submissão Final do Formulário (na Etapa 2)
+  // Submissão do Formulário em Tela Única
   const handleSubmitFinal = (e: React.FormEvent) => {
     e.preventDefault();
+    setFormError(null);
+
+    if (!solicitanteNome.trim()) {
+      setFormError('Por favor, informe o Nome Completo do Solicitante.');
+      return;
+    }
+    if (!telefone.trim()) {
+      setFormError('Por favor, informe o WhatsApp / Celular do Solicitante.');
+      return;
+    }
     if (!origem.trim() || !destino.trim()) {
+      setFormError('Por favor, informe o Ponto de Partida e o Local de Destino.');
+      return;
+    }
+    if (!dataSaida || !horaSaida) {
+      setFormError('Por favor, informe a Data e o Horário de Saída.');
       return;
     }
 
@@ -466,7 +465,7 @@ export const VisitorPortal: React.FC<VisitorPortalProps> = ({
 
   const handleNovaSolicitacao = () => {
     setSubmissionResult(null);
-    setCurrentStep(1);
+    setFormError(null);
     setOrigem('');
     setDestino('');
     setPassageirosQtd(1);
@@ -815,102 +814,137 @@ export const VisitorPortal: React.FC<VisitorPortalProps> = ({
       )}
 
       {/* ============================================================= */}
-      {/* ETAPA 1 DO FORMULÁRIO: MODALIDADE & IDENTIFICAÇÃO HÉRCULES     */}
+      {/* FORMULÁRIO EM TELA ÚNICA: SOLICITAÇÃO DE VEÍCULO OFICIAL TJPR */}
       {/* ============================================================= */}
-      {!submissionResult && activeTab === 'formulario' && currentStep === 1 && (
-        <form onSubmit={handleAvancarParaItinerario} className="space-y-5 animate-in fade-in duration-200">
+      {!submissionResult && activeTab === 'formulario' && (
+        <form onSubmit={handleSubmitFinal} className="space-y-5 animate-in fade-in duration-200">
           
-          <div className="bg-white rounded-2xl border border-slate-200/90 p-5 sm:p-6 shadow-2xs space-y-5">
+          <div className="bg-white rounded-2xl border border-slate-200/90 p-5 sm:p-7 shadow-2xs space-y-6">
             
-            {/* Header da Etapa 1 */}
-            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 pb-3 border-b border-slate-100">
+            {/* Header Unificado */}
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-4 border-b border-slate-100">
               <div>
                 <span className="text-[10px] font-bold uppercase tracking-wider text-slate-400">
-                  Etapa 1 de 2 • Solicitação de Veículo
+                  Formulário Unificado • Solicitação de Veículo Oficial TJPR
                 </span>
                 <h2 className="text-base sm:text-lg font-bold text-slate-900">
-                  Modalidade do Pedido & Identificação do Servidor
+                  Solicitação de Deslocamento & Transporte Institucional
                 </h2>
                 <p className="text-xs text-slate-500">
-                  Defina a modalidade do deslocamento e confirme os dados para solicitação.
+                  Preencha os dados do pedido em tela única para dimensionamento pela Coordenação de Frotas TJPR.
                 </p>
+              </div>
+
+              <div className="flex items-center gap-2 text-xs text-slate-700 bg-slate-50 px-3 py-1.5 rounded-xl border border-slate-200 shrink-0">
+                <User className="w-3.5 h-3.5 text-[#05202B]" />
+                <span className="font-semibold">{solicitanteNome}</span>
+                <span className="font-mono text-slate-500 text-[11px]">({matriculaInput})</span>
               </div>
             </div>
 
-            {/* REQUISITO 2: MODALIDADE DO PEDIDO (DEFINIÇÃO INICIAL SIMPLES) */}
+            {/* REQUISITO 2: MODALIDADE DO PEDIDO */}
             <div>
-              <label className="block text-xs font-bold text-slate-900 mb-2">
-                1. Modalidade do Pedido (Escolha como será o deslocamento):
-              </label>
+              <div className="flex items-center justify-between mb-2">
+                <label className="block text-xs font-bold text-slate-900 tracking-tight">
+                  1. Modalidade do Pedido (Escolha como será o deslocamento):
+                </label>
+                <span className="text-[11px] font-medium text-slate-500 hidden sm:inline">
+                  {tipoServico === 'com_motorista' ? '🚗 Com motorista oficial designado' : '🔑 Retirada de chave para condução própria'}
+                </span>
+              </div>
 
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                 {/* Opção A: Viagem c/ Motorista Oficial */}
-                <div
+                <button
+                  type="button"
                   onClick={() => setTipoServico('com_motorista')}
-                  className={`p-4 rounded-xl border-2 transition-all cursor-pointer ${
+                  className={`group relative flex items-center justify-between p-3.5 sm:p-4 rounded-xl border text-left transition-all duration-150 cursor-pointer ${
                     tipoServico === 'com_motorista'
-                      ? 'border-[#05202B] bg-[#05202B]/5 shadow-xs ring-1 ring-[#05202B]/20'
-                      : 'border-slate-200 hover:border-slate-300 bg-white'
+                      ? 'bg-[#05202B] border-[#05202B] text-white shadow-md ring-2 ring-[#05202B]/20'
+                      : 'bg-white border-slate-200 text-slate-800 hover:border-slate-300 hover:bg-slate-50/80 shadow-2xs'
                   }`}
                 >
-                  <div className="flex items-start justify-between gap-2">
-                    <div className="flex items-start gap-3">
-                      <div className="w-9 h-9 rounded-xl bg-[#05202B] text-white flex items-center justify-center shrink-0 shadow-2xs">
-                        <Car className="w-5 h-5 text-amber-300" />
-                      </div>
-                      <div>
-                        <h3 className="text-xs sm:text-sm font-bold text-slate-900">
-                          Viagem com motorista oficial
-                        </h3>
-                        <p className="text-[11px] text-slate-600 mt-0.5 leading-relaxed">
-                          O solicitante e acompanhantes são transportados por um condutor credenciado do Tribunal de Justiça, com diário de bordo digital e rastreamento oficial.
-                        </p>
-                        <span className="inline-block mt-2 text-[10px] font-bold text-blue-800 bg-blue-100 px-2 py-0.5 rounded">
-                          Ideal para audiências, comitivas e diligências intermunicipais
+                  <div className="flex items-center gap-3.5 min-w-0">
+                    <div className={`w-10 h-10 rounded-xl flex items-center justify-center shrink-0 transition-transform group-hover:scale-105 ${
+                      tipoServico === 'com_motorista'
+                        ? 'bg-amber-400/20 text-amber-300 ring-1 ring-amber-400/40'
+                        : 'bg-slate-100 text-slate-600'
+                    }`}>
+                      <Car className="w-5 h-5" />
+                    </div>
+                    <div className="min-w-0">
+                      <div className="flex items-center gap-2">
+                        <span className={`text-sm font-bold truncate ${
+                          tipoServico === 'com_motorista' ? 'text-white' : 'text-slate-900'
+                        }`}>
+                          Com Motorista Oficial
                         </span>
                       </div>
-                    </div>
-                    <div className={`w-4 h-4 rounded-full border flex items-center justify-center shrink-0 mt-0.5 ${
-                      tipoServico === 'com_motorista' ? 'border-[#05202B] bg-[#05202B]' : 'border-slate-300'
-                    }`}>
-                      {tipoServico === 'com_motorista' && <div className="w-1.5 h-1.5 rounded-full bg-white" />}
+                      <p className={`text-[11px] mt-0.5 truncate ${
+                        tipoServico === 'com_motorista' ? 'text-slate-300' : 'text-slate-500'
+                      }`}>
+                        Condutor credenciado designado pelo TJPR
+                      </p>
                     </div>
                   </div>
-                </div>
+
+                  <div className="shrink-0 pl-2">
+                    {tipoServico === 'com_motorista' ? (
+                      <span className="inline-flex items-center gap-1 text-[11px] font-bold text-amber-300 bg-white/10 px-2.5 py-1 rounded-full border border-amber-300/30 shadow-2xs">
+                        <Check className="w-3.5 h-3.5 stroke-[2.5]" />
+                        <span>Selecionado</span>
+                      </span>
+                    ) : (
+                      <div className="w-5 h-5 rounded-full border-2 border-slate-300 group-hover:border-slate-400 flex items-center justify-center" />
+                    )}
+                  </div>
+                </button>
 
                 {/* Opção B: Reserva de Veículo (O próprio servidor conduz) */}
-                <div
+                <button
+                  type="button"
                   onClick={() => setTipoServico('reserva_veiculo')}
-                  className={`p-4 rounded-xl border-2 transition-all cursor-pointer ${
+                  className={`group relative flex items-center justify-between p-3.5 sm:p-4 rounded-xl border text-left transition-all duration-150 cursor-pointer ${
                     tipoServico === 'reserva_veiculo'
-                      ? 'border-[#05202B] bg-[#05202B]/5 shadow-xs ring-1 ring-[#05202B]/20'
-                      : 'border-slate-200 hover:border-slate-300 bg-white'
+                      ? 'bg-[#05202B] border-[#05202B] text-white shadow-md ring-2 ring-[#05202B]/20'
+                      : 'bg-white border-slate-200 text-slate-800 hover:border-slate-300 hover:bg-slate-50/80 shadow-2xs'
                   }`}
                 >
-                  <div className="flex items-start justify-between gap-2">
-                    <div className="flex items-start gap-3">
-                      <div className="w-9 h-9 rounded-xl bg-slate-800 text-white flex items-center justify-center shrink-0 shadow-2xs">
-                        <Key className="w-5 h-5 text-emerald-400" />
-                      </div>
-                      <div>
-                        <h3 className="text-xs sm:text-sm font-bold text-slate-900">
-                          Reserva de veículo (o próprio servidor conduz)
-                        </h3>
-                        <p className="text-[11px] text-slate-600 mt-0.5 leading-relaxed">
-                          O próprio magistrado ou servidor habilitado retira a chave na garagem oficial da comarca e conduz o veículo institucional mediante termo de cautela.
-                        </p>
-                        <span className="inline-block mt-2 text-[10px] font-bold text-emerald-800 bg-emerald-100 px-2 py-0.5 rounded">
-                          Retirada na garagem oficial com CNH válida
+                  <div className="flex items-center gap-3.5 min-w-0">
+                    <div className={`w-10 h-10 rounded-xl flex items-center justify-center shrink-0 transition-transform group-hover:scale-105 ${
+                      tipoServico === 'reserva_veiculo'
+                        ? 'bg-emerald-400/20 text-emerald-300 ring-1 ring-emerald-400/40'
+                        : 'bg-slate-100 text-slate-600'
+                    }`}>
+                      <Key className="w-5 h-5" />
+                    </div>
+                    <div className="min-w-0">
+                      <div className="flex items-center gap-2">
+                        <span className={`text-sm font-bold truncate ${
+                          tipoServico === 'reserva_veiculo' ? 'text-white' : 'text-slate-900'
+                        }`}>
+                          Reserva de Veículo
                         </span>
                       </div>
-                    </div>
-                    <div className={`w-4 h-4 rounded-full border flex items-center justify-center shrink-0 mt-0.5 ${
-                      tipoServico === 'reserva_veiculo' ? 'border-[#05202B] bg-[#05202B]' : 'border-slate-300'
-                    }`}>
-                      {tipoServico === 'reserva_veiculo' && <div className="w-1.5 h-1.5 rounded-full bg-white" />}
+                      <p className={`text-[11px] mt-0.5 truncate ${
+                        tipoServico === 'reserva_veiculo' ? 'text-slate-300' : 'text-slate-500'
+                      }`}>
+                        O próprio servidor conduz o veículo oficial
+                      </p>
                     </div>
                   </div>
-                </div>
+
+                  <div className="shrink-0 pl-2">
+                    {tipoServico === 'reserva_veiculo' ? (
+                      <span className="inline-flex items-center gap-1 text-[11px] font-bold text-emerald-300 bg-white/10 px-2.5 py-1 rounded-full border border-emerald-300/30 shadow-2xs">
+                        <Check className="w-3.5 h-3.5 stroke-[2.5]" />
+                        <span>Selecionado</span>
+                      </span>
+                    ) : (
+                      <div className="w-5 h-5 rounded-full border-2 border-slate-300 group-hover:border-slate-400 flex items-center justify-center" />
+                    )}
+                  </div>
+                </button>
               </div>
             </div>
 
@@ -1040,53 +1074,11 @@ export const VisitorPortal: React.FC<VisitorPortalProps> = ({
             </div>
           </div>
 
-            {/* Botão de Avançar */}
-            <div className="pt-4 border-t border-slate-100 flex items-center justify-between">
-              <span className="text-xs text-slate-500">
-                Próximo passo: Rota, data/horário e identificação de acompanhantes.
-              </span>
-
-              <button
-                type="submit"
-                className="px-6 py-3 rounded-xl bg-[#05202B] hover:bg-[#082E3C] text-white font-bold text-xs sm:text-sm flex items-center justify-center gap-2 shadow-md hover:shadow-lg transition-all hover:scale-[1.01] cursor-pointer"
-              >
-                <span>Avançar para Itinerário & Passageiros</span>
-                <ArrowRight className="w-4 h-4 text-amber-300" />
-              </button>
-            </div>
-
-          </div>
-
-        </form>
-      )}
-
-      {/* ============================================================= */}
-      {/* ETAPA 2 DO FORMULÁRIO: ITINERÁRIO, PASSAGEIROS & RETORNO      */}
-      {/* ============================================================= */}
-      {!submissionResult && activeTab === 'formulario' && currentStep === 2 && (
-        <form onSubmit={handleSubmitFinal} className="space-y-5 animate-in fade-in duration-200">
-
-          <div className="bg-white rounded-2xl border border-slate-200/90 p-5 sm:p-6 shadow-2xs space-y-5">
-            
-            {/* Header da Etapa 2 */}
-            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 pb-3 border-b border-slate-100">
-              <div>
-                <span className="text-[10px] font-bold uppercase tracking-wider text-slate-400">
-                  Etapa 2 de 2 • Detalhes do Deslocamento
-                </span>
-                <h2 className="text-base sm:text-lg font-bold text-slate-900">
-                  Itinerário, Horários e Passageiros
-                </h2>
-                <p className="text-xs text-slate-500">
-                  Indique a rota e os acompanhantes. A atribuição do modelo do veículo será realizada pela Coordenação de Frotas.
-                </p>
-              </div>
-
-              <div className="flex items-center gap-2 text-xs text-slate-700 bg-slate-50 px-3 py-1.5 rounded-xl border border-slate-200">
-                <span className="font-semibold">{solicitanteNome}</span>
-                <span className="font-mono text-slate-500 text-[11px]">({matriculaInput})</span>
-              </div>
-            </div>
+            {/* 3. ITINERÁRIO, DATAS E HORÁRIOS */}
+            <div className="pt-4 border-t border-slate-100 space-y-3">
+              <label className="block text-xs font-bold text-slate-900">
+                3. Itinerário, Datas e Horários do Deslocamento:
+              </label>
 
             {/* Origem e Destino com Sugestões Rápidas */}
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -1255,15 +1247,16 @@ export const VisitorPortal: React.FC<VisitorPortalProps> = ({
                 </div>
               )}
             </div>
+          </div>
 
-            {/* REQUISITO: QUANTIDADE DE PASSAGEIROS & ADIÇÃO POR MATRÍCULA NO SISTEMA HÉRCULES */}
-            <div className="bg-slate-50/70 p-4 sm:p-5 rounded-xl border border-slate-200/90 space-y-4">
-              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
-                <div>
-                  <h3 className="text-xs sm:text-sm font-bold text-slate-900 flex items-center gap-2">
-                    <Users className="w-4 h-4 text-[#05202B]" />
-                    <span>Quantidade de Passageiros & Adição por Matrícula</span>
-                  </h3>
+          {/* REQUISITO: QUANTIDADE DE PASSAGEIROS & ADIÇÃO POR MATRÍCULA NO SISTEMA HÉRCULES */}
+          <div className="bg-slate-50/70 p-4 sm:p-5 rounded-xl border border-slate-200/90 space-y-4">
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+              <div>
+                <h3 className="text-xs sm:text-sm font-bold text-slate-900 flex items-center gap-2">
+                  <Users className="w-4 h-4 text-[#05202B]" />
+                  <span>4. Quantidade de Passageiros & Adição por Matrícula</span>
+                </h3>
                   <p className="text-[11px] text-slate-500 mt-0.5">
                     O solicitante já é o 1º ocupante. Para adicionar qualquer passageiro, basta informar a matrícula funcional abaixo.
                   </p>
@@ -1514,21 +1507,6 @@ export const VisitorPortal: React.FC<VisitorPortalProps> = ({
               </div>
             </div>
 
-            {/* REQUISITO 4: REMOÇÃO DA SELEÇÃO DE MODELO/VEÍCULO PELO SOLICITANTE */}
-            <div className="bg-slate-50 border border-slate-200/90 rounded-xl p-4 flex items-start gap-3">
-              <div className="w-9 h-9 rounded-xl bg-[#05202B] text-amber-300 flex items-center justify-center shrink-0 shadow-2xs">
-                <ShieldCheck className="w-5 h-5" />
-              </div>
-              <div className="text-xs">
-                <span className="font-bold text-slate-900 block">
-                  Atribuição e Alocação do Modelo do Veículo
-                </span>
-                <p className="text-slate-600 text-[11px] mt-0.5 leading-relaxed">
-                  A definição e o dimensionamento da categoria e modelo do veículo oficial (Sedan Executivo, SUV Operacional, Van ou Utilitário) <strong>é atribuição exclusiva da Gestão e Coordenação Regional de Frotas TJPR</strong>, assegurando a melhor adequação à rota, número de passageiros e disponibilidade na comarca.
-                </p>
-              </div>
-            </div>
-
             {/* Observações Adicionais */}
             <div>
               <label className="block text-xs font-semibold text-slate-700 mb-1">
@@ -1543,20 +1521,24 @@ export const VisitorPortal: React.FC<VisitorPortalProps> = ({
               />
             </div>
 
-            {/* Botões de Ação na Etapa 2 */}
+            {/* Mensagem de Erro/Validação se houver */}
+            {formError && (
+              <div className="p-3.5 rounded-xl bg-red-50 border border-red-200 text-xs font-semibold text-red-900 flex items-center gap-2 animate-in fade-in">
+                <AlertCircle className="w-4 h-4 text-red-600 shrink-0" />
+                <span>{formError}</span>
+              </div>
+            )}
+
+            {/* Ações de Submissão em Tela Única */}
             <div className="pt-4 border-t border-slate-100 flex flex-col sm:flex-row items-center justify-between gap-3">
-              <button
-                type="button"
-                onClick={handleVoltarParaIdentificacao}
-                className="w-full sm:w-auto px-4 py-2.5 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-semibold flex items-center justify-center gap-1.5 transition-colors cursor-pointer"
-              >
-                <ArrowLeft className="w-3.5 h-3.5" />
-                <span>Voltar para Identificação</span>
-              </button>
+              <div className="flex items-center gap-2 text-xs text-slate-500">
+                <ShieldCheck className="w-4 h-4 text-emerald-600 shrink-0" />
+                <span>Demanda protocolada imediatamente no sistema oficial com envio via WhatsApp.</span>
+              </div>
 
               <button
                 type="submit"
-                className="w-full sm:w-auto px-7 py-3 rounded-xl bg-[#05202B] hover:bg-[#082E3C] text-white font-bold text-xs sm:text-sm flex items-center justify-center gap-2 shadow-lg hover:shadow-xl transition-all hover:scale-[1.01] cursor-pointer"
+                className="w-full sm:w-auto px-8 py-3.5 rounded-xl bg-[#05202B] hover:bg-[#082E3C] text-white font-bold text-xs sm:text-sm flex items-center justify-center gap-2 shadow-lg hover:shadow-xl transition-all hover:scale-[1.01] cursor-pointer"
               >
                 <Send className="w-4 h-4 text-amber-300" />
                 <span>Enviar Solicitação de Veículo</span>
@@ -1592,7 +1574,6 @@ export const VisitorPortal: React.FC<VisitorPortalProps> = ({
                 type="button"
                 onClick={() => {
                   setActiveTab('formulario');
-                  setCurrentStep(1);
                 }}
                 className="px-3.5 py-1.5 rounded-xl bg-[#05202B] text-white text-xs font-semibold flex items-center gap-1.5 shadow-2xs cursor-pointer hover:bg-[#082E3C]"
               >
