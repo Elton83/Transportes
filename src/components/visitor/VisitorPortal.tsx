@@ -477,10 +477,6 @@ export const VisitorPortal: React.FC<VisitorPortalProps> = ({
     setHoraRetorno('');
   };
 
-  // Estado para controlar expansão e filtro do Resumo Rápido
-  const [isQuickSummaryOpen, setIsQuickSummaryOpen] = useState(true);
-  const [quickFilter, setQuickFilter] = useState<'todos' | 'pendente_assinatura' | 'nao_concluido' | 'concluido'>('todos');
-
   // Mapeamento unificado de todas as viagens e pedidos do solicitante atual
   const solicitanteRequests = useMemo(() => {
     const list: Array<{
@@ -644,12 +640,6 @@ export const VisitorPortal: React.FC<VisitorPortalProps> = ({
   const naoConcluidosCount = solicitanteRequests.filter(r => r.statusGeral === 'nao_concluido').length;
   const concluidosCount = solicitanteRequests.filter(r => r.statusGeral === 'concluido').length;
 
-  // Filtragem dos pedidos exibidos no Resumo Rápido
-  const filteredRequests = useMemo(() => {
-    if (quickFilter === 'todos') return solicitanteRequests;
-    return solicitanteRequests.filter(r => r.statusGeral === quickFilter);
-  }, [solicitanteRequests, quickFilter]);
-
   // Chamados para aba de consulta rápida
   const chamadosFiltradosConsulta = useMemo(() => {
     if (!searchProtocolo) return solicitanteRequests;
@@ -663,393 +653,8 @@ export const VisitorPortal: React.FC<VisitorPortalProps> = ({
   return (
     <div className="max-w-6xl mx-auto space-y-5">
 
-      {/* ------------------------------------------------------------- */}
-      {/* BARRA SUPERIOR: IDENTIFICAÇÃO E SELETOR DE ABAS ALINHADOS     */}
-      {/* ------------------------------------------------------------- */}
-      <div className="bg-white rounded-2xl border border-slate-200/90 px-4 py-3 shadow-2xs flex flex-col lg:flex-row lg:items-center justify-between gap-3">
-        <div className="flex items-center gap-2.5 min-w-0">
-          <div className="w-9 h-9 rounded-xl bg-[#05202B] text-white flex items-center justify-center shrink-0 shadow-2xs border border-white/10">
-            <Compass className="w-5 h-5 text-amber-300" />
-          </div>
-          <div className="min-w-0">
-            <h1 className="text-sm font-bold text-slate-800 leading-tight">
-              Portal de Solicitação do Veículo
-            </h1>
-            <p className="text-[11px] text-slate-500 mt-0.5 truncate">
-              Conectado: <strong className="text-slate-800">{solicitanteNome}</strong> ({cargoServidor} • {matriculaInput})
-            </p>
-          </div>
-        </div>
 
-        {/* Abas Superiores de Navegação - Todos na mesma linha e alinhados */}
-        <div className="flex items-center gap-1.5 shrink-0 flex-nowrap overflow-x-auto">
-          <button
-            type="button"
-            onClick={() => {
-              setActiveTab('formulario');
-              setSubmissionResult(null);
-            }}
-            className={`h-9 text-xs px-3.5 rounded-xl font-semibold border transition-all cursor-pointer whitespace-nowrap inline-flex items-center gap-1.5 shrink-0 ${
-              activeTab === 'formulario'
-                ? 'bg-[#05202B] text-white border-[#05202B] shadow-2xs'
-                : 'bg-slate-50 hover:bg-slate-100 text-slate-700 border-slate-200'
-            }`}
-          >
-            <Car className="w-3.5 h-3.5 text-amber-300" />
-            <span>Nova Solicitação</span>
-          </button>
 
-          <button
-            type="button"
-            onClick={() => setActiveTab('historico')}
-            className={`h-9 text-xs px-3.5 rounded-xl font-semibold border transition-all cursor-pointer whitespace-nowrap inline-flex items-center gap-1.5 shrink-0 ${
-              activeTab === 'historico'
-                ? 'bg-[#05202B] text-white border-[#05202B] shadow-2xs'
-                : 'bg-slate-50 hover:bg-slate-100 text-slate-700 border-slate-200'
-            }`}
-          >
-            <FileText className="w-3.5 h-3.5 text-blue-400" />
-            <span>Histórico de Viagens</span>
-            {totalPedidosCount > 0 && (
-              <span className={`text-[10px] px-1.5 py-0.2 rounded-full font-mono font-bold ${
-                activeTab === 'historico' ? 'bg-white/20 text-white' : 'bg-slate-200 text-slate-700'
-              }`}>
-                {totalPedidosCount}
-              </span>
-            )}
-          </button>
-
-          <button
-            type="button"
-            onClick={() => setActiveTab('consultar')}
-            className={`h-9 text-xs px-3.5 rounded-xl font-semibold border transition-all cursor-pointer whitespace-nowrap inline-flex items-center gap-1.5 shrink-0 ${
-              activeTab === 'consultar'
-                ? 'bg-amber-400 text-slate-950 border-amber-500 shadow-2xs font-bold'
-                : 'bg-slate-50 hover:bg-slate-100 text-slate-700 border-slate-200'
-            }`}
-          >
-            <Search className="w-3.5 h-3.5 text-slate-500" />
-            <span>Consultar Protocolo</span>
-          </button>
-
-          {onNavigateToCoordinator && (
-            <button
-              type="button"
-              onClick={onNavigateToCoordinator}
-              className="h-9 text-xs px-3.5 rounded-xl font-semibold bg-[#041C26] hover:bg-[#082E3C] text-slate-200 hover:text-white transition-all cursor-pointer whitespace-nowrap inline-flex items-center gap-1.5 border border-slate-700/60 shadow-2xs shrink-0"
-              title="Acessar painel da Coordenação de Frotas"
-            >
-              <span>Coordenação</span>
-              <ArrowRight className="w-3 h-3 text-amber-300" />
-            </button>
-          )}
-        </div>
-      </div>
-
-      {/* ------------------------------------------------------------- */}
-      {/* 1. WIDGETS DIDÁTICOS: RESUMO DE VIAGENS E PEDIDOS DO USUÁRIO   */}
-      {/* ------------------------------------------------------------- */}
-      <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
-        {/* Widget 1: Total de Pedidos Solicitados */}
-        <div 
-          onClick={() => {
-            setQuickFilter('todos');
-            setIsQuickSummaryOpen(true);
-          }}
-          className={`bg-white rounded-xl border p-3.5 shadow-2xs transition-all cursor-pointer hover:shadow-xs group ${
-            quickFilter === 'todos' ? 'border-[#05202B] ring-1 ring-[#05202B]/20 bg-slate-50/50' : 'border-slate-200 hover:border-slate-300'
-          }`}
-          title="Clique para listar todas as viagens solicitadas"
-        >
-          <div className="flex items-center justify-between">
-            <span className="text-[11px] font-bold text-slate-600 uppercase tracking-wider">
-              Total Pedido
-            </span>
-            <div className="w-7 h-7 rounded-lg bg-[#05202B] text-white flex items-center justify-center shrink-0 shadow-2xs">
-              <Compass className="w-3.5 h-3.5 text-amber-300" />
-            </div>
-          </div>
-          <div className="mt-2 flex items-baseline gap-1.5">
-            <span className="text-2xl font-black text-slate-900 tracking-tight">
-              {totalPedidosCount}
-            </span>
-            <span className="text-xs text-slate-500 font-medium">viagens</span>
-          </div>
-          <p className="text-[10px] text-slate-500 mt-0.5 truncate">
-            Demandas registradas no TJPR
-          </p>
-        </div>
-
-        {/* Widget 2: Pedidos Não Concluídos / Em Análise */}
-        <div 
-          onClick={() => {
-            setQuickFilter('nao_concluido');
-            setIsQuickSummaryOpen(true);
-          }}
-          className={`bg-white rounded-xl border p-3.5 shadow-2xs transition-all cursor-pointer hover:shadow-xs group ${
-            quickFilter === 'nao_concluido' ? 'border-amber-500 ring-1 ring-amber-500/20 bg-amber-50/30' : 'border-slate-200 hover:border-amber-300'
-          }`}
-          title="Clique para filtrar pedidos em análise ou em trânsito"
-        >
-          <div className="flex items-center justify-between">
-            <span className="text-[11px] font-bold text-amber-800 uppercase tracking-wider">
-              Não Concluídos
-            </span>
-            <div className="w-7 h-7 rounded-lg bg-amber-100 text-amber-800 border border-amber-200 flex items-center justify-center shrink-0">
-              <Clock className="w-3.5 h-3.5 text-amber-700" />
-            </div>
-          </div>
-          <div className="mt-2 flex items-baseline gap-1.5">
-            <span className="text-2xl font-black text-amber-900 tracking-tight">
-              {naoConcluidosCount}
-            </span>
-            <span className="text-xs text-amber-700 font-medium">em aberto</span>
-          </div>
-          <p className="text-[10px] text-slate-500 mt-0.5 truncate">
-            Em análise ou deslocamento
-          </p>
-        </div>
-
-        {/* Widget 3: Pendente por Falta de Assinatura (Ação Imediata) */}
-        <div 
-          onClick={() => {
-            setQuickFilter('pendente_assinatura');
-            setIsQuickSummaryOpen(true);
-          }}
-          className={`rounded-xl border p-3.5 shadow-2xs transition-all cursor-pointer hover:shadow-xs group ${
-            pendenteAssinaturaCount > 0 
-              ? 'bg-red-50/70 border-red-200 hover:border-red-300 ring-1 ring-red-400/20' 
-              : 'bg-white border-slate-200 hover:border-slate-300'
-          } ${quickFilter === 'pendente_assinatura' ? 'ring-2 ring-red-500' : ''}`}
-          title="Clique para ver pedidos pendentes de visto/assinatura digital do solicitante"
-        >
-          <div className="flex items-center justify-between">
-            <span className="text-[11px] font-bold text-red-800 uppercase tracking-wider flex items-center gap-1">
-              <span>Falta Assinatura</span>
-              {pendenteAssinaturaCount > 0 && (
-                <span className="w-2 h-2 rounded-full bg-[#EF5350] animate-ping" />
-              )}
-            </span>
-            <div className="w-7 h-7 rounded-lg bg-[#EF5350] text-white flex items-center justify-center shrink-0 shadow-xs">
-              <FileSignature className="w-3.5 h-3.5" />
-            </div>
-          </div>
-          <div className="mt-2 flex items-baseline gap-1.5">
-            <span className="text-2xl font-black text-red-950 tracking-tight">
-              {pendenteAssinaturaCount}
-            </span>
-            <span className="text-xs text-red-700 font-bold">requer visto</span>
-          </div>
-          <p className="text-[10px] text-red-800/90 font-medium mt-0.5 truncate">
-            {pendenteAssinaturaCount > 0 ? 'Clique para assinar agora' : 'Nenhuma pendência de visto'}
-          </p>
-        </div>
-
-        {/* Widget 4: Concluídos e Homologados */}
-        <div 
-          onClick={() => {
-            setQuickFilter('concluido');
-            setIsQuickSummaryOpen(true);
-          }}
-          className={`bg-white rounded-xl border p-3.5 shadow-2xs transition-all cursor-pointer hover:shadow-xs group ${
-            quickFilter === 'concluido' ? 'border-emerald-500 ring-1 ring-emerald-500/20 bg-emerald-50/30' : 'border-slate-200 hover:border-emerald-300'
-          }`}
-          title="Clique para listar viagens 100% finalizadas e homologadas"
-        >
-          <div className="flex items-center justify-between">
-            <span className="text-[11px] font-bold text-emerald-800 uppercase tracking-wider">
-              Concluídos
-            </span>
-            <div className="w-7 h-7 rounded-lg bg-emerald-100 text-emerald-800 border border-emerald-200 flex items-center justify-center shrink-0">
-              <CheckCircle2 className="w-3.5 h-3.5 text-emerald-700" />
-            </div>
-          </div>
-          <div className="mt-2 flex items-baseline gap-1.5">
-            <span className="text-2xl font-black text-emerald-950 tracking-tight">
-              {concluidosCount}
-            </span>
-            <span className="text-xs text-emerald-700 font-medium">homologados</span>
-          </div>
-          <p className="text-[10px] text-slate-500 mt-0.5 truncate">
-            Processo SEI finalizado
-          </p>
-        </div>
-      </div>
-
-      {/* ------------------------------------------------------------- */}
-      {/* 2. RÁPIDO RESUMO DOS PEDIDOS JÁ SOLICITADOS (COM MOTIVOS)     */}
-      {/* ------------------------------------------------------------- */}
-      {totalPedidosCount > 0 && activeTab === 'formulario' && !submissionResult && (
-        <div className="bg-white rounded-2xl border border-slate-200/90 shadow-2xs overflow-hidden transition-all">
-          <div className="px-4 py-3 border-b border-slate-100 flex flex-col sm:flex-row sm:items-center justify-between gap-3 bg-slate-50/70">
-            <div className="flex items-center gap-2">
-              <div className="w-6 h-6 rounded-md bg-[#05202B] text-white flex items-center justify-center shrink-0 text-xs">
-                <FileText className="w-3.5 h-3.5 text-amber-300" />
-              </div>
-              <div>
-                <h3 className="text-xs sm:text-sm font-bold text-slate-900 flex items-center gap-2">
-                  <span>Rápido Resumo das Minhas Solicitações</span>
-                  <span className="text-[10px] font-mono bg-slate-200/80 text-slate-700 px-1.5 py-0.2 rounded font-semibold">
-                    {filteredRequests.length} de {totalPedidosCount}
-                  </span>
-                </h3>
-                <p className="text-[10px] text-slate-500">
-                  Acompanhamento de status, pendências e assinaturas de viagens
-                </p>
-              </div>
-            </div>
-
-            <div className="flex items-center gap-1.5 flex-wrap">
-              <div className="flex items-center bg-white border border-slate-200 p-0.5 rounded-lg text-[11px]">
-                <button
-                  type="button"
-                  onClick={() => setQuickFilter('todos')}
-                  className={`px-2 py-0.5 rounded-md font-semibold transition-colors cursor-pointer ${
-                    quickFilter === 'todos' ? 'bg-[#05202B] text-white shadow-2xs' : 'text-slate-600 hover:text-slate-900'
-                  }`}
-                >
-                  Todos ({totalPedidosCount})
-                </button>
-                {pendenteAssinaturaCount > 0 && (
-                  <button
-                    type="button"
-                    onClick={() => setQuickFilter('pendente_assinatura')}
-                    className={`px-2 py-0.5 rounded-md font-bold transition-colors cursor-pointer flex items-center gap-1 ${
-                      quickFilter === 'pendente_assinatura' ? 'bg-[#EF5350] text-white shadow-2xs' : 'text-red-700 hover:bg-red-50'
-                    }`}
-                  >
-                    <span>Falta Assinatura</span>
-                    <span className="bg-red-200 text-red-900 text-[9px] px-1 rounded-full font-mono">
-                      {pendenteAssinaturaCount}
-                    </span>
-                  </button>
-                )}
-                <button
-                  type="button"
-                  onClick={() => setQuickFilter('nao_concluido')}
-                  className={`px-2 py-0.5 rounded-md font-semibold transition-colors cursor-pointer ${
-                    quickFilter === 'nao_concluido' ? 'bg-amber-500 text-white shadow-2xs' : 'text-slate-600 hover:text-slate-900'
-                  }`}
-                >
-                  Em Aberto ({naoConcluidosCount})
-                </button>
-                <button
-                  type="button"
-                  onClick={() => setQuickFilter('concluido')}
-                  className={`px-2 py-0.5 rounded-md font-semibold transition-colors cursor-pointer ${
-                    quickFilter === 'concluido' ? 'bg-emerald-600 text-white shadow-2xs' : 'text-slate-600 hover:text-slate-900'
-                  }`}
-                >
-                  Concluídos ({concluidosCount})
-                </button>
-              </div>
-
-              <button
-                type="button"
-                onClick={() => setIsQuickSummaryOpen(!isQuickSummaryOpen)}
-                className="p-1 rounded-lg text-slate-500 hover:text-slate-900 hover:bg-slate-200/60 transition-colors cursor-pointer"
-                title={isQuickSummaryOpen ? 'Recolher resumo' : 'Expandir resumo'}
-              >
-                {isQuickSummaryOpen ? <ChevronUp className="w-4 h-4" /> : <ChevronDown className="w-4 h-4" />}
-              </button>
-            </div>
-          </div>
-
-          {isQuickSummaryOpen && (
-            <div className="p-3 sm:p-4 divide-y divide-slate-100 space-y-3">
-              {filteredRequests.map((req) => {
-                const isPendenteAssinatura = req.statusGeral === 'pendente_assinatura';
-                const isNaoConcluido = req.statusGeral === 'nao_concluido';
-                const isConcluido = req.statusGeral === 'concluido';
-
-                return (
-                  <div 
-                    key={req.id} 
-                    className={`pt-3 first:pt-0 rounded-xl p-3 border transition-all ${
-                      isPendenteAssinatura
-                        ? 'bg-red-50/40 border-red-200'
-                        : isNaoConcluido
-                        ? 'bg-slate-50/50 border-slate-200'
-                        : 'bg-white border-slate-100'
-                    }`}
-                  >
-                    <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
-                      <div className="flex items-center gap-2 flex-wrap">
-                        <span className="font-mono text-xs font-bold text-[#05202B] bg-slate-200/80 px-2 py-0.5 rounded">
-                          {req.codigo}
-                        </span>
-                        {req.processoSei && (
-                          <span className="text-[10px] font-mono text-slate-500 bg-white px-1.5 py-0.2 rounded border border-slate-200">
-                            SEI: {req.processoSei}
-                          </span>
-                        )}
-                        <span className="text-xs text-slate-500 font-medium">
-                          Partida: {req.dataSaida} {req.horaSaida ? `às ${req.horaSaida}` : ''}
-                        </span>
-                      </div>
-
-                      <span className={`text-[11px] font-bold px-2.5 py-0.5 rounded-full border inline-flex items-center gap-1 ${
-                        isPendenteAssinatura
-                          ? 'bg-red-100 text-red-800 border-red-300'
-                          : isNaoConcluido
-                          ? 'bg-amber-100 text-amber-900 border-amber-300'
-                          : 'bg-emerald-100 text-emerald-900 border-emerald-300'
-                      }`}>
-                        {isPendenteAssinatura && <AlertCircle className="w-3 h-3 text-red-600" />}
-                        {isNaoConcluido && <Clock className="w-3 h-3 text-amber-700" />}
-                        {isConcluido && <CheckCircle2 className="w-3 h-3 text-emerald-700" />}
-                        <span>{req.statusLabel}</span>
-                      </span>
-                    </div>
-
-                    <div className="mt-2 flex flex-col sm:flex-row sm:items-center justify-between gap-2 text-xs">
-                      <div>
-                        <div className="font-semibold text-slate-800 flex items-center gap-1.5">
-                          <MapPin className="w-3.5 h-3.5 text-slate-400 shrink-0" />
-                          <span>{req.origem}</span>
-                          <ArrowRight className="w-3 h-3 text-slate-400" />
-                          <span className="text-[#05202B] font-bold">{req.destino}</span>
-                        </div>
-                        <p className="text-[11px] text-slate-500 mt-0.5">
-                          {req.tipoServico} {req.veiculoPrefixo ? `• Veículo ${req.veiculoPrefixo}` : ''} {req.motoristaNome ? `(Condutor: ${req.motoristaNome})` : ''}
-                        </p>
-                      </div>
-
-                      <div className="flex items-center gap-2">
-                        {isPendenteAssinatura && onOpenTripSignature && req.trip && (
-                          <button
-                            type="button"
-                            onClick={() => onOpenTripSignature(req.trip!)}
-                            className="px-3 py-1.5 rounded-lg bg-[#EF5350] hover:bg-red-600 text-white font-bold text-xs flex items-center gap-1.5 shadow-xs transition-all cursor-pointer"
-                          >
-                            <FileSignature className="w-3.5 h-3.5" />
-                            <span>Assinar Agora</span>
-                          </button>
-                        )}
-
-                        <button
-                          type="button"
-                          onClick={() => setReportModalItem({ trip: req.trip, chamado: req.chamado })}
-                          className="px-2.5 py-1 rounded-lg bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-semibold flex items-center gap-1 transition-colors cursor-pointer"
-                          title="Visualizar espelho da viagem e relatório funcional"
-                        >
-                          <Printer className="w-3 h-3 text-slate-500" />
-                          <span>Espelho</span>
-                        </button>
-                      </div>
-                    </div>
-
-                    <div className="mt-2 pt-2 border-t border-slate-100/80 text-[11px] flex items-start gap-1.5 text-slate-600 bg-white/70 p-2 rounded-lg">
-                      <HelpCircle className="w-3.5 h-3.5 text-slate-400 shrink-0 mt-0.5" />
-                      <span><strong>Situação do Pedido:</strong> {req.motivoStatus}</span>
-                    </div>
-                  </div>
-                );
-              })}
-            </div>
-          )}
-        </div>
-      )}
 
       {/* ------------------------------------------------------------- */}
       {/* TELA DE SUCESSO PÓS-SUBMISSÃO COM DISPARO WHATSAPP            */}
@@ -2195,6 +1800,120 @@ export const VisitorPortal: React.FC<VisitorPortalProps> = ({
           </div>
         </div>
       )}
+
+      {/* ------------------------------------------------------------- */}
+      {/* WIDGETS RESUMO DE DEMANDAS / PEDIDOS (PARTE INFERIOR)         */}
+      {/* ------------------------------------------------------------- */}
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 pt-4 border-t border-slate-200/80">
+        {/* Widget 1: Total de Pedidos Solicitados */}
+        <div 
+          className="bg-white rounded-xl border border-slate-200 p-3.5 shadow-2xs hover:border-slate-300 transition-all"
+          title="Total de viagens registradas no TJPR"
+        >
+          <div className="flex items-center justify-between">
+            <span className="text-[11px] font-bold text-slate-600 uppercase tracking-wider">
+              Total Pedido
+            </span>
+            <div className="w-7 h-7 rounded-lg bg-[#05202B] text-white flex items-center justify-center shrink-0 shadow-2xs">
+              <Compass className="w-3.5 h-3.5 text-amber-300" />
+            </div>
+          </div>
+          <div className="mt-2 flex items-baseline gap-1.5">
+            <span className="text-2xl font-black text-slate-900 tracking-tight">
+              {totalPedidosCount}
+            </span>
+            <span className="text-xs text-slate-500 font-medium">viagens</span>
+          </div>
+          <p className="text-[10px] text-slate-500 mt-0.5 truncate">
+            Demandas registradas no TJPR
+          </p>
+        </div>
+
+        {/* Widget 2: Pedidos Não Concluídos / Em Análise */}
+        <div 
+          className="bg-white rounded-xl border border-slate-200 p-3.5 shadow-2xs hover:border-amber-300 transition-all"
+          title="Pedidos em análise ou em trânsito"
+        >
+          <div className="flex items-center justify-between">
+            <span className="text-[11px] font-bold text-amber-800 uppercase tracking-wider">
+              Não Concluídos
+            </span>
+            <div className="w-7 h-7 rounded-lg bg-amber-100 text-amber-800 border border-amber-200 flex items-center justify-center shrink-0">
+              <Clock className="w-3.5 h-3.5 text-amber-700" />
+            </div>
+          </div>
+          <div className="mt-2 flex items-baseline gap-1.5">
+            <span className="text-2xl font-black text-amber-900 tracking-tight">
+              {naoConcluidosCount}
+            </span>
+            <span className="text-xs text-amber-700 font-medium">em aberto</span>
+          </div>
+          <p className="text-[10px] text-slate-500 mt-0.5 truncate">
+            Em análise ou deslocamento
+          </p>
+        </div>
+
+        {/* Widget 3: Pendente por Falta de Assinatura */}
+        <div 
+          onClick={() => {
+            if (pendenteAssinaturaCount > 0 && onOpenTripSignature) {
+              const pendente = solicitanteRequests.find(r => r.statusGeral === 'pendente_assinatura' && r.trip);
+              if (pendente?.trip) onOpenTripSignature(pendente.trip);
+            }
+          }}
+          className={`rounded-xl border p-3.5 shadow-2xs transition-all ${
+            pendenteAssinaturaCount > 0 
+              ? 'bg-red-50/70 border-red-200 hover:border-red-300 ring-1 ring-red-400/20 cursor-pointer' 
+              : 'bg-white border-slate-200 hover:border-slate-300'
+          }`}
+          title={pendenteAssinaturaCount > 0 ? "Clique para assinar viagem pendente" : "Nenhuma pendência de visto"}
+        >
+          <div className="flex items-center justify-between">
+            <span className="text-[11px] font-bold text-red-800 uppercase tracking-wider flex items-center gap-1">
+              <span>Falta Assinatura</span>
+              {pendenteAssinaturaCount > 0 && (
+                <span className="w-2 h-2 rounded-full bg-[#EF5350] animate-ping" />
+              )}
+            </span>
+            <div className="w-7 h-7 rounded-lg bg-[#EF5350] text-white flex items-center justify-center shrink-0 shadow-xs">
+              <FileSignature className="w-3.5 h-3.5" />
+            </div>
+          </div>
+          <div className="mt-2 flex items-baseline gap-1.5">
+            <span className="text-2xl font-black text-red-950 tracking-tight">
+              {pendenteAssinaturaCount}
+            </span>
+            <span className="text-xs text-red-700 font-bold">requer visto</span>
+          </div>
+          <p className="text-[10px] text-red-800/90 font-medium mt-0.5 truncate">
+            {pendenteAssinaturaCount > 0 ? 'Clique para assinar agora' : 'Nenhuma pendência de visto'}
+          </p>
+        </div>
+
+        {/* Widget 4: Concluídos e Homologados */}
+        <div 
+          className="bg-white rounded-xl border border-slate-200 p-3.5 shadow-2xs hover:border-emerald-300 transition-all"
+          title="Viagens 100% finalizadas e homologadas"
+        >
+          <div className="flex items-center justify-between">
+            <span className="text-[11px] font-bold text-emerald-800 uppercase tracking-wider">
+              Concluídos
+            </span>
+            <div className="w-7 h-7 rounded-lg bg-emerald-100 text-emerald-800 border border-emerald-200 flex items-center justify-center shrink-0">
+              <CheckCircle2 className="w-3.5 h-3.5 text-emerald-700" />
+            </div>
+          </div>
+          <div className="mt-2 flex items-baseline gap-1.5">
+            <span className="text-2xl font-black text-emerald-950 tracking-tight">
+              {concluidosCount}
+            </span>
+            <span className="text-xs text-emerald-700 font-medium">homologados</span>
+          </div>
+          <p className="text-[10px] text-slate-500 mt-0.5 truncate">
+            Processo SEI finalizado
+          </p>
+        </div>
+      </div>
 
       {/* Modal de Espelho de Viagem e Relatório Funcional */}
       {reportModalItem && (
