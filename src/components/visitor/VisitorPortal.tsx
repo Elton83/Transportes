@@ -93,6 +93,9 @@ export const VisitorPortal: React.FC<VisitorPortalProps> = ({
   // Feedback de validação do formulário em tela única
   const [formError, setFormError] = useState<string | null>(null);
 
+  // Quadrante de métricas selecionado para expandir os itens
+  const [filtroItensAberto, setFiltroItensAberto] = useState<'total' | 'nao_concluidos' | 'falta_assinatura' | 'concluidos' | null>(null);
+
   // REQUISITO 2: Modalidade do Pedido (Definição Inicial Simples)
   const [tipoServico, setTipoServico] = useState<'com_motorista' | 'reserva_veiculo'>('com_motorista');
   
@@ -648,6 +651,16 @@ export const VisitorPortal: React.FC<VisitorPortalProps> = ({
       (r.processoSei && r.processoSei.toLowerCase().includes(searchProtocolo.toLowerCase()))
     );
   }, [solicitanteRequests, searchProtocolo]);
+
+  // Itens filtrados de acordo com o quadrante/botão clicado na parte inferior
+  const itensFiltradosPorCard = useMemo(() => {
+    if (!filtroItensAberto) return [];
+    if (filtroItensAberto === 'total') return solicitanteRequests;
+    if (filtroItensAberto === 'nao_concluidos') return solicitanteRequests.filter(r => r.statusGeral === 'nao_concluido');
+    if (filtroItensAberto === 'falta_assinatura') return solicitanteRequests.filter(r => r.statusGeral === 'pendente_assinatura');
+    if (filtroItensAberto === 'concluidos') return solicitanteRequests.filter(r => r.statusGeral === 'concluido');
+    return [];
+  }, [filtroItensAberto, solicitanteRequests]);
 
   return (
     <div className="max-w-6xl mx-auto space-y-5">
@@ -1787,9 +1800,15 @@ export const VisitorPortal: React.FC<VisitorPortalProps> = ({
       {/* ------------------------------------------------------------- */}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 pt-4 border-t border-slate-200/80">
         {/* Widget 1: Total de Pedidos Solicitados */}
-        <div 
-          className="bg-white rounded-xl border border-slate-200 p-3.5 shadow-2xs hover:border-slate-300 transition-all"
-          title="Total de viagens registradas no TJPR"
+        <button 
+          type="button"
+          onClick={() => setFiltroItensAberto(filtroItensAberto === 'total' ? null : 'total')}
+          className={`bg-white rounded-xl border p-3.5 shadow-2xs transition-all cursor-pointer text-left select-none hover:shadow-md hover:-translate-y-0.5 active:scale-[0.99] ${
+            filtroItensAberto === 'total'
+              ? 'border-[#05202B] ring-2 ring-[#05202B] shadow-sm bg-slate-50/70'
+              : 'border-slate-200 hover:border-slate-400'
+          }`}
+          title="Clique para abrir e ver todas as viagens solicitadas"
         >
           <div className="flex items-center justify-between">
             <span className="text-[11px] font-bold text-slate-600 uppercase tracking-wider">
@@ -1805,15 +1824,24 @@ export const VisitorPortal: React.FC<VisitorPortalProps> = ({
             </span>
             <span className="text-xs text-slate-500 font-medium">viagens</span>
           </div>
-          <p className="text-[10px] text-slate-500 mt-0.5 truncate">
-            Demandas registradas no TJPR
+          <p className="text-[10px] text-slate-500 mt-0.5 truncate flex items-center justify-between">
+            <span>Demandas registradas no TJPR</span>
+            <span className="text-[9px] font-bold text-blue-700 ml-1">
+              {filtroItensAberto === 'total' ? '▲ fechar' : '▼ abrir'}
+            </span>
           </p>
-        </div>
+        </button>
 
         {/* Widget 2: Pedidos Não Concluídos / Em Análise */}
-        <div 
-          className="bg-white rounded-xl border border-slate-200 p-3.5 shadow-2xs hover:border-amber-300 transition-all"
-          title="Pedidos em análise ou em trânsito"
+        <button 
+          type="button"
+          onClick={() => setFiltroItensAberto(filtroItensAberto === 'nao_concluidos' ? null : 'nao_concluidos')}
+          className={`bg-white rounded-xl border p-3.5 shadow-2xs transition-all cursor-pointer text-left select-none hover:shadow-md hover:-translate-y-0.5 active:scale-[0.99] ${
+            filtroItensAberto === 'nao_concluidos'
+              ? 'border-amber-400 ring-2 ring-amber-400 shadow-sm bg-amber-50/30'
+              : 'border-slate-200 hover:border-amber-300'
+          }`}
+          title="Clique para abrir e ver pedidos em aberto ou em trânsito"
         >
           <div className="flex items-center justify-between">
             <span className="text-[11px] font-bold text-amber-800 uppercase tracking-wider">
@@ -1829,25 +1857,26 @@ export const VisitorPortal: React.FC<VisitorPortalProps> = ({
             </span>
             <span className="text-xs text-amber-700 font-medium">em aberto</span>
           </div>
-          <p className="text-[10px] text-slate-500 mt-0.5 truncate">
-            Em análise ou deslocamento
+          <p className="text-[10px] text-slate-500 mt-0.5 truncate flex items-center justify-between">
+            <span>Em análise ou deslocamento</span>
+            <span className="text-[9px] font-bold text-amber-700 ml-1">
+              {filtroItensAberto === 'nao_concluidos' ? '▲ fechar' : '▼ abrir'}
+            </span>
           </p>
-        </div>
+        </button>
 
         {/* Widget 3: Pendente por Falta de Assinatura */}
-        <div 
-          onClick={() => {
-            if (pendenteAssinaturaCount > 0 && onOpenTripSignature) {
-              const pendente = solicitanteRequests.find(r => r.statusGeral === 'pendente_assinatura' && r.trip);
-              if (pendente?.trip) onOpenTripSignature(pendente.trip);
-            }
-          }}
-          className={`rounded-xl border p-3.5 shadow-2xs transition-all ${
-            pendenteAssinaturaCount > 0 
-              ? 'bg-red-50/70 border-red-200 hover:border-red-300 ring-1 ring-red-400/20 cursor-pointer' 
-              : 'bg-white border-slate-200 hover:border-slate-300'
+        <button 
+          type="button"
+          onClick={() => setFiltroItensAberto(filtroItensAberto === 'falta_assinatura' ? null : 'falta_assinatura')}
+          className={`rounded-xl border p-3.5 shadow-2xs transition-all cursor-pointer text-left select-none hover:shadow-md hover:-translate-y-0.5 active:scale-[0.99] ${
+            filtroItensAberto === 'falta_assinatura'
+              ? 'bg-red-50/90 border-red-400 ring-2 ring-red-400 shadow-sm'
+              : pendenteAssinaturaCount > 0 
+                ? 'bg-red-50/70 border-red-200 hover:border-red-300 ring-1 ring-red-400/20' 
+                : 'bg-white border-slate-200 hover:border-slate-300'
           }`}
-          title={pendenteAssinaturaCount > 0 ? "Clique para assinar viagem pendente" : "Nenhuma pendência de visto"}
+          title="Clique para abrir e assinar as viagens pendentes de visto"
         >
           <div className="flex items-center justify-between">
             <span className="text-[11px] font-bold text-red-800 uppercase tracking-wider flex items-center gap-1">
@@ -1866,15 +1895,24 @@ export const VisitorPortal: React.FC<VisitorPortalProps> = ({
             </span>
             <span className="text-xs text-red-700 font-bold">requer visto</span>
           </div>
-          <p className="text-[10px] text-red-800/90 font-medium mt-0.5 truncate">
-            {pendenteAssinaturaCount > 0 ? 'Clique para assinar agora' : 'Nenhuma pendência de visto'}
+          <p className="text-[10px] text-red-800/90 font-medium mt-0.5 truncate flex items-center justify-between">
+            <span>{pendenteAssinaturaCount > 0 ? 'Clique para assinar agora' : 'Nenhuma pendência de visto'}</span>
+            <span className="text-[9px] font-bold text-red-700 ml-1">
+              {filtroItensAberto === 'falta_assinatura' ? '▲ fechar' : '▼ abrir'}
+            </span>
           </p>
-        </div>
+        </button>
 
         {/* Widget 4: Concluídos e Homologados */}
-        <div 
-          className="bg-white rounded-xl border border-slate-200 p-3.5 shadow-2xs hover:border-emerald-300 transition-all"
-          title="Viagens 100% finalizadas e homologadas"
+        <button 
+          type="button"
+          onClick={() => setFiltroItensAberto(filtroItensAberto === 'concluidos' ? null : 'concluidos')}
+          className={`bg-white rounded-xl border p-3.5 shadow-2xs transition-all cursor-pointer text-left select-none hover:shadow-md hover:-translate-y-0.5 active:scale-[0.99] ${
+            filtroItensAberto === 'concluidos'
+              ? 'border-emerald-500 ring-2 ring-emerald-500 shadow-sm bg-emerald-50/30'
+              : 'border-slate-200 hover:border-emerald-300'
+          }`}
+          title="Clique para abrir e ver viagens homologadas"
         >
           <div className="flex items-center justify-between">
             <span className="text-[11px] font-bold text-emerald-800 uppercase tracking-wider">
@@ -1890,11 +1928,144 @@ export const VisitorPortal: React.FC<VisitorPortalProps> = ({
             </span>
             <span className="text-xs text-emerald-700 font-medium">homologados</span>
           </div>
-          <p className="text-[10px] text-slate-500 mt-0.5 truncate">
-            Processo SEI finalizado
+          <p className="text-[10px] text-slate-500 mt-0.5 truncate flex items-center justify-between">
+            <span>Processo SEI finalizado</span>
+            <span className="text-[9px] font-bold text-emerald-700 ml-1">
+              {filtroItensAberto === 'concluidos' ? '▲ fechar' : '▼ abrir'}
+            </span>
           </p>
-        </div>
+        </button>
       </div>
+
+      {/* PAINEL EXPANSÍVEL: ITENS ABERTOS AO CLICAR EM QUALQUER DOS QUADRANTES */}
+      {filtroItensAberto && (
+        <div className="bg-white rounded-2xl border border-slate-200/90 p-4 sm:p-5 shadow-sm space-y-3.5 animate-in fade-in slide-in-from-top-2 duration-200">
+          <div className="flex items-center justify-between border-b border-slate-100 pb-3">
+            <div className="flex items-center gap-2 flex-wrap">
+              <span className="text-xs sm:text-sm font-bold text-slate-900 flex items-center gap-2">
+                {filtroItensAberto === 'total' && (
+                  <>
+                    <Compass className="w-4 h-4 text-[#05202B]" />
+                    <span>Todas as Demandas e Viagens do Servidor</span>
+                  </>
+                )}
+                {filtroItensAberto === 'nao_concluidos' && (
+                  <>
+                    <Clock className="w-4 h-4 text-amber-600" />
+                    <span>Pedidos Não Concluídos (Em Análise ou Trânsito)</span>
+                  </>
+                )}
+                {filtroItensAberto === 'falta_assinatura' && (
+                  <>
+                    <FileSignature className="w-4 h-4 text-red-600" />
+                    <span>Viagens Aguardando Visto / Assinatura Digital</span>
+                  </>
+                )}
+                {filtroItensAberto === 'concluidos' && (
+                  <>
+                    <CheckCircle2 className="w-4 h-4 text-emerald-600" />
+                    <span>Viagens Concluídas e Homologadas no SEI</span>
+                  </>
+                )}
+              </span>
+              <span className="text-[11px] font-bold px-2.5 py-0.5 rounded-full bg-slate-100 text-slate-700 border border-slate-200">
+                {itensFiltradosPorCard.length} {itensFiltradosPorCard.length === 1 ? 'item' : 'itens'}
+              </span>
+            </div>
+
+            <button
+              type="button"
+              onClick={() => setFiltroItensAberto(null)}
+              className="text-xs text-slate-500 hover:text-slate-800 hover:bg-slate-100 px-2.5 py-1 rounded-lg flex items-center gap-1 transition-colors cursor-pointer"
+            >
+              <X className="w-4 h-4" />
+              <span>Fechar</span>
+            </button>
+          </div>
+
+          {itensFiltradosPorCard.length === 0 ? (
+            <div className="p-8 text-center text-slate-500 text-xs bg-slate-50 rounded-xl border border-dashed border-slate-200">
+              Nenhuma viagem encontrada para esta categoria.
+            </div>
+          ) : (
+            <div className="space-y-3 max-h-[500px] overflow-y-auto pr-1">
+              {itensFiltradosPorCard.map((item) => (
+                <div
+                  key={item.id}
+                  className="p-3.5 sm:p-4 rounded-xl border border-slate-200/90 hover:border-slate-300 bg-slate-50/40 hover:bg-white shadow-2xs space-y-2.5 transition-all"
+                >
+                  <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+                    <div className="flex items-center gap-2 flex-wrap">
+                      <span className="font-mono text-xs font-bold text-[#05202B] bg-white px-2 py-0.5 rounded border border-slate-200">
+                        {item.codigo}
+                      </span>
+                      {item.processoSei && (
+                        <span className="text-[10px] font-mono text-slate-600 bg-slate-100 px-1.5 py-0.5 rounded border border-slate-200">
+                          SEI: {item.processoSei}
+                        </span>
+                      )}
+                      <span className="text-xs text-slate-500 font-medium">
+                        {item.dataSaida} {item.horaSaida ? `às ${item.horaSaida}` : ''}
+                      </span>
+                    </div>
+
+                    <div className="flex items-center gap-2">
+                      <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full border ${
+                        item.statusGeral === 'pendente_assinatura'
+                          ? 'bg-red-50 text-red-700 border-red-200'
+                          : item.statusGeral === 'nao_concluido'
+                          ? 'bg-amber-50 text-amber-700 border-amber-200'
+                          : 'bg-emerald-50 text-emerald-700 border-emerald-200'
+                      }`}>
+                        {item.statusLabel}
+                      </span>
+
+                      <button
+                        type="button"
+                        onClick={() => setReportModalItem({ trip: item.trip, chamado: item.chamado })}
+                        className="px-2.5 py-1 rounded-lg bg-white hover:bg-slate-100 border border-slate-200 text-slate-700 text-xs font-semibold flex items-center gap-1 transition-colors cursor-pointer shadow-2xs"
+                        title="Ver espelho da viagem e relatório"
+                      >
+                        <Printer className="w-3 h-3 text-slate-500" />
+                        <span>Espelho / Relatório</span>
+                      </button>
+
+                      {item.requerAssinatura && onOpenTripSignature && item.trip && (
+                        <button
+                          type="button"
+                          onClick={() => onOpenTripSignature(item.trip!)}
+                          className="px-3 py-1 rounded-lg bg-[#EF5350] hover:bg-red-600 text-white font-bold text-xs flex items-center gap-1 shadow-xs cursor-pointer animate-pulse"
+                        >
+                          <FileSignature className="w-3.5 h-3.5" />
+                          <span>Assinar Diário de Bordo</span>
+                        </button>
+                      )}
+                    </div>
+                  </div>
+
+                  <div>
+                    <div className="font-bold text-slate-900 text-xs sm:text-sm flex items-center gap-1.5 flex-wrap">
+                      <MapPin className="w-3.5 h-3.5 text-slate-400 shrink-0" />
+                      <span>{item.origem}</span>
+                      <ArrowRight className="w-3.5 h-3.5 text-slate-400 shrink-0" />
+                      <span className="text-[#05202B]">{item.destino}</span>
+                    </div>
+                    <p className="text-xs text-slate-500 mt-0.5">
+                      {item.tipoServico} {item.veiculoPrefixo ? `• Veículo: ${item.veiculoPrefixo}` : ''} {item.motoristaNome ? `• Motorista: ${item.motoristaNome}` : ''}
+                    </p>
+                  </div>
+
+                  <div className="pt-2 border-t border-slate-100 flex items-center justify-between text-xs text-slate-600">
+                    <div>
+                      <span><strong>Situação:</strong> {item.motivoStatus}</span>
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
+      )}
 
       {/* Modal de Espelho de Viagem e Relatório Funcional */}
       {reportModalItem && (
