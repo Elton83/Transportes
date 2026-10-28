@@ -331,6 +331,13 @@ export default function App() {
           avaliacaoComentario: data.comentario,
           avaliacaoTags: data.tags,
           dataAvaliacao: now,
+          avaliacao: {
+            nota: data.rating,
+            carinhas: data.rating,
+            pontosPositivos: data.tags,
+            comentario: data.comentario,
+            dataAvaliacao: now,
+          },
           finalizadoPorSolicitante: true,
           dataEncerramento: now,
           encerradoPor: `${c.solicitanteNome} (Solicitante via Pesquisa de Satisfação)`,
@@ -371,7 +378,21 @@ export default function App() {
       )
     );
 
-    showToast(`Chamado ${data.chamadoCodigo} finalizado com sucesso! Avaliação ${data.rating}/5 registrada no SIGPAT.`);
+    // 5. Notificação imediata ao Supervisor Operacional & Registro em Relatório de Pesquisa
+    const supervisorNotif: NotificationItem = {
+      id: `notif-survey-sup-${Date.now()}`,
+      titulo: `⭐ Pesquisa de Satisfação Recebida • Chamado ${data.chamadoCodigo}`,
+      mensagem: `Avaliação do Solicitante recebida: Nota ${data.rating}/5 (${data.ratingLabel}). ${data.tags.length > 0 ? `Critérios: ${data.tags.join(', ')}. ` : ''}${data.comentario ? `Comentário: "${data.comentario}". ` : ''}Inserido automaticamente no Relatório de Pesquisa & Ouvidoria TJPR.`,
+      dataHora: `Hoje às ${now.split(' ')[1] || '17:30'}`,
+      lida: false,
+      tipo: 'avaliacao_satisfacao',
+      link: 'relatorios',
+      chamadoCodigo: data.chamadoCodigo,
+      tripId: data.tripId,
+    };
+    setNotifications((prev) => [supervisorNotif, ...prev]);
+
+    showToast(`Avaliação ${data.rating}/5 registrada! Notificação transmitida à Supervisão Operacional e incluída no Relatório de Pesquisa.`);
   };
 
   // Confirmação e registro de envio de reserva via WhatsApp
@@ -900,7 +921,69 @@ export default function App() {
         )
       );
 
-      showToast(`Viagem ${checklistTrip.codigo} concluída com êxito! Veículo ${checklistTrip.veiculoPrefixo} liberado para a frota.`);
+      // Localizar chamado vinculado e habilitar pesquisa de satisfação imediatamente
+      const chamadoNumero = checklistTrip.chamadoCodigo || checklistTrip.codigo;
+      const matchedChamado = chamados.find(
+        (c) => c.tripIdVinculada === checklistTrip.id || c.codigo === chamadoNumero || (c.processoSei && c.processoSei === checklistTrip.processoSei) || (c.solicitanteNome && checklistTrip.solicitanteNome && c.solicitanteNome.toLowerCase().includes(checklistTrip.solicitanteNome.toLowerCase().split(' ')[0]))
+      );
+
+      setChamados((prev) =>
+        prev.map((c) => {
+          const isMatch = (matchedChamado && c.id === matchedChamado.id) || c.tripIdVinculada === checklistTrip.id || c.codigo === chamadoNumero;
+          if (isMatch) {
+            return {
+              ...c,
+              atividadeConcluida: true,
+              aguardaAvaliacao: true,
+              respostas: [
+                ...c.respostas,
+                {
+                  id: `resp-ret-${Date.now()}`,
+                  autor: checklistTrip.motoristaNome || currentDriver.nome || 'Motorista Oficial TJPR',
+                  cargo: 'Condutor Oficial',
+                  dataHora: now,
+                  mensagem: `Retorno oficial finalizado na garagem TJPR. Diário de bordo atualizado com KM Final ${kmFinal}. Pesquisa de satisfação de 1 a 5 carinhas liberada para o Solicitante (${checklistTrip.solicitanteNome}).`,
+                  isAdmin: false,
+                },
+              ],
+            };
+          }
+          return c;
+        })
+      );
+
+      // Inserir notificação no sistema para o solicitante com flag de avaliação
+      const evalNotification: NotificationItem = {
+        id: `notif-eval-${Date.now()}`,
+        titulo: `Viagem Concluída • Avalie no Chamado ${chamadoNumero}`,
+        mensagem: `O condutor ${checklistTrip.motoristaNome || currentDriver.nome} finalizou a viagem (${checklistTrip.codigo}). A pesquisa de satisfação (1 a 5 carinhas) está disponível para sua avaliação.`,
+        dataHora: `Hoje às ${now.split(' ')[1] || '17:00'}`,
+        lida: false,
+        tipo: 'chamado',
+        tripId: checklistTrip.id,
+        chamadoId: matchedChamado?.id,
+        chamadoCodigo: chamadoNumero,
+        requiresEvaluation: true,
+      };
+      setNotifications((prev) => [evalNotification, ...prev]);
+
+      // Habilitar aviso no sistema para o solicitante
+      setPendingEvaluationNotice({
+        trip: {
+          ...checklistTrip,
+          status: 'concluida',
+          kmFinal,
+        },
+        chamadoCodigo: chamadoNumero,
+        chamadoId: matchedChamado?.id,
+        solicitanteNome: checklistTrip.solicitanteNome,
+        motoristaNome: checklistTrip.motoristaNome || currentDriver.nome,
+        veiculoPrefixo: checklistTrip.veiculoPrefixo,
+        origem: checklistTrip.origem,
+        destino: checklistTrip.destino,
+      });
+
+      showToast(`Viagem ${checklistTrip.codigo} concluída pelo motorista! Pesquisa de satisfação habilitada para o solicitante.`);
     }
 
     setChecklistTrip(null);
@@ -1787,6 +1870,7 @@ export default function App() {
                 documents={documents}
                 meuBeneficioTransactions={meuBeneficioTransactions}
                 selectedComarca={selectedComarca}
+                chamados={chamados}
               />
             )}
 
@@ -1825,6 +1909,7 @@ export default function App() {
                 vehicles={vehicles}
                 onOpenTripSignature={(trip) => setSignatureModalTrip(trip)}
                 onOpenTripDetails={(trip) => setTripLogTrip(trip)}
+                onOpenSatisfactionSurvey={(item) => setSatisfactionSurveyData(item)}
               />
             )}
           </>

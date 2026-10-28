@@ -61,6 +61,14 @@ export interface Chamado {
   assinaturaSolicitanteData?: string;
   assinaturaSolicitanteHash?: string;
   // Pesquisa de Satisfação com Carinhas de 1 a 5 pelo Solicitante
+  aguardaAvaliacao?: boolean;
+  avaliacao?: {
+    nota: number;
+    carinhas?: number;
+    pontosPositivos?: string[];
+    comentario?: string;
+    dataAvaliacao?: string;
+  };
   avaliacaoNota?: number;
   avaliacaoCarinhas?: number;
   avaliacaoLabel?: string;
@@ -534,7 +542,7 @@ export interface NotificationItem {
   mensagem: string;
   dataHora: string;
   lida: boolean;
-  tipo: 'viagem' | 'manutencao' | 'cnh' | 'alerta' | 'assinatura_solicitante' | 'chamado';
+  tipo: 'viagem' | 'manutencao' | 'cnh' | 'alerta' | 'assinatura_solicitante' | 'chamado' | 'avaliacao_satisfacao';
   link?: string;
   tripId?: string;
   chamadoId?: string;

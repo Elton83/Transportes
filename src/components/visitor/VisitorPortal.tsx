@@ -40,7 +40,8 @@ import {
   X,
   Plus,
   Pencil,
-  Save
+  Save,
+  Star
 } from 'lucide-react';
 import { Chamado, Trip, Vehicle, VisitorSolicitationData, PassengerDetail } from '../../types';
 import { 
@@ -64,6 +65,16 @@ interface VisitorPortalProps {
   vehicles?: Vehicle[];
   onOpenTripSignature?: (trip: Trip) => void;
   onOpenTripDetails?: (trip: Trip) => void;
+  onOpenSatisfactionSurvey?: (item: {
+    trip?: Trip;
+    chamadoCodigo: string;
+    chamadoId?: string;
+    solicitanteNome?: string;
+    motoristaNome?: string;
+    veiculoPrefixo?: string;
+    origem?: string;
+    destino?: string;
+  }) => void;
 }
 
 // Dados iniciais carregados via Keycloak SSO TJPR e Sistema Hércules
@@ -88,6 +99,7 @@ export const VisitorPortal: React.FC<VisitorPortalProps> = ({
   vehicles = [],
   onOpenTripSignature,
   onOpenTripDetails,
+  onOpenSatisfactionSurvey,
 }) => {
   // Controle de Navegação Principal: Formulário, Histórico ou Consulta
   const [activeTab, setActiveTab] = useState<'formulario' | 'historico' | 'consultar'>('formulario');
@@ -954,17 +966,6 @@ export const VisitorPortal: React.FC<VisitorPortalProps> = ({
                 <span>Ver no Histórico</span>
               </button>
             </div>
-
-            {onNavigateToCoordinator && (
-              <button
-                type="button"
-                onClick={onNavigateToCoordinator}
-                className="w-full sm:w-auto px-5 py-2.5 rounded-xl bg-[#05202B] hover:bg-[#082E3C] text-white text-xs font-bold flex items-center justify-center gap-2 shadow-md transition-all hover:scale-[1.01] cursor-pointer"
-              >
-                <span>Acompanhar na Fila da Coordenação</span>
-                <ArrowRight className="w-4 h-4 text-amber-300" />
-              </button>
-            )}
           </div>
         </div>
       )}
@@ -2134,16 +2135,43 @@ export const VisitorPortal: React.FC<VisitorPortalProps> = ({
                       <span><strong>Situação:</strong> {req.motivoStatus}</span>
                     </div>
 
-                    {req.requerAssinatura && onOpenTripSignature && req.trip && (
-                      <button
-                        type="button"
-                        onClick={() => onOpenTripSignature(req.trip!)}
-                        className="px-3 py-1 rounded-lg bg-[#EF5350] hover:bg-red-600 text-white font-bold text-xs flex items-center gap-1 shadow-xs cursor-pointer"
-                      >
-                        <FileSignature className="w-3.5 h-3.5" />
-                        <span>Assinar Diário de Bordo</span>
-                      </button>
-                    )}
+                    <div className="flex items-center gap-2">
+                      {req.chamado?.avaliacaoNota ? (
+                        <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-[11px] font-bold bg-amber-50 text-amber-800 border border-amber-200">
+                          <Star className="w-3 h-3 fill-amber-500 text-amber-500" />
+                          Avaliado: {req.chamado.avaliacaoNota}/5
+                        </span>
+                      ) : onOpenSatisfactionSurvey && (req.chamado?.aguardaAvaliacao || req.trip?.status === 'concluida' || req.statusGeral === 'concluido') ? (
+                        <button
+                          type="button"
+                          onClick={() => onOpenSatisfactionSurvey({
+                            trip: req.trip,
+                            chamadoCodigo: req.chamado?.codigo || req.codigo,
+                            chamadoId: req.chamado?.id,
+                            solicitanteNome: req.trip?.solicitanteNome || req.chamado?.solicitanteNome || solicitanteNome,
+                            motoristaNome: req.motoristaNome,
+                            veiculoPrefixo: req.veiculoPrefixo,
+                            origem: req.origem,
+                            destino: req.destino,
+                          })}
+                          className="px-3 py-1 rounded-lg bg-amber-500 hover:bg-amber-600 text-white font-bold text-xs flex items-center gap-1 shadow-xs cursor-pointer"
+                        >
+                          <Star className="w-3.5 h-3.5 fill-white text-white" />
+                          <span>Avaliar Atendimento (1 a 5 ⭐)</span>
+                        </button>
+                      ) : null}
+
+                      {req.requerAssinatura && onOpenTripSignature && req.trip && (
+                        <button
+                          type="button"
+                          onClick={() => onOpenTripSignature(req.trip!)}
+                          className="px-3 py-1 rounded-lg bg-[#EF5350] hover:bg-red-600 text-white font-bold text-xs flex items-center gap-1 shadow-xs cursor-pointer"
+                        >
+                          <FileSignature className="w-3.5 h-3.5" />
+                          <span>Assinar Diário de Bordo</span>
+                        </button>
+                      )}
+                    </div>
                   </div>
                 </div>
               ))}
@@ -2467,6 +2495,31 @@ export const VisitorPortal: React.FC<VisitorPortalProps> = ({
                         <Printer className="w-3 h-3 text-slate-500" />
                         <span>Espelho / Relatório</span>
                       </button>
+
+                      {item.chamado?.avaliacaoNota ? (
+                        <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-[11px] font-bold bg-amber-50 text-amber-800 border border-amber-200">
+                          <Star className="w-3 h-3 fill-amber-500 text-amber-500" />
+                          Avaliado: {item.chamado.avaliacaoNota}/5
+                        </span>
+                      ) : onOpenSatisfactionSurvey && (item.chamado?.aguardaAvaliacao || item.trip?.status === 'concluida' || item.statusGeral === 'concluido') ? (
+                        <button
+                          type="button"
+                          onClick={() => onOpenSatisfactionSurvey({
+                            trip: item.trip,
+                            chamadoCodigo: item.chamado?.codigo || item.codigo,
+                            chamadoId: item.chamado?.id,
+                            solicitanteNome: item.trip?.solicitanteNome || item.chamado?.solicitanteNome || solicitanteNome,
+                            motoristaNome: item.motoristaNome,
+                            veiculoPrefixo: item.veiculoPrefixo,
+                            origem: item.origem,
+                            destino: item.destino,
+                          })}
+                          className="px-3 py-1 rounded-lg bg-amber-500 hover:bg-amber-600 text-white font-bold text-xs flex items-center gap-1 shadow-xs cursor-pointer"
+                        >
+                          <Star className="w-3.5 h-3.5 fill-white text-white" />
+                          <span>Avaliar (1 a 5 ⭐)</span>
+                        </button>
+                      ) : null}
 
                       {item.requerAssinatura && onOpenTripSignature && item.trip && (
                         <button

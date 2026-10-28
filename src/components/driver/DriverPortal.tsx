@@ -33,7 +33,7 @@ interface DriverPortalProps {
   onFinishTripClick: (trip: Trip) => void;
   onOpenTripLog: (trip: Trip) => void;
   onOpenOfficialOrder: (trip: Trip) => void;
-  onOpenQuickFuel: () => void;
+  onOpenQuickFuel?: () => void;
 }
 
 export const DriverPortal: React.FC<DriverPortalProps> = ({
@@ -144,17 +144,6 @@ export const DriverPortal: React.FC<DriverPortalProps> = ({
                 </span>
               </div>
             </div>
-          </div>
-
-          <div className="flex items-center gap-2.5 shrink-0">
-            <button
-              id="driver-quick-fuel-btn"
-              onClick={onOpenQuickFuel}
-              className="px-3.5 py-2.5 bg-emerald-700 hover:bg-emerald-800 text-white rounded-lg text-xs font-bold shadow-xs transition-colors flex items-center gap-1.5 cursor-pointer"
-            >
-              <Fuel className="w-4 h-4" />
-              Lançar Abastecimento
-            </button>
           </div>
         </div>
       </div>

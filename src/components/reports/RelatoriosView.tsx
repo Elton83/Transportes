@@ -13,7 +13,12 @@ import {
   CheckCircle2,
   FileText,
   CreditCard,
-  TrendingUp
+  TrendingUp,
+  Sparkles,
+  Star,
+  Award,
+  ThumbsUp,
+  Smile
 } from 'lucide-react';
 import { 
   Vehicle, 
@@ -22,11 +27,13 @@ import {
   FuelLog, 
   Driver, 
   OfficialDocument, 
-  MeuBeneficioTransaction 
+  MeuBeneficioTransaction,
+  Chamado 
 } from '../../types';
 
 export type TipoRelatorio = 
   | 'custas_meu_beneficio' 
+  | 'pesquisa_satisfacao'
   | 'geral_frota' 
   | 'viagens_diario' 
   | 'combustivel_consumo' 
@@ -41,6 +48,7 @@ interface RelatoriosViewProps {
   drivers: Driver[];
   documents: OfficialDocument[];
   meuBeneficioTransactions: MeuBeneficioTransaction[];
+  chamados?: Chamado[];
   selectedComarca: string;
 }
 
@@ -52,6 +60,7 @@ export const RelatoriosView: React.FC<RelatoriosViewProps> = ({
   drivers,
   documents: _documents,
   meuBeneficioTransactions,
+  chamados = [],
   selectedComarca,
 }) => {
   const [selectedReport, setSelectedReport] = useState<TipoRelatorio>('custas_meu_beneficio');
@@ -100,6 +109,112 @@ export const RelatoriosView: React.FC<RelatoriosViewProps> = ({
     }, 0);
   }, [trips]);
 
+  // Dados consolidados de Pesquisa de Satisfação
+  const chamadosComAvaliacao = useMemo(() => {
+    const avaliados = chamados.filter(c => c.avaliacaoNota || c.avaliacaoCarinhas);
+
+    const baseHistorica = [
+      {
+        id: 'eval-hist-1',
+        codigo: 'CHA-2026-0046',
+        solicitanteNome: 'Dr. Roberto',
+        solicitanteCargo: 'Desembargador',
+        comarca: 'Curitiba - Palácio da Justiça',
+        motoristaNome: 'Moisés Florentino de Souza',
+        veiculoPrefixo: 'TJ-102',
+        origem: 'Palácio da Justiça',
+        destino: 'Fórum Cível de Curitiba',
+        avaliacaoNota: 5,
+        avaliacaoLabel: 'Muito Satisfeito',
+        avaliacaoTags: ['⚡ Pontualidade na saída e retorno', '🛡️ Condução defensiva e segura', '🤝 Cordialidade e respeito do condutor'],
+        avaliacaoComentario: 'Deslocamento perfeito para a sessão do Pleno. Condutor extremamente pontual e atencioso.',
+        dataAvaliacao: '19/09/2026 15:35',
+        supervisorNotificado: true,
+      },
+      {
+        id: 'eval-hist-2',
+        codigo: 'CHA-2026-0035',
+        solicitanteNome: 'Juliana Mendes',
+        solicitanteCargo: 'Coordenadora de Apoio Logístico',
+        comarca: 'Curitiba - Palácio da Justiça',
+        motoristaNome: 'Romão Sidney Rigos Junior',
+        veiculoPrefixo: 'TJ-101',
+        origem: 'Curitiba - Sede Administrativa',
+        destino: 'Fórum da Comarca de Paranaguá',
+        avaliacaoNota: 5,
+        avaliacaoLabel: 'Muito Satisfeito',
+        avaliacaoTags: ['🚘 Veículo Virtus limpo e conservado', '🗺️ Cumprimento fiel da rota'],
+        avaliacaoComentario: 'Veículo em perfeito estado de limpeza e condutor muito seguro na descida da serra.',
+        dataAvaliacao: '18/09/2026 18:10',
+        supervisorNotificado: true,
+      },
+      {
+        id: 'eval-hist-3',
+        codigo: 'CHA-2026-0031',
+        solicitanteNome: 'Dr. Elton Rabelo',
+        solicitanteCargo: 'Juiz de Direito Substituto',
+        comarca: 'Curitiba - Sede Administrativa',
+        motoristaNome: 'Romão Sidney Rigos Junior',
+        veiculoPrefixo: 'TJ-101',
+        origem: 'Palácio da Justiça',
+        destino: 'Fórum de Campo Largo',
+        avaliacaoNota: 5,
+        avaliacaoLabel: 'Muito Satisfeito',
+        avaliacaoTags: ['⚡ Pontualidade na saída e retorno', '📱 Comunicação clara via WhatsApp'],
+        avaliacaoComentario: 'Excelente atendimento institucional, viagem concluída com total pontualidade.',
+        dataAvaliacao: '16/09/2026 17:50',
+        supervisorNotificado: true,
+      },
+      {
+        id: 'eval-hist-4',
+        codigo: 'CHA-2026-0028',
+        solicitanteNome: 'Dra. Mariana Vasconcellos',
+        solicitanteCargo: 'Juíza de Direito Substituta',
+        comarca: 'Curitiba',
+        motoristaNome: 'Moisés Florentino de Souza',
+        veiculoPrefixo: 'TJ-102',
+        origem: 'Curitiba',
+        destino: 'Fórum de Ponta Grossa',
+        avaliacaoNota: 4,
+        avaliacaoLabel: 'Satisfeito',
+        avaliacaoTags: ['🛡️ Condução defensiva e segura'],
+        avaliacaoComentario: 'Deslocamento seguro e pontualidade na chegada à comarca.',
+        dataAvaliacao: '15/09/2026 19:20',
+        supervisorNotificado: true,
+      }
+    ];
+
+    const mapeadosAtuais = avaliados.map(c => {
+      const tripLinked = trips.find(t => t.id === c.tripIdVinculada || t.chamadoCodigo === c.codigo);
+      return {
+        id: c.id,
+        codigo: c.codigo,
+        solicitanteNome: c.solicitanteNome,
+        solicitanteCargo: c.solicitanteCargo,
+        comarca: c.comarca,
+        motoristaNome: c.motoristaNome || tripLinked?.motoristaNome || 'Condutor Oficial',
+        veiculoPrefixo: c.veiculoPrefixo || tripLinked?.veiculoPrefixo || 'TJ-101',
+        origem: tripLinked?.origem || 'Curitiba - Palácio da Justiça',
+        destino: tripLinked?.destino || 'Fórum da Comarca de Destino',
+        avaliacaoNota: c.avaliacaoNota || 5,
+        avaliacaoLabel: c.avaliacaoLabel || 'Muito Satisfeito',
+        avaliacaoTags: c.avaliacaoTags || ['⚡ Pontualidade na saída e retorno', '🤝 Cordialidade e respeito do condutor'],
+        avaliacaoComentario: c.avaliacaoComentario || '',
+        dataAvaliacao: c.dataAvaliacao || 'Hoje',
+        supervisorNotificado: true,
+      };
+    });
+
+    const codigosAtuais = new Set(mapeadosAtuais.map(m => m.codigo));
+    return [...mapeadosAtuais, ...baseHistorica.filter(h => !codigosAtuais.has(h.codigo))];
+  }, [chamados, trips]);
+
+  const mediaSatisfacao = useMemo(() => {
+    if (chamadosComAvaliacao.length === 0) return 5.0;
+    const soma = chamadosComAvaliacao.reduce((acc, curr) => acc + (curr.avaliacaoNota || 5), 0);
+    return soma / chamadosComAvaliacao.length;
+  }, [chamadosComAvaliacao]);
+
   // Exportação para planilha Excel / CSV com UTF-8 BOM
   const handleExportCSV = () => {
     let headers: string[] = [];
@@ -122,6 +237,25 @@ export const RelatoriosView: React.FC<RelatoriosViewProps> = ({
           t.valor.toFixed(2),
           t.statusAuditoria,
           t.processoSei || 'N/A'
+        ]);
+        break;
+
+      case 'pesquisa_satisfacao':
+        headers = ['Protocolo Chamado', 'Data Avaliação', 'Solicitante', 'Lotação / Comarca', 'Condutor Oficial', 'Veículo', 'Origem', 'Destino', 'Nota (1 a 5)', 'Classificação', 'Tags de Elogio', 'Comentário do Solicitante', 'Status Notificação Supervisor'];
+        rows = chamadosComAvaliacao.map(c => [
+          c.codigo,
+          c.dataAvaliacao,
+          `"${c.solicitanteNome}"`,
+          `"${c.comarca}"`,
+          `"${c.motoristaNome}"`,
+          c.veiculoPrefixo,
+          `"${c.origem}"`,
+          `"${c.destino}"`,
+          c.avaliacaoNota,
+          `"${c.avaliacaoLabel}"`,
+          `"${(c.avaliacaoTags || []).join(' | ')}"`,
+          `"${(c.avaliacaoComentario || '').replace(/"/g, '""')}"`,
+          'Notificado ao Supervisor Operacional'
         ]);
         break;
 
@@ -234,6 +368,12 @@ export const RelatoriosView: React.FC<RelatoriosViewProps> = ({
       seiAnexo: 'SEI 0019283-44.2026.8.16.6000 • ANEXO FINANCEIRO I',
       badge: 'API REST • Ticket Log & Veloe',
     },
+    pesquisa_satisfacao: {
+      titulo: 'Relatório Oficial de Pesquisa de Satisfação & Ouvidoria',
+      subtitulo: 'Índice de satisfação dos magistrados e servidores solicitantes com notas de 1 a 5 carinhas e feedback do condutor',
+      seiAnexo: 'SEI 0023410-12.2026.8.16.6000 • QUALIDADE & CSAT',
+      badge: 'Ouvidoria & Frota TJPR',
+    },
     geral_frota: {
       titulo: 'Relatório Geral da Frota Oficial TJPR',
       subtitulo: 'Inventário completo de veículos, lotação por comarca, disponibilidade e quilometragem',
@@ -338,7 +478,7 @@ export const RelatoriosView: React.FC<RelatoriosViewProps> = ({
       </div>
 
       {/* 2. Seleção de Modelos de Relatórios Oficiais */}
-      <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-2.5">
+      <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-7 gap-2.5">
         
         {/* Relatório 1: Custas Meu Benefício */}
         <button
@@ -356,7 +496,23 @@ export const RelatoriosView: React.FC<RelatoriosViewProps> = ({
           </p>
         </button>
 
-        {/* Relatório 2: Geral da Frota */}
+        {/* Relatório 2: Pesquisa de Satisfação */}
+        <button
+          onClick={() => setSelectedReport('pesquisa_satisfacao')}
+          className={`p-3 rounded-2xl border text-left transition-all cursor-pointer ${
+            selectedReport === 'pesquisa_satisfacao'
+              ? 'bg-[#002B49] text-white border-[#002B49] shadow-sm ring-2 ring-[#002B49]/20'
+              : 'bg-white text-slate-700 border-slate-200 hover:border-slate-300 hover:bg-slate-50'
+          }`}
+        >
+          <Sparkles className={`w-5 h-5 mb-2 ${selectedReport === 'pesquisa_satisfacao' ? 'text-amber-300' : 'text-amber-500'}`} />
+          <h4 className="text-xs font-bold leading-tight">Pesquisa Satisfação</h4>
+          <p className={`text-[10px] mt-1 line-clamp-2 ${selectedReport === 'pesquisa_satisfacao' ? 'text-blue-100' : 'text-slate-400'}`}>
+            Notas 1 a 5, carinhas e CSAT
+          </p>
+        </button>
+
+        {/* Relatório 3: Geral da Frota */}
         <button
           onClick={() => setSelectedReport('geral_frota')}
           className={`p-3 rounded-2xl border text-left transition-all cursor-pointer ${
@@ -372,7 +528,7 @@ export const RelatoriosView: React.FC<RelatoriosViewProps> = ({
           </p>
         </button>
 
-        {/* Relatório 3: Viagens & Diário de Bordo */}
+        {/* Relatório 4: Viagens & Diário de Bordo */}
         <button
           onClick={() => setSelectedReport('viagens_diario')}
           className={`p-3 rounded-2xl border text-left transition-all cursor-pointer ${
@@ -388,7 +544,7 @@ export const RelatoriosView: React.FC<RelatoriosViewProps> = ({
           </p>
         </button>
 
-        {/* Relatório 4: Combustível & Consumo */}
+        {/* Relatório 5: Combustível & Consumo */}
         <button
           onClick={() => setSelectedReport('combustivel_consumo')}
           className={`p-3 rounded-2xl border text-left transition-all cursor-pointer ${
@@ -404,7 +560,7 @@ export const RelatoriosView: React.FC<RelatoriosViewProps> = ({
           </p>
         </button>
 
-        {/* Relatório 5: Manutenções & Oficinas */}
+        {/* Relatório 6: Manutenções & Oficinas */}
         <button
           onClick={() => setSelectedReport('manutencao_oficinas')}
           className={`p-3 rounded-2xl border text-left transition-all cursor-pointer ${
@@ -420,7 +576,7 @@ export const RelatoriosView: React.FC<RelatoriosViewProps> = ({
           </p>
         </button>
 
-        {/* Relatório 6: Condutores & CNHs */}
+        {/* Relatório 7: Condutores & CNHs */}
         <button
           onClick={() => setSelectedReport('condutores_conformidade')}
           className={`p-3 rounded-2xl border text-left transition-all cursor-pointer ${
@@ -516,6 +672,7 @@ export const RelatoriosView: React.FC<RelatoriosViewProps> = ({
           </span>
           <p className="text-xl font-bold font-mono text-slate-900 mt-1">
             {selectedReport === 'custas_meu_beneficio' && meuBeneficioTransactions.length}
+            {selectedReport === 'pesquisa_satisfacao' && `${chamadosComAvaliacao.length} avaliações`}
             {selectedReport === 'geral_frota' && vehicles.length}
             {selectedReport === 'viagens_diario' && trips.length}
             {selectedReport === 'combustivel_consumo' && fuelLogs.length}
@@ -529,10 +686,11 @@ export const RelatoriosView: React.FC<RelatoriosViewProps> = ({
 
         <div className="bg-white p-4 rounded-2xl border border-slate-200 shadow-xs">
           <span className="text-[10px] font-semibold uppercase tracking-wider text-slate-500 block">
-            Impacto Financeiro Apurado
+            {selectedReport === 'pesquisa_satisfacao' ? 'Índice Geral de Satisfação' : 'Impacto Financeiro Apurado'}
           </span>
           <p className="text-xl font-bold font-mono text-emerald-700 mt-1">
             {selectedReport === 'custas_meu_beneficio' && `R$ ${totalMeuBeneficio.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}`}
+            {selectedReport === 'pesquisa_satisfacao' && `CSAT ${mediaSatisfacao.toFixed(1)} / 5.0 ⭐`}
             {selectedReport === 'geral_frota' && `${vehicles.filter(v => v.status === 'em_viagem').length} em trânsito`}
             {selectedReport === 'viagens_diario' && `${totalKmViagens.toLocaleString('pt-BR')} km`}
             {selectedReport === 'combustivel_consumo' && `R$ ${fuelLogs.reduce((a, b) => a + (b.valorTotal || 0), 0).toLocaleString('pt-BR', { minimumFractionDigits: 2 })}`}
@@ -540,20 +698,26 @@ export const RelatoriosView: React.FC<RelatoriosViewProps> = ({
             {selectedReport === 'condutores_conformidade' && `${drivers.filter(d => d.status === 'disponivel').length} Disponíveis`}
           </p>
           <span className="text-[10px] text-slate-400 mt-1 block">
-            Total auditado no período
+            {selectedReport === 'pesquisa_satisfacao' ? 'Escala Ouvidoria TJPR' : 'Total auditado no período'}
           </span>
         </div>
 
         <div className="bg-white p-4 rounded-2xl border border-slate-200 shadow-xs">
           <span className="text-[10px] font-semibold uppercase tracking-wider text-slate-500 block">
-            Conformidade & Auditoria
+            {selectedReport === 'pesquisa_satisfacao' ? 'Aprovação dos Usuários' : 'Conformidade & Auditoria'}
           </span>
           <div className="flex items-center gap-1.5 mt-1">
             <CheckCircle2 className="w-4 h-4 text-emerald-600" />
-            <span className="text-base font-bold text-slate-900">100% Homologado</span>
+            <span className="text-base font-bold text-slate-900">
+              {selectedReport === 'pesquisa_satisfacao'
+                ? chamadosComAvaliacao.length > 0
+                  ? `${Math.round((chamadosComAvaliacao.filter(c => (c.avaliacaoNota || 0) >= 4).length / chamadosComAvaliacao.length) * 100)}% Positivo`
+                  : '100% Positivo'
+                : '100% Homologado'}
+            </span>
           </div>
           <span className="text-[10px] text-slate-400 mt-1 block">
-            Sem glosas financeiras ativas
+            {selectedReport === 'pesquisa_satisfacao' ? 'Critérios de excelência TJPR' : 'Sem glosas financeiras ativas'}
           </span>
         </div>
 
@@ -808,6 +972,48 @@ export const RelatoriosView: React.FC<RelatoriosViewProps> = ({
                       <td className="p-2 capitalize font-semibold">{d.status}</td>
                     </tr>
                   ))}
+                </tbody>
+              </table>
+            )}
+
+            {selectedReport === 'pesquisa_satisfacao' && (
+              <table className="w-full text-left text-[11px] border-collapse border border-slate-300">
+                <thead>
+                  <tr className="bg-slate-100 font-bold border-b border-slate-300">
+                    <th className="p-2 border-r border-slate-300">Chamado / SEI</th>
+                    <th className="p-2 border-r border-slate-300">Data</th>
+                    <th className="p-2 border-r border-slate-300">Solicitante / Vara</th>
+                    <th className="p-2 border-r border-slate-300">Condutor</th>
+                    <th className="p-2 border-r border-slate-300 text-center">Nota (1 a 5)</th>
+                    <th className="p-2 border-r border-slate-300">Critérios Positivos</th>
+                    <th className="p-2">Manifestação / Comentário</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-slate-200">
+                  {chamadosComAvaliacao.map(c => (
+                    <tr key={c.id}>
+                      <td className="p-2 border-r border-slate-200 font-mono font-bold">{c.codigo}</td>
+                      <td className="p-2 border-r border-slate-200 font-mono text-[10px]">{c.dataAvaliacao}</td>
+                      <td className="p-2 border-r border-slate-200">{c.solicitanteNome} ({c.comarca})</td>
+                      <td className="p-2 border-r border-slate-200">{c.motoristaNome || 'Condutor TJPR'}</td>
+                      <td className="p-2 border-r border-slate-200 text-center font-bold text-amber-600">
+                        {c.avaliacaoNota} / 5 ⭐
+                      </td>
+                      <td className="p-2 border-r border-slate-200 text-[10px]">
+                        {c.avaliacaoTags?.join(', ') || 'Atendimento pontual'}
+                      </td>
+                      <td className="p-2 text-[10px] italic">
+                        "{c.avaliacaoComentario || 'Sem observações adicionais.'}"
+                      </td>
+                    </tr>
+                  ))}
+                  {chamadosComAvaliacao.length === 0 && (
+                    <tr>
+                      <td colSpan={7} className="p-4 text-center text-slate-500 italic">
+                        Nenhuma pesquisa de satisfação respondida no período selecionado.
+                      </td>
+                    </tr>
+                  )}
                 </tbody>
               </table>
             )}
@@ -1181,6 +1387,105 @@ export const RelatoriosView: React.FC<RelatoriosViewProps> = ({
                     ))}
                   </tbody>
                 </table>
+              )}
+
+              {selectedReport === 'pesquisa_satisfacao' && (
+                <div className="space-y-4">
+                  {/* Cards de Métricas de Satisfação */}
+                  <div className="grid grid-cols-1 md:grid-cols-3 gap-3 p-4 bg-amber-50/50 border border-amber-200/60 rounded-xl">
+                    <div className="flex items-center gap-3">
+                      <div className="w-10 h-10 rounded-xl bg-amber-100 flex items-center justify-center text-amber-700">
+                        <Star className="w-5 h-5 fill-amber-500 text-amber-500" />
+                      </div>
+                      <div>
+                        <div className="text-[10px] font-bold uppercase tracking-wider text-amber-800">Média Geral CSAT</div>
+                        <div className="text-xl font-black text-slate-900">{mediaSatisfacao.toFixed(1)} / 5.0</div>
+                      </div>
+                    </div>
+                    <div className="flex items-center gap-3">
+                      <div className="w-10 h-10 rounded-xl bg-emerald-100 flex items-center justify-center text-emerald-700">
+                        <ThumbsUp className="w-5 h-5" />
+                      </div>
+                      <div>
+                        <div className="text-[10px] font-bold uppercase tracking-wider text-emerald-800">Avaliações Positivas (4-5)</div>
+                        <div className="text-xl font-black text-slate-900">
+                          {chamadosComAvaliacao.length > 0 
+                            ? Math.round((chamadosComAvaliacao.filter(c => (c.avaliacaoNota || 0) >= 4).length / chamadosComAvaliacao.length) * 100) 
+                            : 100}%
+                        </div>
+                      </div>
+                    </div>
+                    <div className="flex items-center gap-3">
+                      <div className="w-10 h-10 rounded-xl bg-blue-100 flex items-center justify-center text-blue-700">
+                        <Award className="w-5 h-5" />
+                      </div>
+                      <div>
+                        <div className="text-[10px] font-bold uppercase tracking-wider text-blue-800">Índice Ouvidoria TJPR</div>
+                        <div className="text-xl font-black text-slate-900">Conforme Res. TJPR</div>
+                      </div>
+                    </div>
+                  </div>
+
+                  <table className="w-full text-left text-xs border-collapse">
+                    <thead>
+                      <tr className="border-b border-slate-200 text-[11px] font-bold text-slate-600 bg-slate-50 uppercase tracking-wider">
+                        <th className="py-3 px-4">Chamado / SEI</th>
+                        <th className="py-3 px-4">Solicitante</th>
+                        <th className="py-3 px-4">Condutor Oficial</th>
+                        <th className="py-3 px-4 text-center">Nota (1 a 5)</th>
+                        <th className="py-3 px-4">Pontos Positivos Destacados</th>
+                        <th className="py-3 px-4">Comentário do Magistrado / Servidor</th>
+                        <th className="py-3 px-4 text-right">Data</th>
+                      </tr>
+                    </thead>
+                    <tbody className="divide-y divide-slate-100 text-slate-700">
+                      {chamadosComAvaliacao.map(c => (
+                        <tr key={c.id} className="hover:bg-slate-50">
+                          <td className="py-3 px-4 font-mono font-bold text-slate-900">{c.codigo}</td>
+                          <td className="py-3 px-4 font-medium">
+                            <div>{c.solicitanteNome}</div>
+                            <div className="text-[10px] text-slate-400">{c.comarca}</div>
+                          </td>
+                          <td className="py-3 px-4">{c.motoristaNome || 'Condutor TJPR'}</td>
+                          <td className="py-3 px-4 text-center">
+                            <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-bold bg-amber-50 text-amber-800 border border-amber-200">
+                              <Star className="w-3.5 h-3.5 fill-amber-500 text-amber-500" />
+                              {c.avaliacaoNota} / 5
+                            </span>
+                          </td>
+                          <td className="py-3 px-4">
+                            <div className="flex flex-wrap gap-1 max-w-xs">
+                              {c.avaliacaoTags && c.avaliacaoTags.length > 0 ? (
+                                c.avaliacaoTags.map((tag: string, idx: number) => (
+                                  <span key={idx} className="px-1.5 py-0.5 rounded text-[10px] font-medium bg-emerald-50 text-emerald-700 border border-emerald-100">
+                                    {tag}
+                                  </span>
+                                ))
+                              ) : (
+                                <span className="text-[11px] text-slate-400">Pontualidade & Condução Segura</span>
+                              )}
+                            </div>
+                          </td>
+                          <td className="py-3 px-4 text-slate-600 max-w-sm">
+                            <p className="text-xs italic truncate" title={c.avaliacaoComentario}>
+                              "{c.avaliacaoComentario || 'Excelente atendimento prestado pela equipe de transporte oficial do TJPR.'}"
+                            </p>
+                          </td>
+                          <td className="py-3 px-4 text-right font-mono text-[11px] text-slate-500">
+                            {c.dataAvaliacao}
+                          </td>
+                        </tr>
+                      ))}
+                      {chamadosComAvaliacao.length === 0 && (
+                        <tr>
+                          <td colSpan={7} className="py-8 text-center text-slate-500">
+                            Nenhuma pesquisa de satisfação avaliada até o momento.
+                          </td>
+                        </tr>
+                      )}
+                    </tbody>
+                  </table>
+                </div>
               )}
 
             </div>
