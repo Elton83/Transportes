@@ -787,20 +787,6 @@ export const CoordinatorPortal: React.FC<CoordinatorPortalProps> = ({
 
                       {/* GRUPO DE AÇÕES */}
                       <div className="flex flex-wrap items-center gap-2">
-                        
-                        {/* BOTÃO DE AVALIAÇÃO COM CARINHAS (1 A 5) PARA O SOLICITANTE / COORDENAÇÃO */}
-                        {onOpenSatisfactionSurvey && !chamado.avaliacaoNota && (
-                          <button
-                            type="button"
-                            onClick={() => onOpenSatisfactionSurvey(chamado)}
-                            className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-amber-500 hover:bg-amber-600 text-slate-950 font-bold text-xs shadow-xs transition-all cursor-pointer hover:scale-[1.02]"
-                            title="Finalizar e avaliar chamado com carinhas de 1 a 5"
-                          >
-                            <span>⭐</span>
-                            <span>{isConcluido ? 'Avaliar Chamado (1 a 5)' : 'Finalizar & Avaliar'}</span>
-                          </button>
-                        )}
-
                         {/* REQUISITO 2: GERENCIAR & DIRECIONAR (MOTORISTA E VEÍCULO) */}
                         {!isConcluido && (
                           <button
