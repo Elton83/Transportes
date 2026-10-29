@@ -39,6 +39,7 @@ import {
   SearchCode,
   X,
   Plus,
+  Minus,
   Pencil,
   Save,
   Star
@@ -143,6 +144,7 @@ export const VisitorPortal: React.FC<VisitorPortalProps> = ({
 
   // REQUISITO: Habilitação progressiva sequencial (Item 1 -> Item 2 -> Item 3 -> Item 4 -> Enviar)
   const [item1Confirmado, setItem1Confirmado] = useState(false);
+  const [item1Expandido, setItem1Expandido] = useState(true);
   const [item3Confirmado, setItem3Confirmado] = useState(false);
   const [item3Erro, setItem3Erro] = useState<string | null>(null);
   const [item4Confirmado, setItem4Confirmado] = useState(false);
@@ -306,9 +308,16 @@ export const VisitorPortal: React.FC<VisitorPortalProps> = ({
     });
   };
 
-  // Handler do Item 1: Modalidade
+  // Handler do Item 1: Selecionar modalidade diretamente (a escolha é a própria confirmação e agrupa)
+  const handleSelectModalidade = (servico: 'com_motorista' | 'reserva_veiculo') => {
+    setTipoServico(servico);
+    setItem1Confirmado(true);
+    setItem1Expandido(false);
+  };
+
   const handleConfirmarModalidade = () => {
     setItem1Confirmado(true);
+    setItem1Expandido(false);
   };
 
   // Handler do Item 3: Itinerário
@@ -627,6 +636,7 @@ export const VisitorPortal: React.FC<VisitorPortalProps> = ({
     setDataRetorno('');
     setHoraRetorno('');
     setItem1Confirmado(false);
+    setItem1Expandido(true);
     setDadosCadastraisConfirmados(false);
     setModoEdicaoCadastral(false);
     setItem3Confirmado(false);
@@ -877,8 +887,8 @@ export const VisitorPortal: React.FC<VisitorPortalProps> = ({
               <span className="text-slate-400 text-[11px] block">Modalidade Escolhida:</span>
               <strong className="text-slate-900">
                 {submissionResult.solicitacao.tipoServico === 'com_motorista'
-                  ? '🚗 Solicitação de Veículo com Motorista'
-                  : '🔑 Reserva de Veículo (Direção Própria)'}
+                  ? '🚗 Solicitação de veículo com motorista'
+                  : '🔑 Solicitação de veículo sem motorista (Você será o condutor)'}
               </strong>
               <p className="text-[11px] text-emerald-700 font-medium">Veículo dimensionado pela coordenação</p>
             </div>
@@ -979,135 +989,187 @@ export const VisitorPortal: React.FC<VisitorPortalProps> = ({
           <div className="bg-white rounded-2xl border border-slate-200/90 p-5 sm:p-7 shadow-2xs space-y-6">
             
 
-            {/* REQUISITO 2: MODALIDADE DO PEDIDO (ITEM 1) */}
-            <div className={`transition-all duration-200 ${item1Confirmado ? 'p-3.5 bg-slate-50/50 rounded-2xl border border-slate-200/80' : ''}`}>
-              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 mb-2.5">
-                <div className="flex items-center gap-2 flex-wrap">
-                  <label className="block text-xs font-bold text-slate-900 tracking-tight">
-                    1. Modalidade do Pedido:
-                  </label>
+            {/* REQUISITO: MODALIDADE DO PEDIDO (ITEM 1) COM AGRUPAMENTO ACCORDION */}
+            {item1Confirmado && !item1Expandido ? (
+              /* ESTADO AGRUPADO / CONCLUÍDO (Sinal de + para abrir o conteúdo) */
+              <div className="p-4 bg-gradient-to-r from-slate-50 to-blue-50/40 rounded-2xl border border-slate-200/90 shadow-2xs transition-all duration-200">
+                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+                  <div className="flex items-center gap-3 min-w-0">
+                    <div className="w-10 h-10 rounded-xl bg-emerald-100 border border-emerald-200 flex items-center justify-center shrink-0 text-emerald-700 shadow-xs">
+                      <CheckCircle2 className="w-5 h-5 text-emerald-600 stroke-[2.5]" />
+                    </div>
+                    <div className="min-w-0">
+                      <div className="flex items-center gap-2 flex-wrap">
+                        <span className="text-xs font-bold text-slate-900 tracking-tight">
+                          1. Modalidade do Pedido
+                        </span>
+                        <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[11px] font-bold bg-emerald-50 text-emerald-700 border border-emerald-200 shadow-2xs">
+                          <Check className="w-3 h-3 text-emerald-600 stroke-[3]" />
+                          <span>Etapa Concluída</span>
+                        </span>
+                      </div>
+                      <div className="flex items-center gap-2 mt-1 flex-wrap">
+                        <span className="text-xs font-semibold text-slate-600">Modalidade:</span>
+                        {tipoServico === 'com_motorista' ? (
+                          <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-lg text-xs font-bold bg-[#05202B] text-amber-300 shadow-xs">
+                            <Car className="w-3.5 h-3.5 text-amber-300" />
+                            <span>Solicitação de veículo com motorista</span>
+                          </span>
+                        ) : (
+                          <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-lg text-xs font-bold bg-[#05202B] text-emerald-300 shadow-xs">
+                            <Key className="w-3.5 h-3.5 text-emerald-300" />
+                            <span>Solicitação de veículo sem motorista (Você será o condutor)</span>
+                          </span>
+                        )}
+                      </div>
+                    </div>
+                  </div>
+
+                  <button
+                    type="button"
+                    onClick={() => setItem1Expandido(true)}
+                    className="px-3.5 py-2 rounded-xl text-xs font-bold text-blue-700 hover:text-blue-900 bg-white hover:bg-blue-50 border border-blue-200 flex items-center justify-center gap-1.5 transition-all shadow-2xs hover:shadow-xs cursor-pointer shrink-0"
+                    title="Clique para abrir as opções da modalidade"
+                  >
+                    <Plus className="w-4 h-4 text-blue-600 stroke-[2.5]" />
+                    <span>Abrir Conteúdo (+)</span>
+                  </button>
+                </div>
+              </div>
+            ) : (
+              /* ESTADO EXPANDIDO (Sinal de - para reduzir caso já aprovado / escolha inicial) */
+              <div className={`transition-all duration-200 ${item1Confirmado ? 'p-4 bg-slate-50/70 rounded-2xl border border-slate-200/90' : ''}`}>
+                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 mb-3">
+                  <div className="flex items-center gap-2 flex-wrap">
+                    <label className="block text-xs font-bold text-slate-900 tracking-tight">
+                      1. Modalidade do Pedido (Escolha como será o deslocamento):
+                    </label>
+                    {item1Confirmado && (
+                      <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[11px] font-bold bg-emerald-50 text-emerald-700 border border-emerald-200 shadow-2xs animate-in fade-in">
+                        <CheckCircle2 className="w-3.5 h-3.5 text-emerald-600" />
+                        <span>Etapa Concluída</span>
+                      </span>
+                    )}
+                  </div>
+
                   {item1Confirmado && (
-                    <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[11px] font-bold bg-emerald-50 text-emerald-700 border border-emerald-200 shadow-2xs animate-in fade-in">
-                      <CheckCircle2 className="w-3.5 h-3.5 text-emerald-600" />
-                      <span>Modalidade Confirmada</span>
-                    </span>
-                  )}
-                </div>
-
-                <div className="flex items-center gap-2">
-                  {!item1Confirmado ? (
                     <button
                       type="button"
-                      onClick={handleConfirmarModalidade}
-                      className="px-4 py-2 rounded-xl text-xs font-bold bg-[#05202B] hover:bg-[#082E3C] text-white flex items-center gap-1.5 shadow-sm transition-all hover:scale-[1.01] cursor-pointer"
+                      onClick={() => setItem1Expandido(false)}
+                      className="px-3 py-1.5 rounded-xl text-xs font-semibold text-slate-600 hover:text-slate-900 bg-white hover:bg-slate-100 border border-slate-300 flex items-center gap-1.5 transition-colors cursor-pointer shadow-2xs"
+                      title="Reduzir / agrupar modalidade"
                     >
-                      <CheckCircle2 className="w-3.5 h-3.5 text-amber-300" />
-                      <span>Confirmar Modalidade</span>
-                    </button>
-                  ) : (
-                    <button
-                      type="button"
-                      onClick={() => setItem1Confirmado(false)}
-                      className="px-3 py-1 rounded-xl text-xs font-semibold text-slate-600 hover:text-slate-900 bg-white hover:bg-slate-100 border border-slate-300 flex items-center gap-1 transition-colors cursor-pointer shadow-2xs"
-                      title="Clique para alterar a modalidade selecionada"
-                    >
-                      <Pencil className="w-3 h-3 text-slate-400" />
-                      <span>Alterar Modalidade</span>
+                      <Minus className="w-3.5 h-3.5 text-slate-500 stroke-[2.5]" />
+                      <span>Reduzir (-)</span>
                     </button>
                   )}
                 </div>
-              </div>
 
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                {/* Opção A: Solicitação de veículo com motorista */}
-                <button
-                  type="button"
-                  onClick={() => setTipoServico('com_motorista')}
-                  className={`group relative flex items-center justify-between p-3.5 sm:p-4 rounded-xl border text-left transition-all duration-150 cursor-pointer ${
-                    tipoServico === 'com_motorista'
-                      ? 'bg-[#05202B] border-[#05202B] text-white shadow-md ring-2 ring-[#05202B]/20'
-                      : 'bg-white border-slate-200 text-slate-800 hover:border-slate-300 hover:bg-slate-50/80 shadow-2xs'
-                  }`}
-                >
-                  <div className="flex items-center gap-3.5 min-w-0">
-                    <div className={`w-12 h-12 rounded-2xl flex items-center justify-center shrink-0 transition-transform group-hover:scale-105 shadow-xs ${
-                      tipoServico === 'com_motorista'
-                        ? 'bg-linear-to-br from-amber-400/25 to-amber-500/10 text-amber-300 ring-1.5 ring-amber-400/40 shadow-amber-400/10'
-                        : 'bg-slate-100 text-slate-700 border border-slate-200/80 group-hover:bg-slate-200/60'
-                    }`}>
-                      <svg className="w-6 h-6 fill-current" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-                        <path d="M18.92 5.01C18.72 4.42 18.16 4 17.5 4h-11c-.66 0-1.21.42-1.42 1.01L3 11v8c0 .55.45 1 1 1h1c.55 0 1-.45 1-1v-1h12v1c0 .55.45 1 1 1h1c.55 0 1-.45 1-1v-8l-2.08-5.99zM6.85 6h10.29l1.04 3H5.81l1.04-3zM19 16H5v-4.66l.12-.34h13.77l.11.34V16z"/>
-                        <circle cx="7.5" cy="13.5" r="1.5"/>
-                        <circle cx="16.5" cy="13.5" r="1.5"/>
-                      </svg>
-                    </div>
-                    <div className="min-w-0">
-                      <span className={`text-sm font-bold truncate block ${
-                        tipoServico === 'com_motorista' ? 'text-white' : 'text-slate-900'
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
+                  {/* Opção A: Solicitação de veículo com motorista */}
+                  <button
+                    type="button"
+                    onClick={() => handleSelectModalidade('com_motorista')}
+                    className={`group relative flex items-center justify-between p-4 sm:p-4.5 rounded-2xl border text-left transition-all duration-200 cursor-pointer ${
+                      tipoServico === 'com_motorista' && item1Confirmado
+                        ? 'bg-[#05202B] border-[#05202B] text-white shadow-md ring-2 ring-[#05202B]/20'
+                        : 'bg-white border-slate-200 text-slate-800 hover:border-amber-400 hover:bg-amber-50/20 hover:shadow-xs'
+                    }`}
+                  >
+                    <div className="flex items-center gap-4 min-w-0">
+                      <div className={`w-14 h-14 rounded-2xl flex items-center justify-center shrink-0 transition-transform group-hover:scale-105 shadow-sm ${
+                        tipoServico === 'com_motorista' && item1Confirmado
+                          ? 'bg-gradient-to-br from-amber-400 via-amber-500 to-amber-600 text-slate-950 shadow-md shadow-amber-500/25 ring-2 ring-amber-300/40'
+                          : 'bg-gradient-to-br from-amber-50 via-amber-100/90 to-amber-200/60 text-amber-800 border-2 border-amber-300/90 group-hover:border-amber-400'
                       }`}>
-                        Solicitação de veículo com motorista
-                      </span>
+                        {/* Imagem/Ícone do veículo oficial com motorista - alta visibilidade */}
+                        <svg className="w-8 h-8 drop-shadow-xs" viewBox="0 0 32 32" fill="none" xmlns="http://www.w3.org/2000/svg">
+                          <path d="M28.5 17.5L25.8 9.8C25.3 8.7 24.3 8 23.1 8H8.9C7.7 8 6.7 8.7 6.2 9.8L3.5 17.5C2.6 17.9 2 18.9 2 20V23.5C2 24.3 2.7 25 3.5 25H5C5.8 25 6.5 24.3 6.5 23.5V22.5H25.5V23.5C25.5 24.3 26.2 25 27 25H28.5C29.3 25 30 24.3 30 23.5V20C30 18.9 29.4 17.9 28.5 17.5Z" fill="currentColor" fillOpacity="0.18" stroke="currentColor" strokeWidth="2" strokeLinejoin="round"/>
+                          <path d="M6.8 15.5L8.8 10.5H23.2L25.2 15.5H6.8Z" stroke="currentColor" strokeWidth="1.8" strokeLinejoin="round"/>
+                          <circle cx="6.5" cy="19" r="1.5" fill="currentColor"/>
+                          <circle cx="25.5" cy="19" r="1.5" fill="currentColor"/>
+                          <circle cx="11.5" cy="12.5" r="1.5" fill="currentColor"/>
+                          <path d="M9.5 15C9.5 13.9 10.4 13.5 11.5 13.5C12.6 13.5 13.5 13.9 13.5 15" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round"/>
+                        </svg>
+                      </div>
+                      <div className="min-w-0">
+                        <span className={`text-sm sm:text-base font-bold block ${
+                          tipoServico === 'com_motorista' && item1Confirmado ? 'text-white' : 'text-slate-900'
+                        }`}>
+                          Solicitação de veículo com motorista
+                        </span>
+                      </div>
                     </div>
-                  </div>
 
-                  <div className="shrink-0 pl-2">
-                    {tipoServico === 'com_motorista' ? (
-                      <span className="inline-flex items-center gap-1 text-[11px] font-bold text-amber-300 bg-white/10 px-2.5 py-1 rounded-full border border-amber-300/30 shadow-2xs">
-                        <Check className="w-3.5 h-3.5 stroke-[2.5]" />
-                        <span>Selecionado</span>
-                      </span>
-                    ) : (
-                      <div className="w-5 h-5 rounded-full border-2 border-slate-300 group-hover:border-slate-400 flex items-center justify-center" />
-                    )}
-                  </div>
-                </button>
-
-                {/* Opção B: Reserva de Veículo */}
-                <button
-                  type="button"
-                  onClick={() => setTipoServico('reserva_veiculo')}
-                  className={`group relative flex items-center justify-between p-3.5 sm:p-4 rounded-xl border text-left transition-all duration-150 cursor-pointer ${
-                    tipoServico === 'reserva_veiculo'
-                      ? 'bg-[#05202B] border-[#05202B] text-white shadow-md ring-2 ring-[#05202B]/20'
-                      : 'bg-white border-slate-200 text-slate-800 hover:border-slate-300 hover:bg-slate-50/80 shadow-2xs'
-                  }`}
-                >
-                  <div className="flex items-center gap-3.5 min-w-0">
-                    <div className={`w-12 h-12 rounded-2xl flex items-center justify-center shrink-0 transition-transform group-hover:scale-105 shadow-xs ${
-                      tipoServico === 'reserva_veiculo'
-                        ? 'bg-linear-to-br from-emerald-400/25 to-emerald-500/10 text-emerald-300 ring-1.5 ring-emerald-400/40 shadow-emerald-400/10'
-                        : 'bg-slate-100 text-slate-700 border border-slate-200/80 group-hover:bg-slate-200/60'
-                    }`}>
-                      <svg className="w-6 h-6" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                        <circle cx="7.5" cy="15.5" r="4.5" />
-                        <path d="m10.7 12.3 9.3-9.3" />
-                        <path d="m15.5 7.5 2.5 2.5" />
-                        <path d="m18 5 2 2" />
-                        <circle cx="7.5" cy="15.5" r="1.5" fill="currentColor" />
-                      </svg>
+                    <div className="shrink-0 pl-3">
+                      {tipoServico === 'com_motorista' && item1Confirmado ? (
+                        <span className="inline-flex items-center gap-1 text-[11px] font-bold text-amber-300 bg-white/10 px-2.5 py-1 rounded-full border border-amber-300/30 shadow-2xs">
+                          <Check className="w-3.5 h-3.5 stroke-[2.5]" />
+                          <span>Selecionado</span>
+                        </span>
+                      ) : (
+                        <div className="w-5 h-5 rounded-full border-2 border-slate-300 group-hover:border-amber-500 flex items-center justify-center transition-colors" />
+                      )}
                     </div>
-                    <div className="min-w-0">
-                      <span className={`text-sm font-bold truncate block ${
-                        tipoServico === 'reserva_veiculo' ? 'text-white' : 'text-slate-900'
+                  </button>
+
+                  {/* Opção B: Solicitação de veículo sem motorista (Você será o condutor) */}
+                  <button
+                    type="button"
+                    onClick={() => handleSelectModalidade('reserva_veiculo')}
+                    className={`group relative flex items-center justify-between p-4 sm:p-4.5 rounded-2xl border text-left transition-all duration-200 cursor-pointer ${
+                      tipoServico === 'reserva_veiculo' && item1Confirmado
+                        ? 'bg-[#05202B] border-[#05202B] text-white shadow-md ring-2 ring-[#05202B]/20'
+                        : 'bg-white border-slate-200 text-slate-800 hover:border-emerald-400 hover:bg-emerald-50/20 hover:shadow-xs'
+                    }`}
+                  >
+                    <div className="flex items-center gap-4 min-w-0">
+                      <div className={`w-14 h-14 rounded-2xl flex items-center justify-center shrink-0 transition-transform group-hover:scale-105 shadow-sm ${
+                        tipoServico === 'reserva_veiculo' && item1Confirmado
+                          ? 'bg-gradient-to-br from-emerald-400 via-teal-500 to-emerald-600 text-slate-950 shadow-md shadow-emerald-500/25 ring-2 ring-emerald-300/40'
+                          : 'bg-gradient-to-br from-emerald-50 via-emerald-100/90 to-teal-200/60 text-emerald-800 border-2 border-emerald-300/90 group-hover:border-emerald-400'
                       }`}>
-                        Reserva de Veículo
-                      </span>
+                        {/* Imagem/Ícone da chave automotiva + volante de alta visibilidade */}
+                        <svg className="w-8 h-8 drop-shadow-xs" viewBox="0 0 32 32" fill="none" xmlns="http://www.w3.org/2000/svg">
+                          <rect x="3" y="10" width="11" height="17" rx="3.5" fill="currentColor" fillOpacity="0.18" stroke="currentColor" strokeWidth="2"/>
+                          <circle cx="8.5" cy="14" r="1.3" fill="currentColor"/>
+                          <rect x="6.5" cy="18" width="4" height="2" rx="0.5" fill="currentColor"/>
+                          <rect x="6.5" cy="22" width="4" height="2" rx="0.5" fill="currentColor"/>
+                          <path d="M8.5 10V4.5C8.5 3.7 9.2 3 10 3H10.5C11.3 3 12 3.7 12 4.5V8" stroke="currentColor" strokeWidth="2" strokeLinecap="round"/>
+                          <path d="M12 5.5H10.5" stroke="currentColor" strokeWidth="1.8"/>
+                          <circle cx="22" cy="16" r="7" stroke="currentColor" strokeWidth="2"/>
+                          <circle cx="22" cy="16" r="2.2" fill="currentColor"/>
+                          <path d="M15.5 16H19.8M24.2 16H28.5M22 18.2V22.5" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round"/>
+                        </svg>
+                      </div>
+                      <div className="min-w-0">
+                        <span className={`text-sm sm:text-base font-bold block ${
+                          tipoServico === 'reserva_veiculo' && item1Confirmado ? 'text-white' : 'text-slate-900'
+                        }`}>
+                          Solicitação de veículo sem motorista
+                        </span>
+                        <span className={`text-xs block font-bold mt-0.5 ${
+                          tipoServico === 'reserva_veiculo' && item1Confirmado ? 'text-emerald-300' : 'text-slate-500'
+                        }`}>
+                          (Você será o condutor)
+                        </span>
+                      </div>
                     </div>
-                  </div>
 
-                  <div className="shrink-0 pl-2">
-                    {tipoServico === 'reserva_veiculo' ? (
-                      <span className="inline-flex items-center gap-1 text-[11px] font-bold text-emerald-300 bg-white/10 px-2.5 py-1 rounded-full border border-emerald-300/30 shadow-2xs">
-                        <Check className="w-3.5 h-3.5 stroke-[2.5]" />
-                        <span>Selecionado</span>
-                      </span>
-                    ) : (
-                      <div className="w-5 h-5 rounded-full border-2 border-slate-300 group-hover:border-slate-400 flex items-center justify-center" />
-                    )}
-                  </div>
-                </button>
+                    <div className="shrink-0 pl-3">
+                      {tipoServico === 'reserva_veiculo' && item1Confirmado ? (
+                        <span className="inline-flex items-center gap-1 text-[11px] font-bold text-emerald-300 bg-white/10 px-2.5 py-1 rounded-full border border-emerald-300/30 shadow-2xs">
+                          <Check className="w-3.5 h-3.5 stroke-[2.5]" />
+                          <span>Selecionado</span>
+                        </span>
+                      ) : (
+                        <div className="w-5 h-5 rounded-full border-2 border-slate-300 group-hover:border-emerald-500 flex items-center justify-center transition-colors" />
+                      )}
+                    </div>
+                  </button>
+                </div>
               </div>
-            </div>
+            )}
 
             {/* 2. DADOS CADASTRAIS DO SOLICITANTE (OCULTO ATÉ APROVAÇÃO DO ITEM 1) */}
             {item1Confirmado && (

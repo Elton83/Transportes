@@ -66,8 +66,8 @@ export const formatWhatsAppSolicitationNotification = (
   matricula?: string
 ): string => {
   const modalidade = tipoServico === 'com_motorista'
-    ? '🚗 Viagem com Motorista Oficial Credenciado'
-    : '🔑 Reserva de Veículo Oficial (Direção Própria)';
+    ? '🚗 Solicitação de veículo com motorista'
+    : '🔑 Solicitação de veículo sem motorista (Você será o condutor)';
   
   return `🏛️ *TRIBUNAL DE JUSTIÇA DO PARANÁ*
 *COORDENAÇÃO REGIONAL DE FROTAS | PROTOCOLO DE SOLICITAÇÃO*
