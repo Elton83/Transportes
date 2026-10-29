@@ -989,35 +989,32 @@ export const VisitorPortal: React.FC<VisitorPortalProps> = ({
           <div className="bg-white rounded-2xl border border-slate-200/90 p-5 sm:p-7 shadow-2xs space-y-6">
             
 
-            {/* REQUISITO: MODALIDADE DO PEDIDO (ITEM 1) COM AGRUPAMENTO ACCORDION */}
+            {/* REQUISITO: MODALIDADE DO PEDIDO COM AGRUPAMENTO ACCORDION */}
             {item1Confirmado && !item1Expandido ? (
               /* ESTADO AGRUPADO / CONCLUÍDO (Sinal de + para abrir o conteúdo) */
               <div className="p-4 bg-gradient-to-r from-slate-50 to-blue-50/40 rounded-2xl border border-slate-200/90 shadow-2xs transition-all duration-200">
                 <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
-                  <div className="flex items-center gap-3 min-w-0">
+                  <div className="flex items-center gap-3.5 min-w-0">
                     <div className="w-10 h-10 rounded-xl bg-emerald-100 border border-emerald-200 flex items-center justify-center shrink-0 text-emerald-700 shadow-xs">
                       <CheckCircle2 className="w-5 h-5 text-emerald-600 stroke-[2.5]" />
                     </div>
                     <div className="min-w-0">
                       <div className="flex items-center gap-2 flex-wrap">
-                        <span className="text-xs font-bold text-slate-900 tracking-tight">
-                          1. Modalidade do Pedido
-                        </span>
-                        <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[11px] font-bold bg-emerald-50 text-emerald-700 border border-emerald-200 shadow-2xs">
-                          <Check className="w-3 h-3 text-emerald-600 stroke-[3]" />
+                        <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-bold bg-emerald-50 text-emerald-700 border border-emerald-200 shadow-2xs">
+                          <Check className="w-3.5 h-3.5 text-emerald-600 stroke-[3]" />
                           <span>Etapa Concluída</span>
                         </span>
                       </div>
-                      <div className="flex items-center gap-2 mt-1 flex-wrap">
-                        <span className="text-xs font-semibold text-slate-600">Modalidade:</span>
+                      <div className="flex items-center gap-2.5 mt-1.5 flex-wrap">
+                        <span className="text-xs font-semibold text-slate-500">Modalidade:</span>
                         {tipoServico === 'com_motorista' ? (
-                          <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-lg text-xs font-bold bg-[#05202B] text-amber-300 shadow-xs">
-                            <Car className="w-3.5 h-3.5 text-amber-300" />
+                          <span className="inline-flex items-center gap-2 px-3 py-1 rounded-xl text-xs sm:text-sm font-bold bg-[#05202B] text-amber-300 shadow-xs">
+                            <span className="w-2 h-2 rounded-full bg-amber-400 animate-pulse" />
                             <span>Solicitação de veículo com motorista</span>
                           </span>
                         ) : (
-                          <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-lg text-xs font-bold bg-[#05202B] text-emerald-300 shadow-xs">
-                            <Key className="w-3.5 h-3.5 text-emerald-300" />
+                          <span className="inline-flex items-center gap-2 px-3 py-1 rounded-xl text-xs sm:text-sm font-bold bg-[#05202B] text-emerald-300 shadow-xs">
+                            <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
                             <span>Solicitação de veículo sem motorista (Você será o condutor)</span>
                           </span>
                         )}
@@ -1028,8 +1025,8 @@ export const VisitorPortal: React.FC<VisitorPortalProps> = ({
                   <button
                     type="button"
                     onClick={() => setItem1Expandido(true)}
-                    className="px-3.5 py-2 rounded-xl text-xs font-bold text-blue-700 hover:text-blue-900 bg-white hover:bg-blue-50 border border-blue-200 flex items-center justify-center gap-1.5 transition-all shadow-2xs hover:shadow-xs cursor-pointer shrink-0"
-                    title="Clique para abrir as opções da modalidade"
+                    className="px-4 py-2 rounded-xl text-xs font-bold text-blue-700 hover:text-blue-900 bg-white hover:bg-blue-50 border border-blue-200 flex items-center justify-center gap-1.5 transition-all shadow-2xs hover:shadow-xs cursor-pointer shrink-0"
+                    title="Clique para abrir as opções"
                   >
                     <Plus className="w-4 h-4 text-blue-600 stroke-[2.5]" />
                     <span>Abrir Conteúdo (+)</span>
@@ -1037,63 +1034,80 @@ export const VisitorPortal: React.FC<VisitorPortalProps> = ({
                 </div>
               </div>
             ) : (
-              /* ESTADO EXPANDIDO (Sinal de - para reduzir caso já aprovado / escolha inicial) */
+              /* ESTADO EXPANDIDO (Sem cabeçalho '1. modalidade...', com botão de reduzir se aprovado) */
               <div className={`transition-all duration-200 ${item1Confirmado ? 'p-4 bg-slate-50/70 rounded-2xl border border-slate-200/90' : ''}`}>
-                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 mb-3">
-                  <div className="flex items-center gap-2 flex-wrap">
-                    <label className="block text-xs font-bold text-slate-900 tracking-tight">
-                      1. Modalidade do Pedido (Escolha como será o deslocamento):
-                    </label>
-                    {item1Confirmado && (
-                      <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[11px] font-bold bg-emerald-50 text-emerald-700 border border-emerald-200 shadow-2xs animate-in fade-in">
-                        <CheckCircle2 className="w-3.5 h-3.5 text-emerald-600" />
-                        <span>Etapa Concluída</span>
-                      </span>
-                    )}
-                  </div>
+                {item1Confirmado && (
+                  <div className="flex items-center justify-between gap-2 mb-3">
+                    <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-bold bg-emerald-50 text-emerald-700 border border-emerald-200 shadow-2xs animate-in fade-in">
+                      <CheckCircle2 className="w-3.5 h-3.5 text-emerald-600" />
+                      <span>Etapa Concluída</span>
+                    </span>
 
-                  {item1Confirmado && (
                     <button
                       type="button"
                       onClick={() => setItem1Expandido(false)}
-                      className="px-3 py-1.5 rounded-xl text-xs font-semibold text-slate-600 hover:text-slate-900 bg-white hover:bg-slate-100 border border-slate-300 flex items-center gap-1.5 transition-colors cursor-pointer shadow-2xs"
+                      className="px-3.5 py-1.5 rounded-xl text-xs font-semibold text-slate-600 hover:text-slate-900 bg-white hover:bg-slate-100 border border-slate-300 flex items-center gap-1.5 transition-colors cursor-pointer shadow-2xs"
                       title="Reduzir / agrupar modalidade"
                     >
                       <Minus className="w-3.5 h-3.5 text-slate-500 stroke-[2.5]" />
                       <span>Reduzir (-)</span>
                     </button>
-                  )}
-                </div>
+                  </div>
+                )}
 
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
-                  {/* Opção A: Solicitação de veículo com motorista */}
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  {/* Opção A: Solicitação de veículo com motorista (Ícone colorido: motorista/chofer ao lado da porta do carro) */}
                   <button
                     type="button"
                     onClick={() => handleSelectModalidade('com_motorista')}
-                    className={`group relative flex items-center justify-between p-4 sm:p-4.5 rounded-2xl border text-left transition-all duration-200 cursor-pointer ${
+                    className={`group relative flex items-center justify-between p-4 sm:p-5 rounded-2xl border text-left transition-all duration-200 cursor-pointer ${
                       tipoServico === 'com_motorista' && item1Confirmado
-                        ? 'bg-[#05202B] border-[#05202B] text-white shadow-md ring-2 ring-[#05202B]/20'
-                        : 'bg-white border-slate-200 text-slate-800 hover:border-amber-400 hover:bg-amber-50/20 hover:shadow-xs'
+                        ? 'bg-[#05202B] border-[#05202B] text-white shadow-lg ring-2 ring-[#05202B]/20'
+                        : 'bg-white border-slate-200 text-slate-800 hover:border-blue-400 hover:bg-blue-50/20 hover:shadow-md'
                     }`}
                   >
-                    <div className="flex items-center gap-4 min-w-0">
-                      <div className={`w-14 h-14 rounded-2xl flex items-center justify-center shrink-0 transition-transform group-hover:scale-105 shadow-sm ${
+                    <div className="flex items-center gap-4 sm:gap-5 min-w-0">
+                      <div className={`w-18 h-18 sm:w-20 sm:h-20 rounded-2xl flex items-center justify-center shrink-0 p-2 transition-transform group-hover:scale-105 shadow-sm ${
                         tipoServico === 'com_motorista' && item1Confirmado
-                          ? 'bg-gradient-to-br from-amber-400 via-amber-500 to-amber-600 text-slate-950 shadow-md shadow-amber-500/25 ring-2 ring-amber-300/40'
-                          : 'bg-gradient-to-br from-amber-50 via-amber-100/90 to-amber-200/60 text-amber-800 border-2 border-amber-300/90 group-hover:border-amber-400'
+                          ? 'bg-gradient-to-br from-blue-900/60 via-slate-800 to-[#05202B] border border-blue-400/40 shadow-blue-500/20'
+                          : 'bg-gradient-to-br from-blue-50 via-sky-50 to-indigo-100/70 border-2 border-blue-200/80 group-hover:border-blue-300'
                       }`}>
-                        {/* Imagem/Ícone do veículo oficial com motorista - alta visibilidade */}
-                        <svg className="w-8 h-8 drop-shadow-xs" viewBox="0 0 32 32" fill="none" xmlns="http://www.w3.org/2000/svg">
-                          <path d="M28.5 17.5L25.8 9.8C25.3 8.7 24.3 8 23.1 8H8.9C7.7 8 6.7 8.7 6.2 9.8L3.5 17.5C2.6 17.9 2 18.9 2 20V23.5C2 24.3 2.7 25 3.5 25H5C5.8 25 6.5 24.3 6.5 23.5V22.5H25.5V23.5C25.5 24.3 26.2 25 27 25H28.5C29.3 25 30 24.3 30 23.5V20C30 18.9 29.4 17.9 28.5 17.5Z" fill="currentColor" fillOpacity="0.18" stroke="currentColor" strokeWidth="2" strokeLinejoin="round"/>
-                          <path d="M6.8 15.5L8.8 10.5H23.2L25.2 15.5H6.8Z" stroke="currentColor" strokeWidth="1.8" strokeLinejoin="round"/>
-                          <circle cx="6.5" cy="19" r="1.5" fill="currentColor"/>
-                          <circle cx="25.5" cy="19" r="1.5" fill="currentColor"/>
-                          <circle cx="11.5" cy="12.5" r="1.5" fill="currentColor"/>
-                          <path d="M9.5 15C9.5 13.9 10.4 13.5 11.5 13.5C12.6 13.5 13.5 13.9 13.5 15" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round"/>
+                        {/* Ícone colorido correspondente à 2ª imagem: Motorista/Chofer oficial ao lado da porta aberta do carro */}
+                        <svg className="w-13 h-13 sm:w-15 sm:h-15 drop-shadow-sm" viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg">
+                          {/* Carro Oficial à direita */}
+                          <path d="M52 28 C 58 28 66 31 73 39 L 88 56 C 90 59 91 62 91 66 L 91 76 C 91 78 89 80 87 80 L 84 80 C 84 73 78 67 71 67 C 64 67 58 73 58 80 L 51 80 C 49 80 48 78 48 76 L 48 32 C 48 30 50 28 52 28 Z" fill="#2563EB" />
+                          <path d="M54 33 C 58 33 64 35 70 42 L 81 54 C 82 55 82 56 80 56 L 54 56 C 52 56 51 55 51 53 L 51 35 C 51 34 52 33 54 33 Z" fill="#BAE6FD" />
+                          <path d="M55 35 L 55 53 L 77 53 L 68 43 C 63 37 59 35 55 35 Z" fill="#E0F2FE" fillOpacity="0.7"/>
+                          {/* Maçaneta da porta */}
+                          <rect x="52" y="60" width="10" height="3" rx="1.5" fill="#FFFFFF" />
+                          {/* Roda e Pneu */}
+                          <circle cx="71" cy="80" r="12" fill="#1E293B" />
+                          <circle cx="71" cy="80" r="7.5" fill="#CBD5E1" />
+                          <circle cx="71" cy="80" r="3.5" fill="#2563EB" />
+
+                          {/* Motorista/Chofer Fardado Oficial TJPR à esquerda */}
+                          <path d="M22 66 L 22 92 C 22 93 24 94 25 94 L 27 94 C 28 94 29 93 29 92 L 31 73 L 33 92 C 33 93 34 94 35 94 L 37 94 C 38 94 40 93 40 92 L 40 66 Z" fill="#1E293B" />
+                          <path d="M20 37 C 20 34 24 33 31 33 C 38 33 42 34 42 37 L 43 65 C 43 67 41 68 39 68 L 23 68 C 21 68 19 67 19 65 Z" fill="#0F172A" />
+                          {/* Colarinho Branco */}
+                          <polygon points="28,33 34,33 31,43" fill="#FFFFFF" />
+                          {/* Gravata Dourada/Âmbar */}
+                          <polygon points="30,38 32,38 33,48 31,52 29,48" fill="#F59E0B" />
+                          {/* Braço esquerdo para baixo */}
+                          <path d="M20 37 L 16 57 C 15 60 17 63 20 63 C 22 63 23 61 24 59 L 24 43 Z" fill="#0F172A" />
+                          <circle cx="18" cy="64" r="3" fill="#FCD34D" />
+                          {/* Braço direito segurando a maçaneta da porta */}
+                          <path d="M41 37 L 54 55 C 55 57 57 57 59 55 C 60 54 60 52 58 50 L 44 38 Z" fill="#0F172A" />
+                          <circle cx="58" cy="56" r="3.5" fill="#FCD34D" />
+                          {/* Cabeça do motorista */}
+                          <circle cx="31" cy="24" r="8" fill="#FCD34D" />
+                          {/* Quepe de Motorista Oficial */}
+                          <path d="M21 16 C 24 10 38 10 41 16 C 42 18 39 21 31 21 C 23 21 20 18 21 16 Z" fill="#1E3A8A" />
+                          <path d="M22 18 Q 31 21 40 18" stroke="#F59E0B" strokeWidth="2" strokeLinecap="round" />
+                          <path d="M21 19 Q 31 23 42 19 L 43 21 Q 31 25 20 21 Z" fill="#0F172A" />
                         </svg>
                       </div>
-                      <div className="min-w-0">
-                        <span className={`text-sm sm:text-base font-bold block ${
+                      <div className="min-w-0 py-1">
+                        <span className={`text-base sm:text-lg lg:text-xl font-extrabold block tracking-tight leading-snug ${
                           tipoServico === 'com_motorista' && item1Confirmado ? 'text-white' : 'text-slate-900'
                         }`}>
                           Solicitação de veículo com motorista
@@ -1103,53 +1117,72 @@ export const VisitorPortal: React.FC<VisitorPortalProps> = ({
 
                     <div className="shrink-0 pl-3">
                       {tipoServico === 'com_motorista' && item1Confirmado ? (
-                        <span className="inline-flex items-center gap-1 text-[11px] font-bold text-amber-300 bg-white/10 px-2.5 py-1 rounded-full border border-amber-300/30 shadow-2xs">
-                          <Check className="w-3.5 h-3.5 stroke-[2.5]" />
+                        <span className="inline-flex items-center gap-1.5 text-xs font-bold text-amber-300 bg-white/10 px-3 py-1.5 rounded-full border border-amber-300/30 shadow-2xs">
+                          <Check className="w-4 h-4 stroke-[2.5]" />
                           <span>Selecionado</span>
                         </span>
                       ) : (
-                        <div className="w-5 h-5 rounded-full border-2 border-slate-300 group-hover:border-amber-500 flex items-center justify-center transition-colors" />
+                        <div className="w-6 h-6 rounded-full border-2 border-slate-300 group-hover:border-blue-500 flex items-center justify-center transition-colors" />
                       )}
                     </div>
                   </button>
 
-                  {/* Opção B: Solicitação de veículo sem motorista (Você será o condutor) */}
+                  {/* Opção B: Solicitação de veículo sem motorista (Ícone colorido: motorista ao volante com cinto de segurança) */}
                   <button
                     type="button"
                     onClick={() => handleSelectModalidade('reserva_veiculo')}
-                    className={`group relative flex items-center justify-between p-4 sm:p-4.5 rounded-2xl border text-left transition-all duration-200 cursor-pointer ${
+                    className={`group relative flex items-center justify-between p-4 sm:p-5 rounded-2xl border text-left transition-all duration-200 cursor-pointer ${
                       tipoServico === 'reserva_veiculo' && item1Confirmado
-                        ? 'bg-[#05202B] border-[#05202B] text-white shadow-md ring-2 ring-[#05202B]/20'
-                        : 'bg-white border-slate-200 text-slate-800 hover:border-emerald-400 hover:bg-emerald-50/20 hover:shadow-xs'
+                        ? 'bg-[#05202B] border-[#05202B] text-white shadow-lg ring-2 ring-[#05202B]/20'
+                        : 'bg-white border-slate-200 text-slate-800 hover:border-emerald-400 hover:bg-emerald-50/20 hover:shadow-md'
                     }`}
                   >
-                    <div className="flex items-center gap-4 min-w-0">
-                      <div className={`w-14 h-14 rounded-2xl flex items-center justify-center shrink-0 transition-transform group-hover:scale-105 shadow-sm ${
+                    <div className="flex items-center gap-4 sm:gap-5 min-w-0">
+                      <div className={`w-18 h-18 sm:w-20 sm:h-20 rounded-2xl flex items-center justify-center shrink-0 p-2 transition-transform group-hover:scale-105 shadow-sm ${
                         tipoServico === 'reserva_veiculo' && item1Confirmado
-                          ? 'bg-gradient-to-br from-emerald-400 via-teal-500 to-emerald-600 text-slate-950 shadow-md shadow-emerald-500/25 ring-2 ring-emerald-300/40'
-                          : 'bg-gradient-to-br from-emerald-50 via-emerald-100/90 to-teal-200/60 text-emerald-800 border-2 border-emerald-300/90 group-hover:border-emerald-400'
+                          ? 'bg-gradient-to-br from-emerald-950/60 via-slate-800 to-[#05202B] border border-emerald-400/40 shadow-emerald-500/20'
+                          : 'bg-gradient-to-br from-emerald-50 via-teal-50 to-emerald-100/70 border-2 border-emerald-200/80 group-hover:border-emerald-300'
                       }`}>
-                        {/* Imagem/Ícone da chave automotiva + volante de alta visibilidade */}
-                        <svg className="w-8 h-8 drop-shadow-xs" viewBox="0 0 32 32" fill="none" xmlns="http://www.w3.org/2000/svg">
-                          <rect x="3" y="10" width="11" height="17" rx="3.5" fill="currentColor" fillOpacity="0.18" stroke="currentColor" strokeWidth="2"/>
-                          <circle cx="8.5" cy="14" r="1.3" fill="currentColor"/>
-                          <rect x="6.5" cy="18" width="4" height="2" rx="0.5" fill="currentColor"/>
-                          <rect x="6.5" cy="22" width="4" height="2" rx="0.5" fill="currentColor"/>
-                          <path d="M8.5 10V4.5C8.5 3.7 9.2 3 10 3H10.5C11.3 3 12 3.7 12 4.5V8" stroke="currentColor" strokeWidth="2" strokeLinecap="round"/>
-                          <path d="M12 5.5H10.5" stroke="currentColor" strokeWidth="1.8"/>
-                          <circle cx="22" cy="16" r="7" stroke="currentColor" strokeWidth="2"/>
-                          <circle cx="22" cy="16" r="2.2" fill="currentColor"/>
-                          <path d="M15.5 16H19.8M24.2 16H28.5M22 18.2V22.5" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round"/>
+                        {/* Ícone colorido correspondente à 3ª imagem: Condutor segurando volante com cinto de segurança */}
+                        <svg className="w-13 h-13 sm:w-15 sm:h-15 drop-shadow-sm" viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg">
+                          {/* Cabeça do Condutor */}
+                          <circle cx="50" cy="25" r="16" fill="#FCD34D" />
+                          <path d="M34 25 C 34 16 42 10 50 10 C 58 10 66 16 66 25 C 66 21 58 13 50 13 C 42 13 34 21 34 25 Z" fill="#1E293B" />
+                          
+                          {/* Tronco do Condutor (em verde institucional / esmeralda) */}
+                          <path d="M19 68 C 19 54 28 46 39 46 L 61 46 C 72 46 81 54 81 68 L 81 74 L 19 74 Z" fill="#059669" />
+                          
+                          {/* Cinto de Segurança Diagonal (amarelo/âmbar de alta segurança) */}
+                          <path d="M64 46 L 76 56 L 39 74 L 27 65 Z" fill="#F59E0B" stroke="#D97706" strokeWidth="1.5" />
+                          <path d="M63 47 L 74 56" stroke="#FEF3C7" strokeWidth="1" strokeLinecap="round" />
+
+                          {/* Coluna da Direção */}
+                          <path d="M43 88 L 47 70 L 53 70 L 57 88 Z" fill="#334155" />
+                          
+                          {/* Aro do Volante com acabamento em couro escuro */}
+                          <path d="M20 74 C 20 54 33 42 50 42 C 67 42 80 54 80 74" stroke="#0F172A" strokeWidth="9" strokeLinecap="round" />
+                          <path d="M21 73 C 21 55 34 44 50 44 C 66 44 79 55 79 73" stroke="#475569" strokeWidth="3" strokeLinecap="round" />
+
+                          {/* Centro e Raios do Volante */}
+                          <circle cx="50" cy="72" r="8" fill="#1E293B" stroke="#64748B" strokeWidth="2" />
+                          <circle cx="50" cy="72" r="4" fill="#10B981" />
+                          <path d="M25 72 L 42 72 M 58 72 L 75 72" stroke="#64748B" strokeWidth="4" strokeLinecap="round" />
+
+                          {/* Mãos do Condutor Empunhando o Volante (posições 10 e 2) */}
+                          <circle cx="23" cy="71" r="6" fill="#FCD34D" stroke="#D97706" strokeWidth="1" />
+                          <ellipse cx="23" cy="69" rx="5" ry="3" fill="#FDE68A" />
+                          <circle cx="77" cy="71" r="6" fill="#FCD34D" stroke="#D97706" strokeWidth="1" />
+                          <ellipse cx="77" cy="69" rx="5" ry="3" fill="#FDE68A" />
                         </svg>
                       </div>
-                      <div className="min-w-0">
-                        <span className={`text-sm sm:text-base font-bold block ${
+                      <div className="min-w-0 py-1">
+                        <span className={`text-base sm:text-lg lg:text-xl font-extrabold block tracking-tight leading-snug ${
                           tipoServico === 'reserva_veiculo' && item1Confirmado ? 'text-white' : 'text-slate-900'
                         }`}>
                           Solicitação de veículo sem motorista
                         </span>
-                        <span className={`text-xs block font-bold mt-0.5 ${
-                          tipoServico === 'reserva_veiculo' && item1Confirmado ? 'text-emerald-300' : 'text-slate-500'
+                        <span className={`text-sm sm:text-base font-bold block mt-1.5 ${
+                          tipoServico === 'reserva_veiculo' && item1Confirmado ? 'text-emerald-300' : 'text-emerald-700'
                         }`}>
                           (Você será o condutor)
                         </span>
@@ -1158,12 +1191,12 @@ export const VisitorPortal: React.FC<VisitorPortalProps> = ({
 
                     <div className="shrink-0 pl-3">
                       {tipoServico === 'reserva_veiculo' && item1Confirmado ? (
-                        <span className="inline-flex items-center gap-1 text-[11px] font-bold text-emerald-300 bg-white/10 px-2.5 py-1 rounded-full border border-emerald-300/30 shadow-2xs">
-                          <Check className="w-3.5 h-3.5 stroke-[2.5]" />
+                        <span className="inline-flex items-center gap-1.5 text-xs font-bold text-emerald-300 bg-white/10 px-3 py-1.5 rounded-full border border-emerald-300/30 shadow-2xs">
+                          <Check className="w-4 h-4 stroke-[2.5]" />
                           <span>Selecionado</span>
                         </span>
                       ) : (
-                        <div className="w-5 h-5 rounded-full border-2 border-slate-300 group-hover:border-emerald-500 flex items-center justify-center transition-colors" />
+                        <div className="w-6 h-6 rounded-full border-2 border-slate-300 group-hover:border-emerald-500 flex items-center justify-center transition-colors" />
                       )}
                     </div>
                   </button>
