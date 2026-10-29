@@ -715,7 +715,7 @@ export const VisitorPortal: React.FC<VisitorPortalProps> = ({
         destino: t.destino,
         dataSaida: t.dataSaida,
         horaSaida: t.horaSaida,
-        tipoServico: t.finalidade?.includes('Reserva') ? 'Reserva de Veículo (Direção Própria)' : 'Viagem com Motorista Oficial',
+        tipoServico: t.finalidade?.includes('Reserva') ? 'Reserva de Veículo (Direção Própria)' : 'Solicitação de Veículo com Motorista',
         veiculoPrefixo: t.veiculoPrefixo,
         veiculoModelo: t.veiculoModelo,
         motoristaNome: t.motoristaNome,
@@ -877,7 +877,7 @@ export const VisitorPortal: React.FC<VisitorPortalProps> = ({
               <span className="text-slate-400 text-[11px] block">Modalidade Escolhida:</span>
               <strong className="text-slate-900">
                 {submissionResult.solicitacao.tipoServico === 'com_motorista'
-                  ? '🚗 Viagem c/ Motorista Oficial'
+                  ? '🚗 Solicitação de Veículo com Motorista'
                   : '🔑 Reserva de Veículo (Direção Própria)'}
               </strong>
               <p className="text-[11px] text-emerald-700 font-medium">Veículo dimensionado pela coordenação</p>
@@ -984,7 +984,7 @@ export const VisitorPortal: React.FC<VisitorPortalProps> = ({
               <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 mb-2.5">
                 <div className="flex items-center gap-2 flex-wrap">
                   <label className="block text-xs font-bold text-slate-900 tracking-tight">
-                    1. Modalidade do Pedido (Escolha como será o deslocamento):
+                    1. Modalidade do Pedido:
                   </label>
                   {item1Confirmado && (
                     <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[11px] font-bold bg-emerald-50 text-emerald-700 border border-emerald-200 shadow-2xs animate-in fade-in">
@@ -1019,7 +1019,7 @@ export const VisitorPortal: React.FC<VisitorPortalProps> = ({
               </div>
 
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                {/* Opção A: Viagem c/ Motorista Oficial */}
+                {/* Opção A: Solicitação de veículo com motorista */}
                 <button
                   type="button"
                   onClick={() => setTipoServico('com_motorista')}
@@ -1030,26 +1030,23 @@ export const VisitorPortal: React.FC<VisitorPortalProps> = ({
                   }`}
                 >
                   <div className="flex items-center gap-3.5 min-w-0">
-                    <div className={`w-10 h-10 rounded-xl flex items-center justify-center shrink-0 transition-transform group-hover:scale-105 ${
+                    <div className={`w-12 h-12 rounded-2xl flex items-center justify-center shrink-0 transition-transform group-hover:scale-105 shadow-xs ${
                       tipoServico === 'com_motorista'
-                        ? 'bg-amber-400/20 text-amber-300 ring-1 ring-amber-400/40'
-                        : 'bg-slate-100 text-slate-600'
+                        ? 'bg-linear-to-br from-amber-400/25 to-amber-500/10 text-amber-300 ring-1.5 ring-amber-400/40 shadow-amber-400/10'
+                        : 'bg-slate-100 text-slate-700 border border-slate-200/80 group-hover:bg-slate-200/60'
                     }`}>
-                      <Car className="w-5 h-5" />
+                      <svg className="w-6 h-6 fill-current" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                        <path d="M18.92 5.01C18.72 4.42 18.16 4 17.5 4h-11c-.66 0-1.21.42-1.42 1.01L3 11v8c0 .55.45 1 1 1h1c.55 0 1-.45 1-1v-1h12v1c0 .55.45 1 1 1h1c.55 0 1-.45 1-1v-8l-2.08-5.99zM6.85 6h10.29l1.04 3H5.81l1.04-3zM19 16H5v-4.66l.12-.34h13.77l.11.34V16z"/>
+                        <circle cx="7.5" cy="13.5" r="1.5"/>
+                        <circle cx="16.5" cy="13.5" r="1.5"/>
+                      </svg>
                     </div>
                     <div className="min-w-0">
-                      <div className="flex items-center gap-2">
-                        <span className={`text-sm font-bold truncate ${
-                          tipoServico === 'com_motorista' ? 'text-white' : 'text-slate-900'
-                        }`}>
-                          Com Motorista Oficial
-                        </span>
-                      </div>
-                      <p className={`text-[11px] mt-0.5 truncate ${
-                        tipoServico === 'com_motorista' ? 'text-slate-300' : 'text-slate-500'
+                      <span className={`text-sm font-bold truncate block ${
+                        tipoServico === 'com_motorista' ? 'text-white' : 'text-slate-900'
                       }`}>
-                        Condutor credenciado designado pelo TJPR
-                      </p>
+                        Solicitação de veículo com motorista
+                      </span>
                     </div>
                   </div>
 
@@ -1065,7 +1062,7 @@ export const VisitorPortal: React.FC<VisitorPortalProps> = ({
                   </div>
                 </button>
 
-                {/* Opção B: Reserva de Veículo (O próprio servidor conduz) */}
+                {/* Opção B: Reserva de Veículo */}
                 <button
                   type="button"
                   onClick={() => setTipoServico('reserva_veiculo')}
@@ -1076,26 +1073,25 @@ export const VisitorPortal: React.FC<VisitorPortalProps> = ({
                   }`}
                 >
                   <div className="flex items-center gap-3.5 min-w-0">
-                    <div className={`w-10 h-10 rounded-xl flex items-center justify-center shrink-0 transition-transform group-hover:scale-105 ${
+                    <div className={`w-12 h-12 rounded-2xl flex items-center justify-center shrink-0 transition-transform group-hover:scale-105 shadow-xs ${
                       tipoServico === 'reserva_veiculo'
-                        ? 'bg-emerald-400/20 text-emerald-300 ring-1 ring-emerald-400/40'
-                        : 'bg-slate-100 text-slate-600'
+                        ? 'bg-linear-to-br from-emerald-400/25 to-emerald-500/10 text-emerald-300 ring-1.5 ring-emerald-400/40 shadow-emerald-400/10'
+                        : 'bg-slate-100 text-slate-700 border border-slate-200/80 group-hover:bg-slate-200/60'
                     }`}>
-                      <Key className="w-5 h-5" />
+                      <svg className="w-6 h-6" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                        <circle cx="7.5" cy="15.5" r="4.5" />
+                        <path d="m10.7 12.3 9.3-9.3" />
+                        <path d="m15.5 7.5 2.5 2.5" />
+                        <path d="m18 5 2 2" />
+                        <circle cx="7.5" cy="15.5" r="1.5" fill="currentColor" />
+                      </svg>
                     </div>
                     <div className="min-w-0">
-                      <div className="flex items-center gap-2">
-                        <span className={`text-sm font-bold truncate ${
-                          tipoServico === 'reserva_veiculo' ? 'text-white' : 'text-slate-900'
-                        }`}>
-                          Reserva de Veículo
-                        </span>
-                      </div>
-                      <p className={`text-[11px] mt-0.5 truncate ${
-                        tipoServico === 'reserva_veiculo' ? 'text-slate-300' : 'text-slate-500'
+                      <span className={`text-sm font-bold truncate block ${
+                        tipoServico === 'reserva_veiculo' ? 'text-white' : 'text-slate-900'
                       }`}>
-                        O próprio servidor conduz o veículo oficial
-                      </p>
+                        Reserva de Veículo
+                      </span>
                     </div>
                   </div>
 

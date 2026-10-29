@@ -1569,40 +1569,19 @@ export default function App() {
                   <div className="bg-white px-4 py-3 rounded-xl border border-slate-200/90 shadow-2xs flex flex-col md:flex-row md:items-center justify-between gap-3">
                     <div className="flex flex-wrap items-center gap-2">
                       <span className="text-xs font-bold text-slate-800 uppercase tracking-wide flex items-center gap-1.5 mr-1">
-                        <FileSpreadsheet className="w-4 h-4 text-[#05202B]" />
-                        Rodízio:
+                        <LayoutDashboard className="w-4 h-4 text-[#05202B]" />
+                        Painel Executivo da Frota
                       </span>
-                      {/* Controles Administrativos para Perfis de Gestão */}
-                      <div className="flex items-center bg-slate-100 p-1 rounded-lg gap-1">
-                        <button
-                          type="button"
-                          id="diario-tab-dashboard"
-                          onClick={() => setDiarioViewMode('dashboard')}
-                          className={`flex items-center gap-1.5 px-3 py-1.5 rounded-md text-xs font-semibold transition-all cursor-pointer ${
-                            diarioViewMode === 'dashboard'
-                              ? 'bg-[#05202B] text-white shadow-xs'
-                              : 'text-slate-600 hover:text-slate-900 hover:bg-slate-200/60'
-                          }`}
-                          title="Painel Executivo da Frota com disponibilidade, indicadores e escala"
-                        >
-                          <LayoutDashboard className="w-3.5 h-3.5" />
-                          <span>Painel da Frota</span>
-                        </button>
-                        <button
-                          type="button"
-                          id="diario-tab-planilha"
-                          onClick={() => setDiarioViewMode('planilha')}
-                          className={`flex items-center gap-1.5 px-3 py-1.5 rounded-md text-xs font-semibold transition-all cursor-pointer ${
-                            diarioViewMode === 'planilha'
-                              ? 'bg-[#05202B] text-white shadow-xs'
-                              : 'text-slate-600 hover:text-slate-900 hover:bg-slate-200/60'
-                          }`}
-                          title="Planilha oficial do Diário de Bordo com odômetro, histórico e assinaturas"
-                        >
-                          <FileSpreadsheet className="w-3.5 h-3.5" />
-                          <span>Planilha Oficial</span>
-                        </button>
-                      </div>
+                      <button
+                        type="button"
+                        id="diario-tab-relatorios"
+                        onClick={() => setActiveNavTab('relatorios')}
+                        className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-bold text-[#002B49] bg-emerald-50 hover:bg-emerald-100 border border-emerald-200 transition-all cursor-pointer shadow-2xs"
+                        title="Acessar a Planilha Oficial no menu Relatórios"
+                      >
+                        <FileSpreadsheet className="w-3.5 h-3.5 text-emerald-700" />
+                        <span>Planilha Oficial em Relatórios ➔</span>
+                      </button>
                     </div>
 
                     <div className="flex items-center gap-3 text-xs text-slate-500 font-mono">
@@ -1634,7 +1613,7 @@ export default function App() {
                 ) : (
                   <>
                     {/* VISÃO DO PAINEL DA FROTA */}
-                    {diarioViewMode === 'dashboard' && currentRole !== 'supervisor_operacional' && currentRole !== 'coordenador' && (
+                    {currentRole !== 'supervisor_operacional' && currentRole !== 'coordenador' && (
                       <ExecutiveFleetDashboard
                         vehicles={vehicles}
                         drivers={drivers}
@@ -1653,26 +1632,9 @@ export default function App() {
                         onNavigateToChamados={() => setActiveNavTab('chamados')}
                         onOpenNewChamadoModal={() => setNewChamadoModalOpen(true)}
                         onScheduleNewTrip={() => {
-                          setDiarioViewMode('planilha');
+                          setActiveNavTab('relatorios');
                         }}
                         onRegisterNewVehicle={() => setNewVehicleModalOpen(true)}
-                        hideHeader={false}
-                      />
-                    )}
-
-                    {/* VISÃO DA PLANILHA OFICIAL DO DIÁRIO DE BORDO */}
-                    {diarioViewMode === 'planilha' && currentRole !== 'supervisor_operacional' && currentRole !== 'coordenador' && (
-                      <DiarioDeBordoView
-                        trips={trips}
-                        vehicles={vehicles}
-                        drivers={drivers}
-                        currentRole={currentRole}
-                        restrictedDriver={isDriverRole(currentRole) ? currentDriver : undefined}
-                        onOpenTripLog={(trip) => setTripLogTrip(trip)}
-                        onOpenOfficialOrder={(trip) => setOfficialOrderTrip(trip)}
-                        onOpenTripSignature={(trip) => setSignatureModalTrip(trip)}
-                        onAddTrip={handleAddTrip}
-                        selectedComarca={selectedComarca}
                         hideHeader={false}
                       />
                     )}
@@ -1859,7 +1821,7 @@ export default function App() {
               />
             )}
 
-            {/* ABA 6: Menu Relatórios (Relatório Oficial, Prestação de Contas e Auditoria) */}
+            {/* ABA 6: Menu Relatórios (Planilha Oficial, Prestação de Contas e Auditoria) */}
             {activeNavTab === 'relatorios' && (
               <RelatoriosView
                 vehicles={vehicles}
@@ -1871,6 +1833,12 @@ export default function App() {
                 meuBeneficioTransactions={meuBeneficioTransactions}
                 selectedComarca={selectedComarca}
                 chamados={chamados}
+                currentRole={currentRole}
+                driverSchedules={driverSchedules}
+                onOpenTripLog={(trip) => setTripLogTrip(trip)}
+                onOpenOfficialOrder={(trip) => setOfficialOrderTrip(trip)}
+                onOpenTripSignature={(trip) => setSignatureModalTrip(trip)}
+                onAddTrip={handleAddTrip}
               />
             )}
 
