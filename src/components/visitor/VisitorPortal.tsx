@@ -145,9 +145,12 @@ export const VisitorPortal: React.FC<VisitorPortalProps> = ({
   // REQUISITO: Habilitação progressiva sequencial (Item 1 -> Item 2 -> Item 3 -> Item 4 -> Enviar)
   const [item1Confirmado, setItem1Confirmado] = useState(false);
   const [item1Expandido, setItem1Expandido] = useState(true);
+  const [item2Expandido, setItem2Expandido] = useState(true);
   const [item3Confirmado, setItem3Confirmado] = useState(false);
+  const [item3Expandido, setItem3Expandido] = useState(true);
   const [item3Erro, setItem3Erro] = useState<string | null>(null);
   const [item4Confirmado, setItem4Confirmado] = useState(false);
+  const [item4Expandido, setItem4Expandido] = useState(true);
 
   // Derivações de habilitação progressiva
   const item2Habilitado = item1Confirmado;
@@ -277,6 +280,7 @@ export const VisitorPortal: React.FC<VisitorPortalProps> = ({
     }
     setModoEdicaoCadastral(false);
     setDadosCadastraisConfirmados(true);
+    setItem2Expandido(false);
     setCadastralFeedback({
       tipo: 'sucesso',
       texto: 'Dados cadastrais atualizados e confirmados com sucesso!'
@@ -301,10 +305,11 @@ export const VisitorPortal: React.FC<VisitorPortalProps> = ({
   // Confirmar dados cadastrais diretamente (Item 2)
   const handleConfirmarDadosCadastrais = () => {
     setDadosCadastraisConfirmados(true);
+    setItem2Expandido(false);
     setModoEdicaoCadastral(false);
     setCadastralFeedback({
       tipo: 'sucesso',
-      texto: 'Dados cadastrais conferidos e confirmados! Item 3 (Itinerário) habilitado abaixo.'
+      texto: 'Dados do solicitante confirmados! Item 3 (Datas & Itinerário) habilitado abaixo.'
     });
   };
 
@@ -332,11 +337,13 @@ export const VisitorPortal: React.FC<VisitorPortalProps> = ({
     }
     setItem3Erro(null);
     setItem3Confirmado(true);
+    setItem3Expandido(false);
   };
 
   // Handler do Item 4: Passageiros
   const handleConfirmarPassageiros = () => {
     setItem4Confirmado(true);
+    setItem4Expandido(false);
   };
 
   // Restaurar dados originais do Hércules
@@ -638,9 +645,12 @@ export const VisitorPortal: React.FC<VisitorPortalProps> = ({
     setItem1Confirmado(false);
     setItem1Expandido(true);
     setDadosCadastraisConfirmados(false);
+    setItem2Expandido(true);
     setModoEdicaoCadastral(false);
     setItem3Confirmado(false);
+    setItem3Expandido(true);
     setItem4Confirmado(false);
+    setItem4Expandido(true);
     setItem3Erro(null);
   };
 
@@ -1204,560 +1214,734 @@ export const VisitorPortal: React.FC<VisitorPortalProps> = ({
               </div>
             )}
 
-            {/* 2. DADOS CADASTRAIS DO SOLICITANTE (OCULTO ATÉ APROVAÇÃO DO ITEM 1) */}
+            {/* ETAPA: DADOS DO SOLICITANTE (COM AGRUPAMENTO ACCORDION) */}
             {item1Confirmado && (
-              <div className="pt-4 border-t border-slate-100 animate-in fade-in slide-in-from-top-3 duration-300">
-                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-3">
-                  <div>
+              dadosCadastraisConfirmados && !item2Expandido ? (
+                /* ESTADO AGRUPADO / CONCLUÍDO (Sinal de + para abrir o conteúdo) */
+                <div className="p-4 bg-gradient-to-r from-slate-50 to-blue-50/40 rounded-2xl border border-slate-200/90 shadow-2xs transition-all duration-200">
+                  <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+                    <div className="flex items-center gap-3.5 min-w-0">
+                      <div className="w-10 h-10 rounded-xl bg-emerald-100 border border-emerald-200 flex items-center justify-center shrink-0 text-emerald-700 shadow-xs">
+                        <CheckCircle2 className="w-5 h-5 text-emerald-600 stroke-[2.5]" />
+                      </div>
+                      <div className="min-w-0">
+                        <div className="flex items-center gap-2 flex-wrap">
+                          <span className="text-xs sm:text-sm font-bold text-slate-900 tracking-tight">
+                            Dados do Solicitante
+                          </span>
+                          <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-bold bg-emerald-50 text-emerald-700 border border-emerald-200 shadow-2xs">
+                            <Check className="w-3.5 h-3.5 text-emerald-600 stroke-[3]" />
+                            <span>Etapa Concluída</span>
+                          </span>
+                        </div>
+                        <div className="flex items-center gap-2 mt-1.5 flex-wrap text-xs text-slate-700">
+                          <span className="font-bold text-slate-900">{solicitanteNome}</span>
+                          <span className="text-slate-400">•</span>
+                          <span className="font-mono text-slate-800">Matr. {matriculaInput || 'TJPR'}</span>
+                          <span className="text-slate-400">•</span>
+                          <span className="text-slate-600">{cargoServidor}</span>
+                          <span className="text-slate-400">•</span>
+                          <span className="text-slate-600">{comarca}</span>
+                          <span className="text-slate-400">•</span>
+                          <span className="text-emerald-700 font-medium">WhatsApp: {telefone}</span>
+                        </div>
+                      </div>
+                    </div>
+
+                    <button
+                      type="button"
+                      onClick={() => setItem2Expandido(true)}
+                      className="px-4 py-2 rounded-xl text-xs font-bold text-blue-700 hover:text-blue-900 bg-white hover:bg-blue-50 border border-blue-200 flex items-center justify-center gap-1.5 transition-all shadow-2xs hover:shadow-xs cursor-pointer shrink-0"
+                      title="Clique para abrir os dados do solicitante"
+                    >
+                      <Plus className="w-4 h-4 text-blue-600 stroke-[2.5]" />
+                      <span>Abrir Conteúdo (+)</span>
+                    </button>
+                  </div>
+                </div>
+              ) : (
+                /* ESTADO EXPANDIDO (Botão de Reduzir (-) se já confirmado, e botões de ação ABAIXO DOS CAMPOS) */
+                <div className={`transition-all duration-200 p-4 sm:p-5 rounded-2xl border space-y-4 ${
+                  dadosCadastraisConfirmados ? 'bg-slate-50/70 border-slate-200/90' : 'bg-white border-slate-200/90 shadow-2xs'
+                }`}>
+                  <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
                     <div className="flex items-center gap-2 flex-wrap">
-                      <label className="text-xs font-bold text-slate-900 tracking-tight">
-                        2. Dados Cadastrais do Solicitante (Sessão Funcional TJPR):
+                      <label className="text-xs sm:text-sm font-bold text-slate-900 tracking-tight">
+                        Dados do Solicitante
                       </label>
                       {dadosCadastraisConfirmados && (
-                        <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[11px] font-bold bg-emerald-50 text-emerald-700 border border-emerald-200 shadow-2xs animate-in fade-in">
+                        <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-bold bg-emerald-50 text-emerald-700 border border-emerald-200 shadow-2xs animate-in fade-in">
                           <CheckCircle2 className="w-3.5 h-3.5 text-emerald-600" />
-                          <span>Dados Confirmados</span>
+                          <span>Etapa Concluída</span>
                         </span>
                       )}
                     </div>
-                    <p className="text-[11px] text-slate-500 mt-0.5">
-                      {dadosCadastraisConfirmados
-                        ? 'Dados cadastrais conferidos e validados pelo solicitante para este pedido.'
-                        : 'Verifique se seus dados funcionais do sistema Hércules TJPR estão corretos antes de prosseguir.'}
-                    </p>
+
+                    {dadosCadastraisConfirmados && (
+                      <button
+                        type="button"
+                        onClick={() => setItem2Expandido(false)}
+                        className="px-3.5 py-1.5 rounded-xl text-xs font-semibold text-slate-600 hover:text-slate-900 bg-white hover:bg-slate-100 border border-slate-300 flex items-center gap-1.5 transition-colors cursor-pointer shadow-2xs self-start sm:self-auto"
+                        title="Reduzir dados do solicitante"
+                      >
+                        <Minus className="w-3.5 h-3.5 text-slate-500 stroke-[2.5]" />
+                        <span>Reduzir (-)</span>
+                      </button>
+                    )}
                   </div>
 
-                  {/* Botões de Ação: Confirmar e Editar / Corrigir Divergência */}
-                  <div className="flex items-center gap-2 self-start sm:self-auto shrink-0 flex-wrap">
-                    {!modoEdicaoCadastral ? (
-                      <>
-                        <button
-                          type="button"
-                          onClick={handleConfirmarDadosCadastrais}
-                          className={`px-3.5 py-2 rounded-xl text-xs font-bold flex items-center gap-2 transition-all shadow-2xs cursor-pointer ${
-                            dadosCadastraisConfirmados
-                              ? 'bg-emerald-600 hover:bg-emerald-700 text-white'
-                              : 'bg-[#05202B] hover:bg-[#082E3C] text-white hover:scale-[1.01]'
+                  <p className="text-[11px] text-slate-500">
+                    {dadosCadastraisConfirmados
+                      ? 'Dados cadastrais conferidos e validados pelo solicitante para este pedido.'
+                      : 'Verifique se seus dados funcionais do sistema Hércules TJPR estão corretos antes de prosseguir.'}
+                  </p>
+
+                  {/* Banner Informativo quando modo edição está ativo */}
+                  {modoEdicaoCadastral && (
+                    <div className="p-3 rounded-xl bg-blue-50 border border-blue-200 flex flex-col sm:flex-row sm:items-center justify-between gap-2 animate-in fade-in">
+                      <div className="flex items-center gap-2 text-xs text-blue-900 font-medium">
+                        <span className="w-2 h-2 rounded-full bg-blue-600 animate-pulse shrink-0" />
+                        <span>
+                          <strong>Modo de Edição Habilitado:</strong> Modifique os campos com divergência abaixo e clique em <strong>"Atualizar & Confirmar Dados"</strong> abaixo do campo.
+                        </span>
+                      </div>
+                      <button
+                        type="button"
+                        onClick={handleRestaurarHercules}
+                        className="text-[11px] font-semibold text-blue-700 hover:text-blue-900 underline self-start sm:self-auto cursor-pointer"
+                      >
+                        Restaurar Padrão Hércules TJPR
+                      </button>
+                    </div>
+                  )}
+
+                  {/* Feedback inline */}
+                  {cadastralFeedback && !modoEdicaoCadastral && (
+                    <div className={`p-2.5 rounded-xl border flex items-center justify-between gap-2 text-xs animate-in fade-in ${
+                      cadastralFeedback.tipo === 'sucesso'
+                        ? 'bg-emerald-50/90 border-emerald-200 text-emerald-800'
+                        : 'bg-blue-50/90 border-blue-200 text-blue-800'
+                    }`}>
+                      <div className="flex items-center gap-2">
+                        {cadastralFeedback.tipo === 'sucesso' ? (
+                          <CheckCircle2 className="w-4 h-4 text-emerald-600 shrink-0" />
+                        ) : (
+                          <AlertCircle className="w-4 h-4 text-blue-600 shrink-0" />
+                        )}
+                        <span className="font-medium">{cadastralFeedback.texto}</span>
+                      </div>
+                      <button
+                        type="button"
+                        onClick={() => setCadastralFeedback(null)}
+                        className="text-slate-400 hover:text-slate-600 cursor-pointer p-0.5"
+                      >
+                        <X className="w-3.5 h-3.5" />
+                      </button>
+                    </div>
+                  )}
+
+                  {/* Grade de Campos Cadastrais */}
+                  <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3.5">
+                    {/* Nome Completo */}
+                    <div className="sm:col-span-2">
+                      <div className="flex items-center justify-between mb-1">
+                        <label className="block text-xs font-semibold text-slate-700">
+                          Nome Completo do Servidor *
+                        </label>
+                        {modoEdicaoCadastral && (
+                          <span className="text-[10px] font-bold text-blue-600 uppercase tracking-wider">
+                            Editável
+                          </span>
+                        )}
+                      </div>
+                      <div className="relative">
+                        <User className={`w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 ${modoEdicaoCadastral ? 'text-blue-600' : 'text-slate-400'}`} />
+                        <input
+                          type="text"
+                          required
+                          readOnly={!modoEdicaoCadastral}
+                          value={solicitanteNome}
+                          onChange={(e) => setSolicitanteNome(e.target.value)}
+                          className={`w-full pl-9 pr-3 py-2 rounded-xl text-xs font-medium transition-all ${
+                            modoEdicaoCadastral
+                              ? 'bg-white border-2 border-blue-500 text-slate-900 focus:outline-none focus:ring-2 focus:ring-blue-400/20 shadow-xs'
+                              : 'bg-slate-50 border border-slate-200 text-slate-900 cursor-default'
+                          }`}
+                        />
+                      </div>
+                    </div>
+
+                    {/* Matrícula Funcional */}
+                    <div>
+                      <div className="flex items-center justify-between mb-1">
+                        <label className="block text-xs font-semibold text-slate-700">
+                          Matrícula Funcional TJPR
+                        </label>
+                        {modoEdicaoCadastral && (
+                          <span className="text-[10px] font-bold text-blue-600 uppercase tracking-wider">
+                            Editável
+                          </span>
+                        )}
+                      </div>
+                      <div className="relative">
+                        <SearchCode className={`w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 ${modoEdicaoCadastral ? 'text-blue-600' : 'text-slate-400'}`} />
+                        <input
+                          type="text"
+                          readOnly={!modoEdicaoCadastral}
+                          value={matriculaInput}
+                          onChange={(e) => setMatriculaInput(e.target.value)}
+                          className={`w-full pl-9 pr-3 py-2 rounded-xl text-xs font-mono font-bold transition-all ${
+                            modoEdicaoCadastral
+                              ? 'bg-white border-2 border-blue-500 text-slate-900 focus:outline-none focus:ring-2 focus:ring-blue-400/20 shadow-xs'
+                              : 'bg-slate-50 border border-slate-200 text-slate-900 cursor-default'
+                          }`}
+                        />
+                      </div>
+                    </div>
+
+                    {/* Cargo / Função */}
+                    <div>
+                      <div className="flex items-center justify-between mb-1">
+                        <label className="block text-xs font-semibold text-slate-700">
+                          Cargo / Função Oficial
+                        </label>
+                        {modoEdicaoCadastral && (
+                          <span className="text-[10px] font-bold text-blue-600 uppercase tracking-wider">
+                            Editável
+                          </span>
+                        )}
+                      </div>
+                      <div className="relative">
+                        <Briefcase className={`w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 ${modoEdicaoCadastral ? 'text-blue-600' : 'text-slate-400'}`} />
+                        <input
+                          type="text"
+                          readOnly={!modoEdicaoCadastral}
+                          value={cargoServidor}
+                          onChange={(e) => setCargoServidor(e.target.value)}
+                          className={`w-full pl-9 pr-3 py-2 rounded-xl text-xs font-medium transition-all ${
+                            modoEdicaoCadastral
+                              ? 'bg-white border-2 border-blue-500 text-slate-900 focus:outline-none focus:ring-2 focus:ring-blue-400/20 shadow-xs'
+                              : 'bg-slate-50 border border-slate-200 text-slate-900 cursor-default'
+                          }`}
+                        />
+                      </div>
+                    </div>
+
+                    {/* CPF */}
+                    <div>
+                      <div className="flex items-center justify-between mb-1">
+                        <label className="block text-xs font-semibold text-slate-700">
+                          CPF do Solicitante
+                        </label>
+                        {modoEdicaoCadastral && (
+                          <span className="text-[10px] font-bold text-blue-600 uppercase tracking-wider">
+                            Editável
+                          </span>
+                        )}
+                      </div>
+                      <div className="relative">
+                        <FileText className={`w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 ${modoEdicaoCadastral ? 'text-blue-600' : 'text-slate-400'}`} />
+                        <input
+                          type="text"
+                          readOnly={!modoEdicaoCadastral}
+                          value={documentoOuCpf}
+                          onChange={(e) => setDocumentoOuCpf(e.target.value)}
+                          className={`w-full pl-9 pr-3 py-2 rounded-xl text-xs font-medium transition-all ${
+                            modoEdicaoCadastral
+                              ? 'bg-white border-2 border-blue-500 text-slate-900 focus:outline-none focus:ring-2 focus:ring-blue-400/20 shadow-xs'
+                              : 'bg-slate-50 border border-slate-200 text-slate-900 cursor-default'
+                          }`}
+                        />
+                      </div>
+                    </div>
+
+                    {/* WhatsApp / Celular */}
+                    <div>
+                      <div className="flex items-center justify-between mb-1">
+                        <label className="block text-xs font-semibold text-slate-700">
+                          WhatsApp / Celular (Avisos de Reserva) *
+                        </label>
+                        {modoEdicaoCadastral && (
+                          <span className="text-[10px] font-bold text-blue-600 uppercase tracking-wider">
+                            Editável
+                          </span>
+                        )}
+                      </div>
+                      <div className="relative">
+                        <Phone className="w-4 h-4 text-emerald-600 absolute left-3 top-1/2 -translate-y-1/2" />
+                        <input
+                          type="tel"
+                          required
+                          readOnly={!modoEdicaoCadastral}
+                          value={telefone}
+                          onChange={(e) => setTelefone(e.target.value)}
+                          className={`w-full pl-9 pr-3 py-2 rounded-xl text-xs font-medium transition-all ${
+                            modoEdicaoCadastral
+                              ? 'bg-white border-2 border-blue-500 text-slate-900 focus:outline-none focus:ring-2 focus:ring-blue-400/20 shadow-xs'
+                              : 'bg-slate-50 border border-slate-200 text-slate-900 cursor-default'
+                          }`}
+                        />
+                      </div>
+                    </div>
+
+                    {/* E-mail Institucional */}
+                    <div>
+                      <div className="flex items-center justify-between mb-1">
+                        <label className="block text-xs font-semibold text-slate-700">
+                          E-mail Institucional (@tjpr.jus.br)
+                        </label>
+                        {modoEdicaoCadastral && (
+                          <span className="text-[10px] font-bold text-blue-600 uppercase tracking-wider">
+                            Editável
+                          </span>
+                        )}
+                      </div>
+                      <div className="relative">
+                        <Mail className={`w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 ${modoEdicaoCadastral ? 'text-blue-600' : 'text-slate-400'}`} />
+                        <input
+                          type="email"
+                          readOnly={!modoEdicaoCadastral}
+                          value={email}
+                          onChange={(e) => setEmail(e.target.value)}
+                          className={`w-full pl-9 pr-3 py-2 rounded-xl text-xs font-medium transition-all ${
+                            modoEdicaoCadastral
+                              ? 'bg-white border-2 border-blue-500 text-slate-900 focus:outline-none focus:ring-2 focus:ring-blue-400/20 shadow-xs'
+                              : 'bg-slate-50 border border-slate-200 text-slate-900 cursor-default'
+                          }`}
+                        />
+                      </div>
+                    </div>
+
+                    {/* Comarca de Partida */}
+                    <div className="sm:col-span-2 lg:col-span-3">
+                      <div className="flex items-center justify-between mb-1">
+                        <label className="block text-xs font-semibold text-slate-700">
+                          Comarca de Origem / Lotação *
+                        </label>
+                        {modoEdicaoCadastral && (
+                          <span className="text-[10px] font-bold text-blue-600 uppercase tracking-wider">
+                            Editável
+                          </span>
+                        )}
+                      </div>
+                      <div className="relative">
+                        <Building2 className={`w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 ${modoEdicaoCadastral ? 'text-blue-600' : 'text-slate-400'}`} />
+                        <select
+                          disabled={!modoEdicaoCadastral}
+                          value={comarca}
+                          onChange={(e) => setComarca(e.target.value)}
+                          className={`w-full pl-9 pr-3 py-2 rounded-xl text-xs font-medium transition-all ${
+                            modoEdicaoCadastral
+                              ? 'bg-white border-2 border-blue-500 text-slate-900 focus:outline-none focus:ring-2 focus:ring-blue-400/20 shadow-xs cursor-pointer'
+                              : 'bg-slate-50 border border-slate-200 text-slate-900 cursor-default'
                           }`}
                         >
-                          <CheckCircle2 className="w-3.5 h-3.5 text-emerald-300" />
-                          <span>{dadosCadastraisConfirmados ? 'Dados Confirmados ✓' : 'Confirmar Dados Cadastrais'}</span>
-                        </button>
+                          {comarcas.map((c) => (
+                            <option key={c} value={c}>{c}</option>
+                          ))}
+                        </select>
+                      </div>
+                    </div>
+                  </div>
 
-                        <button
-                          type="button"
-                          onClick={handleIniciarEdicaoCadastral}
-                          className="px-3.5 py-2 rounded-xl text-xs font-semibold text-slate-700 hover:text-slate-900 bg-white hover:bg-slate-100 border border-slate-300 flex items-center gap-1.5 transition-colors shadow-2xs cursor-pointer"
-                          title="Caso exista divergência no nome, cargo, matrícula ou telefone, clique para editar"
-                        >
-                          <Pencil className="w-3.5 h-3.5 text-slate-500" />
-                          <span>Houve Divergência? Editar</span>
-                        </button>
-                      </>
-                    ) : (
-                      <div className="flex items-center gap-2">
-                        <button
-                          type="button"
-                          onClick={handleSalvarEAtualizarCadastral}
-                          className="px-4 py-2 rounded-xl bg-blue-600 hover:bg-blue-700 text-white text-xs font-bold flex items-center gap-2 shadow-sm transition-all cursor-pointer hover:scale-[1.01]"
-                        >
-                          <Save className="w-3.5 h-3.5 text-blue-200" />
-                          <span>Atualizar & Confirmar Dados</span>
-                        </button>
-                        <button
-                          type="button"
-                          onClick={handleCancelarEdicaoCadastral}
-                          className="px-3 py-2 rounded-xl bg-white hover:bg-slate-100 border border-slate-300 text-slate-700 text-xs font-semibold flex items-center gap-1 transition-colors cursor-pointer"
-                        >
-                          <X className="w-3.5 h-3.5 text-slate-400" />
-                          <span>Cancelar</span>
-                        </button>
+                  {/* REQUISITO: Jogue para abaixo do campo (Botões de Ação) */}
+                  <div className="pt-3 flex flex-col sm:flex-row items-center justify-between gap-3 border-t border-slate-200/70">
+                    <span className="text-xs text-slate-500">
+                      {dadosCadastraisConfirmados 
+                        ? '✓ Dados do solicitante conferidos e validados.' 
+                        : 'Confira os dados cadastrais acima e confirme para habilitar a próxima etapa.'}
+                    </span>
+
+                    <div className="flex items-center gap-2 self-end sm:self-auto flex-wrap">
+                      {!modoEdicaoCadastral ? (
+                        <>
+                          <button
+                            type="button"
+                            onClick={handleConfirmarDadosCadastrais}
+                            className={`px-4 py-2.5 rounded-xl text-xs font-bold flex items-center gap-2 transition-all shadow-xs cursor-pointer ${
+                              dadosCadastraisConfirmados
+                                ? 'bg-emerald-600 hover:bg-emerald-700 text-white'
+                                : 'bg-[#05202B] hover:bg-[#082E3C] text-white hover:scale-[1.01]'
+                            }`}
+                          >
+                            <CheckCircle2 className="w-4 h-4 text-emerald-300" />
+                            <span>{dadosCadastraisConfirmados ? 'Dados Confirmados ✓' : 'Confirmar Dados do Solicitante'}</span>
+                          </button>
+
+                          <button
+                            type="button"
+                            onClick={handleIniciarEdicaoCadastral}
+                            className="px-3.5 py-2.5 rounded-xl text-xs font-semibold text-slate-700 hover:text-slate-900 bg-white hover:bg-slate-100 border border-slate-300 flex items-center gap-1.5 transition-colors shadow-2xs cursor-pointer"
+                            title="Caso exista divergência no nome, cargo, matrícula ou telefone, clique para editar"
+                          >
+                            <Pencil className="w-3.5 h-3.5 text-slate-500" />
+                            <span>Houve Divergência? Editar</span>
+                          </button>
+                        </>
+                      ) : (
+                        <div className="flex items-center gap-2">
+                          <button
+                            type="button"
+                            onClick={handleSalvarEAtualizarCadastral}
+                            className="px-4 py-2.5 rounded-xl bg-blue-600 hover:bg-blue-700 text-white text-xs font-bold flex items-center gap-2 shadow-sm transition-all cursor-pointer hover:scale-[1.01]"
+                          >
+                            <Save className="w-4 h-4 text-blue-200" />
+                            <span>Atualizar & Confirmar Dados</span>
+                          </button>
+                          <button
+                            type="button"
+                            onClick={handleCancelarEdicaoCadastral}
+                            className="px-3.5 py-2.5 rounded-xl bg-white hover:bg-slate-100 border border-slate-300 text-slate-700 text-xs font-semibold flex items-center gap-1 transition-colors cursor-pointer"
+                          >
+                            <X className="w-4 h-4 text-slate-400" />
+                            <span>Cancelar</span>
+                          </button>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                </div>
+              )
+            )}
+
+            {/* ETAPA: DATAS, HORÁRIOS & ITINERÁRIO (COM AGRUPAMENTO ACCORDION) */}
+            {item3Habilitado && (
+              item3Confirmado && !item3Expandido ? (
+                /* ESTADO AGRUPADO / CONCLUÍDO (Sinal de + para abrir o conteúdo) */
+                <div className="p-4 bg-gradient-to-r from-slate-50 to-blue-50/40 rounded-2xl border border-slate-200/90 shadow-2xs transition-all duration-200">
+                  <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+                    <div className="flex items-center gap-3.5 min-w-0">
+                      <div className="w-10 h-10 rounded-xl bg-emerald-100 border border-emerald-200 flex items-center justify-center shrink-0 text-emerald-700 shadow-xs">
+                        <CheckCircle2 className="w-5 h-5 text-emerald-600 stroke-[2.5]" />
+                      </div>
+                      <div className="min-w-0">
+                        <div className="flex items-center gap-2 flex-wrap">
+                          <span className="text-xs sm:text-sm font-bold text-slate-900 tracking-tight">
+                            Datas, Horários & Itinerário
+                          </span>
+                          <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-bold bg-emerald-50 text-emerald-700 border border-emerald-200 shadow-2xs">
+                            <Check className="w-3.5 h-3.5 text-emerald-600 stroke-[3]" />
+                            <span>Etapa Concluída</span>
+                          </span>
+                        </div>
+                        <div className="flex items-center gap-2 mt-1.5 flex-wrap text-xs text-slate-700">
+                          <span className="font-semibold text-slate-900">
+                            Saída: {dataSaida.split('-').reverse().join('/')} às {horaSaida}
+                          </span>
+                          <span className="text-slate-400">•</span>
+                          <span className="text-blue-800 font-medium">
+                            {retornoEmAberto ? 'Retorno em aberto (fechamento diário)' : `Retorno: ${dataRetorno ? dataRetorno.split('-').reverse().join('/') : ''} às ${horaRetorno}`}
+                          </span>
+                          <span className="text-slate-400">•</span>
+                          <span className="text-slate-700 font-medium">
+                            {origem} ➔ {destino}
+                          </span>
+                        </div>
+                      </div>
+                    </div>
+
+                    <button
+                      type="button"
+                      onClick={() => setItem3Expandido(true)}
+                      className="px-4 py-2 rounded-xl text-xs font-bold text-blue-700 hover:text-blue-900 bg-white hover:bg-blue-50 border border-blue-200 flex items-center justify-center gap-1.5 transition-all shadow-2xs hover:shadow-xs cursor-pointer shrink-0"
+                      title="Clique para abrir datas, horários e itinerário"
+                    >
+                      <Plus className="w-4 h-4 text-blue-600 stroke-[2.5]" />
+                      <span>Abrir Conteúdo (+)</span>
+                    </button>
+                  </div>
+                </div>
+              ) : (
+                /* ESTADO EXPANDIDO (1º Datas e Horários, 2º Itinerário, e botões abaixo) */
+                <div className={`transition-all duration-200 p-4 sm:p-5 rounded-2xl border space-y-4 ${
+                  item3Confirmado ? 'bg-slate-50/70 border-slate-200/90' : 'bg-white border-slate-200/90 shadow-2xs'
+                }`}>
+                  <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+                    <div className="flex items-center gap-2 flex-wrap">
+                      <label className="text-xs sm:text-sm font-bold text-slate-900 tracking-tight">
+                        Datas, Horários & Itinerário do Deslocamento
+                      </label>
+                      {item3Confirmado ? (
+                        <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-bold bg-emerald-50 text-emerald-700 border border-emerald-200 shadow-2xs animate-in fade-in">
+                          <CheckCircle2 className="w-3.5 h-3.5 text-emerald-600" />
+                          <span>Etapa Concluída</span>
+                        </span>
+                      ) : (
+                        <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[11px] font-bold bg-amber-50 text-amber-700 border border-amber-200 shadow-2xs animate-in fade-in">
+                          <Clock className="w-3.5 h-3.5 text-amber-600" />
+                          <span>Aguardando Confirmação</span>
+                        </span>
+                      )}
+                    </div>
+
+                    {item3Confirmado && (
+                      <button
+                        type="button"
+                        onClick={() => setItem3Expandido(false)}
+                        className="px-3.5 py-1.5 rounded-xl text-xs font-semibold text-slate-600 hover:text-slate-900 bg-white hover:bg-slate-100 border border-slate-300 flex items-center gap-1.5 transition-colors cursor-pointer shadow-2xs self-start sm:self-auto"
+                        title="Reduzir datas e itinerário"
+                      >
+                        <Minus className="w-3.5 h-3.5 text-slate-500 stroke-[2.5]" />
+                        <span>Reduzir (-)</span>
+                      </button>
+                    )}
+                  </div>
+
+                  {item3Erro && (
+                    <div className="p-2.5 rounded-xl bg-red-50 border border-red-200 text-xs font-semibold text-red-900 flex items-center gap-2 animate-in fade-in">
+                      <AlertCircle className="w-4 h-4 text-red-600 shrink-0" />
+                      <span>{item3Erro}</span>
+                    </div>
+                  )}
+
+                  {/* 1º BLOCO: DATAS E HORÁRIOS DO DESLOCAMENTO (ORDEM SOLICITADA) */}
+                  <div className="bg-white p-4 rounded-xl border border-slate-200/90 shadow-2xs space-y-3">
+                    <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-slate-100 pb-2.5">
+                      <span className="text-xs font-bold text-slate-900 flex items-center gap-2">
+                        <Calendar className="w-4 h-4 text-[#05202B]" />
+                        <span>Datas e Horários do Deslocamento:</span>
+                      </span>
+
+                      {/* Checkbox de Retorno em Aberto */}
+                      <label className="flex items-center gap-2 cursor-pointer">
+                        <input
+                          type="checkbox"
+                          checked={retornoEmAberto}
+                          onChange={(e) => setRetornoEmAberto(e.target.checked)}
+                          className="w-4 h-4 text-[#05202B] rounded border-slate-300 focus:ring-[#05202B] cursor-pointer"
+                        />
+                        <span className="text-xs font-semibold text-blue-900">
+                          Deixar retorno em aberto (preenchimento pelo motorista no diário de bordo)
+                        </span>
+                      </label>
+                    </div>
+
+                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
+                      {/* Data de Saída */}
+                      <div>
+                        <label className="block text-[11px] font-semibold text-slate-700 mb-1">
+                          Data de Saída *
+                        </label>
+                        <input
+                          type="date"
+                          required
+                          value={dataSaida}
+                          onChange={(e) => setDataSaida(e.target.value)}
+                          className="w-full px-2.5 py-1.5 bg-slate-50 border border-slate-300 rounded-lg text-xs font-mono text-slate-900 focus:outline-none focus:bg-white focus:border-[#05202B]"
+                        />
+                      </div>
+
+                      {/* Hora de Saída */}
+                      <div>
+                        <label className="block text-[11px] font-semibold text-slate-700 mb-1">
+                          Hora de Saída *
+                        </label>
+                        <input
+                          type="time"
+                          required
+                          value={horaSaida}
+                          onChange={(e) => setHoraSaida(e.target.value)}
+                          className="w-full px-2.5 py-1.5 bg-slate-50 border border-slate-300 rounded-lg text-xs font-mono text-slate-900 focus:outline-none focus:bg-white focus:border-[#05202B]"
+                        />
+                      </div>
+
+                      {/* Data de Retorno (Opcional) */}
+                      <div>
+                        <div className="flex items-center justify-between mb-1">
+                          <label className="block text-[11px] font-semibold text-slate-700">
+                            Data de Retorno
+                          </label>
+                          <span className="text-[10px] text-slate-400 font-medium">Opcional</span>
+                        </div>
+                        <input
+                          type="date"
+                          disabled={retornoEmAberto}
+                          value={dataRetorno}
+                          onChange={(e) => setDataRetorno(e.target.value)}
+                          className={`w-full px-2.5 py-1.5 border rounded-lg text-xs font-mono transition-colors ${
+                            retornoEmAberto
+                              ? 'bg-slate-100 text-slate-400 border-slate-200 cursor-not-allowed'
+                              : 'bg-slate-50 text-slate-900 border-slate-300 focus:outline-none focus:bg-white focus:border-[#05202B]'
+                          }`}
+                        />
+                      </div>
+
+                      {/* Hora de Retorno (Opcional) */}
+                      <div>
+                        <div className="flex items-center justify-between mb-1">
+                          <label className="block text-[11px] font-semibold text-slate-700">
+                            Hora de Retorno
+                          </label>
+                          <span className="text-[10px] text-slate-400 font-medium">Opcional</span>
+                        </div>
+                        <input
+                          type="time"
+                          disabled={retornoEmAberto}
+                          value={horaRetorno}
+                          onChange={(e) => setHoraRetorno(e.target.value)}
+                          className={`w-full px-2.5 py-1.5 border rounded-lg text-xs font-mono transition-colors ${
+                            retornoEmAberto
+                              ? 'bg-slate-100 text-slate-400 border-slate-200 cursor-not-allowed'
+                              : 'bg-slate-50 text-slate-900 border-slate-300 focus:outline-none focus:bg-white focus:border-[#05202B]'
+                          }`}
+                        />
+                      </div>
+                    </div>
+
+                    {retornoEmAberto && (
+                      <div className="bg-blue-50/70 border border-blue-200 rounded-lg p-2.5 flex items-center gap-2 text-xs text-blue-900">
+                        <Clock className="w-4 h-4 text-blue-600 shrink-0" />
+                        <span>
+                          <strong>Retorno em aberto:</strong> A data e o horário de retorno não são obrigatórios inicialmente e serão preenchidos pelo motorista diretamente no fechamento do Diário de Bordo Oficial.
+                        </span>
                       </div>
                     )}
                   </div>
-                </div>
 
-              {/* Banner Informativo quando modo edição está ativo */}
-              {modoEdicaoCadastral && (
-                <div className="mb-3.5 p-3 rounded-xl bg-blue-50 border border-blue-200 flex flex-col sm:flex-row sm:items-center justify-between gap-2 animate-in fade-in">
-                  <div className="flex items-center gap-2 text-xs text-blue-900 font-medium">
-                    <span className="w-2 h-2 rounded-full bg-blue-600 animate-pulse shrink-0" />
-                    <span>
-                      <strong>Modo de Edição Habilitado:</strong> Modifique os campos com divergência abaixo e clique em <strong>"Atualizar Dados"</strong> para salvar.
+                  {/* 2º BLOCO: ITINERÁRIO DO DESLOCAMENTO (ORDEM SOLICITADA) */}
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4 pt-1">
+                    {/* Origem */}
+                    <div className="space-y-1.5">
+                      <label className="block text-xs font-semibold text-slate-700">
+                        Ponto de Partida / Origem *
+                      </label>
+                      <div className="relative">
+                        <MapPin className="w-4 h-4 text-blue-600 absolute left-3 top-1/2 -translate-y-1/2" />
+                        <input
+                          type="text"
+                          required
+                          placeholder="Ex: Palácio da Justiça ou Fórum Central"
+                          value={origem}
+                          onChange={(e) => setOrigem(e.target.value)}
+                          className="w-full pl-9 pr-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs text-slate-900 focus:outline-none focus:bg-white focus:border-[#05202B]"
+                        />
+                      </div>
+                      {/* Sugestões de Origem */}
+                      <div className="flex flex-wrap gap-1 pt-0.5">
+                        {origensRapidas.slice(0, 3).map((sug) => (
+                          <button
+                            key={sug}
+                            type="button"
+                            onClick={() => setOrigem(sug)}
+                            className="text-[10px] bg-slate-100 hover:bg-slate-200 text-slate-600 px-2 py-0.5 rounded transition-colors cursor-pointer truncate max-w-[210px]"
+                          >
+                            + {sug.split(' - ')[0]}
+                          </button>
+                        ))}
+                      </div>
+                    </div>
+
+                    {/* Destino */}
+                    <div className="space-y-1.5">
+                      <label className="block text-xs font-semibold text-slate-700">
+                        Local de Destino *
+                      </label>
+                      <div className="relative">
+                        <MapPin className="w-4 h-4 text-red-600 absolute left-3 top-1/2 -translate-y-1/2" />
+                        <input
+                          type="text"
+                          required
+                          placeholder="Ex: Fórum da Comarca de Londrina"
+                          value={destino}
+                          onChange={(e) => setDestino(e.target.value)}
+                          className="w-full pl-9 pr-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs text-slate-900 focus:outline-none focus:bg-white focus:border-[#05202B]"
+                        />
+                      </div>
+                      {/* Sugestões de Destino */}
+                      <div className="flex flex-wrap gap-1 pt-0.5">
+                        {destinosRapidos.slice(0, 3).map((sug) => (
+                          <button
+                            key={sug}
+                            type="button"
+                            onClick={() => setDestino(sug)}
+                            className="text-[10px] bg-slate-100 hover:bg-slate-200 text-slate-600 px-2 py-0.5 rounded transition-colors cursor-pointer truncate max-w-[210px]"
+                          >
+                            + {sug.split(' - ')[0]}
+                          </button>
+                        ))}
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* AÇÕES ABAIXO DOS CAMPOS DO ITEM 3 */}
+                  <div className="pt-3 flex flex-col sm:flex-row items-center justify-between gap-3 border-t border-slate-200/70">
+                    <span className="text-xs text-slate-500">
+                      {item3Confirmado 
+                        ? '✓ Datas, horários e itinerário validados para este pedido.' 
+                        : 'Confira as datas, horários e locais do trajeto antes de confirmar.'}
                     </span>
-                  </div>
-                  <button
-                    type="button"
-                    onClick={handleRestaurarHercules}
-                    className="text-[11px] font-semibold text-blue-700 hover:text-blue-900 underline self-start sm:self-auto cursor-pointer"
-                  >
-                    Restaurar Padrão Hércules TJPR
-                  </button>
-                </div>
-              )}
 
-              {/* Feedback inline */}
-              {cadastralFeedback && !modoEdicaoCadastral && (
-                <div className={`mb-3 p-2.5 rounded-xl border flex items-center justify-between gap-2 text-xs animate-in fade-in ${
-                  cadastralFeedback.tipo === 'sucesso'
-                    ? 'bg-emerald-50/90 border-emerald-200 text-emerald-800'
-                    : 'bg-blue-50/90 border-blue-200 text-blue-800'
-                }`}>
-                  <div className="flex items-center gap-2">
-                    {cadastralFeedback.tipo === 'sucesso' ? (
-                      <CheckCircle2 className="w-4 h-4 text-emerald-600 shrink-0" />
-                    ) : (
-                      <AlertCircle className="w-4 h-4 text-blue-600 shrink-0" />
-                    )}
-                    <span className="font-medium">{cadastralFeedback.texto}</span>
-                  </div>
-                  <button
-                    type="button"
-                    onClick={() => setCadastralFeedback(null)}
-                    className="text-slate-400 hover:text-slate-600 cursor-pointer p-0.5"
-                  >
-                    <X className="w-3.5 h-3.5" />
-                  </button>
-                </div>
-              )}
-
-              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3.5">
-                {/* Nome Completo */}
-                <div className="sm:col-span-2">
-                  <div className="flex items-center justify-between mb-1">
-                    <label className="block text-xs font-semibold text-slate-700">
-                      Nome Completo do Servidor *
-                    </label>
-                    {modoEdicaoCadastral && (
-                      <span className="text-[10px] font-bold text-blue-600 uppercase tracking-wider">
-                        Editável
-                      </span>
-                    )}
-                  </div>
-                  <div className="relative">
-                    <User className={`w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 ${modoEdicaoCadastral ? 'text-blue-600' : 'text-slate-400'}`} />
-                    <input
-                      type="text"
-                      required
-                      readOnly={!modoEdicaoCadastral}
-                      value={solicitanteNome}
-                      onChange={(e) => setSolicitanteNome(e.target.value)}
-                      className={`w-full pl-9 pr-3 py-2 rounded-xl text-xs font-medium transition-all ${
-                        modoEdicaoCadastral
-                          ? 'bg-white border-2 border-blue-500 text-slate-900 focus:outline-none focus:ring-2 focus:ring-blue-400/20 shadow-xs'
-                          : 'bg-slate-50 border border-slate-200 text-slate-900 cursor-default'
-                      }`}
-                    />
-                  </div>
-                </div>
-
-                {/* Matrícula Funcional */}
-                <div>
-                  <div className="flex items-center justify-between mb-1">
-                    <label className="block text-xs font-semibold text-slate-700">
-                      Matrícula Funcional TJPR
-                    </label>
-                    {modoEdicaoCadastral && (
-                      <span className="text-[10px] font-bold text-blue-600 uppercase tracking-wider">
-                        Editável
-                      </span>
-                    )}
-                  </div>
-                  <div className="relative">
-                    <SearchCode className={`w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 ${modoEdicaoCadastral ? 'text-blue-600' : 'text-slate-400'}`} />
-                    <input
-                      type="text"
-                      readOnly={!modoEdicaoCadastral}
-                      value={matriculaInput}
-                      onChange={(e) => setMatriculaInput(e.target.value)}
-                      className={`w-full pl-9 pr-3 py-2 rounded-xl text-xs font-mono font-bold transition-all ${
-                        modoEdicaoCadastral
-                          ? 'bg-white border-2 border-blue-500 text-slate-900 focus:outline-none focus:ring-2 focus:ring-blue-400/20 shadow-xs'
-                          : 'bg-slate-50 border border-slate-200 text-slate-900 cursor-default'
-                      }`}
-                    />
-                  </div>
-                </div>
-
-                {/* Cargo / Função */}
-                <div>
-                  <div className="flex items-center justify-between mb-1">
-                    <label className="block text-xs font-semibold text-slate-700">
-                      Cargo / Função Oficial
-                    </label>
-                    {modoEdicaoCadastral && (
-                      <span className="text-[10px] font-bold text-blue-600 uppercase tracking-wider">
-                        Editável
-                      </span>
-                    )}
-                  </div>
-                  <div className="relative">
-                    <Briefcase className={`w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 ${modoEdicaoCadastral ? 'text-blue-600' : 'text-slate-400'}`} />
-                    <input
-                      type="text"
-                      readOnly={!modoEdicaoCadastral}
-                      value={cargoServidor}
-                      onChange={(e) => setCargoServidor(e.target.value)}
-                      className={`w-full pl-9 pr-3 py-2 rounded-xl text-xs font-medium transition-all ${
-                        modoEdicaoCadastral
-                          ? 'bg-white border-2 border-blue-500 text-slate-900 focus:outline-none focus:ring-2 focus:ring-blue-400/20 shadow-xs'
-                          : 'bg-slate-50 border border-slate-200 text-slate-900 cursor-default'
-                      }`}
-                    />
-                  </div>
-                </div>
-
-                {/* CPF */}
-                <div>
-                  <div className="flex items-center justify-between mb-1">
-                    <label className="block text-xs font-semibold text-slate-700">
-                      CPF do Solicitante
-                    </label>
-                    {modoEdicaoCadastral && (
-                      <span className="text-[10px] font-bold text-blue-600 uppercase tracking-wider">
-                        Editável
-                      </span>
-                    )}
-                  </div>
-                  <div className="relative">
-                    <FileText className={`w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 ${modoEdicaoCadastral ? 'text-blue-600' : 'text-slate-400'}`} />
-                    <input
-                      type="text"
-                      readOnly={!modoEdicaoCadastral}
-                      value={documentoOuCpf}
-                      onChange={(e) => setDocumentoOuCpf(e.target.value)}
-                      className={`w-full pl-9 pr-3 py-2 rounded-xl text-xs font-medium transition-all ${
-                        modoEdicaoCadastral
-                          ? 'bg-white border-2 border-blue-500 text-slate-900 focus:outline-none focus:ring-2 focus:ring-blue-400/20 shadow-xs'
-                          : 'bg-slate-50 border border-slate-200 text-slate-900 cursor-default'
-                      }`}
-                    />
-                  </div>
-                </div>
-
-                {/* WhatsApp / Celular */}
-                <div>
-                  <div className="flex items-center justify-between mb-1">
-                    <label className="block text-xs font-semibold text-slate-700">
-                      WhatsApp / Celular (Avisos de Reserva) *
-                    </label>
-                    {modoEdicaoCadastral && (
-                      <span className="text-[10px] font-bold text-blue-600 uppercase tracking-wider">
-                        Editável
-                      </span>
-                    )}
-                  </div>
-                  <div className="relative">
-                    <Phone className="w-4 h-4 text-emerald-600 absolute left-3 top-1/2 -translate-y-1/2" />
-                    <input
-                      type="tel"
-                      required
-                      readOnly={!modoEdicaoCadastral}
-                      value={telefone}
-                      onChange={(e) => setTelefone(e.target.value)}
-                      className={`w-full pl-9 pr-3 py-2 rounded-xl text-xs font-medium transition-all ${
-                        modoEdicaoCadastral
-                          ? 'bg-white border-2 border-blue-500 text-slate-900 focus:outline-none focus:ring-2 focus:ring-blue-400/20 shadow-xs'
-                          : 'bg-slate-50 border border-slate-200 text-slate-900 cursor-default'
-                      }`}
-                    />
-                  </div>
-                </div>
-
-                {/* E-mail Institucional */}
-                <div>
-                  <div className="flex items-center justify-between mb-1">
-                    <label className="block text-xs font-semibold text-slate-700">
-                      E-mail Institucional (@tjpr.jus.br)
-                    </label>
-                    {modoEdicaoCadastral && (
-                      <span className="text-[10px] font-bold text-blue-600 uppercase tracking-wider">
-                        Editável
-                      </span>
-                    )}
-                  </div>
-                  <div className="relative">
-                    <Mail className={`w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 ${modoEdicaoCadastral ? 'text-blue-600' : 'text-slate-400'}`} />
-                    <input
-                      type="email"
-                      readOnly={!modoEdicaoCadastral}
-                      value={email}
-                      onChange={(e) => setEmail(e.target.value)}
-                      className={`w-full pl-9 pr-3 py-2 rounded-xl text-xs font-medium transition-all ${
-                        modoEdicaoCadastral
-                          ? 'bg-white border-2 border-blue-500 text-slate-900 focus:outline-none focus:ring-2 focus:ring-blue-400/20 shadow-xs'
-                          : 'bg-slate-50 border border-slate-200 text-slate-900 cursor-default'
-                      }`}
-                    />
-                  </div>
-                </div>
-
-                {/* Comarca de Partida */}
-                <div className="sm:col-span-2 lg:col-span-3">
-                  <div className="flex items-center justify-between mb-1">
-                    <label className="block text-xs font-semibold text-slate-700">
-                      Comarca de Origem / Lotação *
-                    </label>
-                    {modoEdicaoCadastral && (
-                      <span className="text-[10px] font-bold text-blue-600 uppercase tracking-wider">
-                        Editável
-                      </span>
-                    )}
-                  </div>
-                  <div className="relative">
-                    <Building2 className={`w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 ${modoEdicaoCadastral ? 'text-blue-600' : 'text-slate-400'}`} />
-                    <select
-                      disabled={!modoEdicaoCadastral}
-                      value={comarca}
-                      onChange={(e) => setComarca(e.target.value)}
-                      className={`w-full pl-9 pr-3 py-2 rounded-xl text-xs font-medium transition-all ${
-                        modoEdicaoCadastral
-                          ? 'bg-white border-2 border-blue-500 text-slate-900 focus:outline-none focus:ring-2 focus:ring-blue-400/20 shadow-xs cursor-pointer'
-                          : 'bg-slate-50 border border-slate-200 text-slate-900 cursor-default'
-                      }`}
-                    >
-                      {comarcas.map((c) => (
-                        <option key={c} value={c}>{c}</option>
-                      ))}
-                    </select>
-                  </div>
-                </div>
-              </div>
-            </div>
-            )}
-
-            {/* 3. ITINERÁRIO, DATAS E HORÁRIOS (OCULTO ATÉ CONFIRMAÇÃO DO ITEM 2) */}
-            {item3Habilitado && (
-              <div className="pt-4 border-t border-slate-100 space-y-3 animate-in fade-in slide-in-from-top-3 duration-300">
-                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 mb-1">
-                  <div className="flex items-center gap-2 flex-wrap">
-                    <label className="block text-xs font-bold text-slate-900 tracking-tight">
-                      3. Itinerário, Datas e Horários do Deslocamento:
-                    </label>
-                    {item3Confirmado ? (
-                      <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[11px] font-bold bg-emerald-50 text-emerald-700 border border-emerald-200 shadow-2xs animate-in fade-in">
-                        <CheckCircle2 className="w-3.5 h-3.5 text-emerald-600" />
-                        <span>Itinerário Confirmado</span>
-                      </span>
-                    ) : (
-                      <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[11px] font-bold bg-amber-50 text-amber-700 border border-amber-200 shadow-2xs animate-in fade-in">
-                        <Clock className="w-3.5 h-3.5 text-amber-600" />
-                        <span>Aguardando Confirmação</span>
-                      </span>
-                    )}
-                  </div>
-
-                  <div className="flex items-center gap-2">
-                    {!item3Confirmado ? (
+                    <div className="flex items-center gap-2 self-end sm:self-auto flex-wrap">
                       <button
                         type="button"
                         onClick={handleConfirmarItinerario}
-                        className="px-4 py-2 rounded-xl text-xs font-bold bg-[#05202B] hover:bg-[#082E3C] text-white flex items-center gap-1.5 shadow-sm transition-all hover:scale-[1.01] cursor-pointer"
+                        className={`px-4 py-2.5 rounded-xl text-xs font-bold flex items-center gap-2 transition-all shadow-xs cursor-pointer ${
+                          item3Confirmado
+                            ? 'bg-emerald-600 hover:bg-emerald-700 text-white'
+                            : 'bg-[#05202B] hover:bg-[#082E3C] text-white hover:scale-[1.01]'
+                        }`}
                       >
-                        <CheckCircle2 className="w-3.5 h-3.5 text-amber-300" />
-                        <span>Confirmar Itinerário</span>
+                        <CheckCircle2 className="w-4 h-4 text-emerald-300" />
+                        <span>{item3Confirmado ? 'Itinerário Confirmado ✓' : 'Confirmar Datas, Horários & Itinerário'}</span>
                       </button>
-                    ) : (
-                      <button
-                        type="button"
-                        onClick={() => setItem3Confirmado(false)}
-                        className="px-3 py-1 rounded-xl text-xs font-semibold text-slate-600 hover:text-slate-900 bg-white hover:bg-slate-100 border border-slate-300 flex items-center gap-1 transition-colors cursor-pointer shadow-2xs"
-                        title="Clique para alterar origem, destino ou horários"
-                      >
-                        <Pencil className="w-3 h-3 text-slate-400" />
-                        <span>Alterar Itinerário</span>
-                      </button>
-                    )}
+
+                      {item3Confirmado && (
+                        <button
+                          type="button"
+                          onClick={() => setItem3Confirmado(false)}
+                          className="px-3.5 py-2.5 rounded-xl text-xs font-semibold text-slate-700 hover:text-slate-900 bg-white hover:bg-slate-100 border border-slate-300 flex items-center gap-1.5 transition-colors shadow-2xs cursor-pointer"
+                        >
+                          <Pencil className="w-3.5 h-3.5 text-slate-500" />
+                          <span>Alterar Itinerário</span>
+                        </button>
+                      )}
+                    </div>
                   </div>
                 </div>
-
-              {item3Erro && (
-                <div className="p-2.5 rounded-xl bg-red-50 border border-red-200 text-xs font-semibold text-red-900 flex items-center gap-2 animate-in fade-in">
-                  <AlertCircle className="w-4 h-4 text-red-600 shrink-0" />
-                  <span>{item3Erro}</span>
-                </div>
-              )}
-
-            {/* Origem e Destino com Sugestões Rápidas */}
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              {/* Origem */}
-              <div className="space-y-1.5">
-                <label className="block text-xs font-semibold text-slate-700">
-                  Ponto de Partida / Origem *
-                </label>
-                <div className="relative">
-                  <MapPin className="w-4 h-4 text-blue-600 absolute left-3 top-1/2 -translate-y-1/2" />
-                  <input
-                    type="text"
-                    required
-                    placeholder="Ex: Palácio da Justiça ou Fórum Central"
-                    value={origem}
-                    onChange={(e) => setOrigem(e.target.value)}
-                    className="w-full pl-9 pr-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs text-slate-900 focus:outline-none focus:bg-white focus:border-[#05202B]"
-                  />
-                </div>
-                {/* Sugestões de Origem */}
-                <div className="flex flex-wrap gap-1 pt-0.5">
-                  {origensRapidas.slice(0, 3).map((sug) => (
-                    <button
-                      key={sug}
-                      type="button"
-                      onClick={() => setOrigem(sug)}
-                      className="text-[10px] bg-slate-100 hover:bg-slate-200 text-slate-600 px-2 py-0.5 rounded transition-colors cursor-pointer truncate max-w-[210px]"
-                    >
-                      + {sug.split(' - ')[0]}
-                    </button>
-                  ))}
-                </div>
-              </div>
-
-              {/* Destino */}
-              <div className="space-y-1.5">
-                <label className="block text-xs font-semibold text-slate-700">
-                  Local de Destino *
-                </label>
-                <div className="relative">
-                  <MapPin className="w-4 h-4 text-red-600 absolute left-3 top-1/2 -translate-y-1/2" />
-                  <input
-                    type="text"
-                    required
-                    placeholder="Ex: Fórum da Comarca de Londrina"
-                    value={destino}
-                    onChange={(e) => setDestino(e.target.value)}
-                    className="w-full pl-9 pr-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs text-slate-900 focus:outline-none focus:bg-white focus:border-[#05202B]"
-                  />
-                </div>
-                {/* Sugestões de Destino */}
-                <div className="flex flex-wrap gap-1 pt-0.5">
-                  {destinosRapidos.slice(0, 3).map((sug) => (
-                    <button
-                      key={sug}
-                      type="button"
-                      onClick={() => setDestino(sug)}
-                      className="text-[10px] bg-slate-100 hover:bg-slate-200 text-slate-600 px-2 py-0.5 rounded transition-colors cursor-pointer truncate max-w-[210px]"
-                    >
-                      + {sug.split(' - ')[0]}
-                    </button>
-                  ))}
-                </div>
-              </div>
-            </div>
-
-            {/* REQUISITO 3: HORÁRIO E DATA DE RETORNO NÃO OBRIGATÓRIOS */}
-            <div className="bg-slate-50/80 p-4 rounded-xl border border-slate-200 space-y-3">
-              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
-                <span className="text-xs font-bold text-slate-900">
-                  Datas e Horários do Deslocamento:
-                </span>
-
-                {/* Checkbox de Retorno em Aberto */}
-                <label className="flex items-center gap-2 cursor-pointer">
-                  <input
-                    type="checkbox"
-                    checked={retornoEmAberto}
-                    onChange={(e) => setRetornoEmAberto(e.target.checked)}
-                    className="w-4 h-4 text-[#05202B] rounded border-slate-300 focus:ring-[#05202B] cursor-pointer"
-                  />
-                  <span className="text-xs font-semibold text-blue-900">
-                    Deixar retorno em aberto (preenchimento pelo motorista no diário de bordo)
-                  </span>
-                </label>
-              </div>
-
-              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
-                {/* Data de Saída */}
-                <div>
-                  <label className="block text-[11px] font-semibold text-slate-700 mb-1">
-                    Data de Saída *
-                  </label>
-                  <input
-                    type="date"
-                    required
-                    value={dataSaida}
-                    onChange={(e) => setDataSaida(e.target.value)}
-                    className="w-full px-2.5 py-1.5 bg-white border border-slate-300 rounded-lg text-xs font-mono text-slate-900 focus:outline-none focus:border-[#05202B]"
-                  />
-                </div>
-
-                {/* Hora de Saída */}
-                <div>
-                  <label className="block text-[11px] font-semibold text-slate-700 mb-1">
-                    Hora de Saída *
-                  </label>
-                  <input
-                    type="time"
-                    required
-                    value={horaSaida}
-                    onChange={(e) => setHoraSaida(e.target.value)}
-                    className="w-full px-2.5 py-1.5 bg-white border border-slate-300 rounded-lg text-xs font-mono text-slate-900 focus:outline-none focus:border-[#05202B]"
-                  />
-                </div>
-
-                {/* Data de Retorno (Opcional) */}
-                <div>
-                  <div className="flex items-center justify-between mb-1">
-                    <label className="block text-[11px] font-semibold text-slate-700">
-                      Data de Retorno
-                    </label>
-                    <span className="text-[10px] text-slate-400 font-medium">Opcional</span>
-                  </div>
-                  <input
-                    type="date"
-                    disabled={retornoEmAberto}
-                    value={dataRetorno}
-                    onChange={(e) => setDataRetorno(e.target.value)}
-                    className={`w-full px-2.5 py-1.5 border rounded-lg text-xs font-mono transition-colors ${
-                      retornoEmAberto
-                        ? 'bg-slate-100 text-slate-400 border-slate-200 cursor-not-allowed'
-                        : 'bg-white text-slate-900 border-slate-300 focus:outline-none focus:border-[#05202B]'
-                    }`}
-                  />
-                </div>
-
-                {/* Hora de Retorno (Opcional) */}
-                <div>
-                  <div className="flex items-center justify-between mb-1">
-                    <label className="block text-[11px] font-semibold text-slate-700">
-                      Hora de Retorno
-                    </label>
-                    <span className="text-[10px] text-slate-400 font-medium">Opcional</span>
-                  </div>
-                  <input
-                    type="time"
-                    disabled={retornoEmAberto}
-                    value={horaRetorno}
-                    onChange={(e) => setHoraRetorno(e.target.value)}
-                    className={`w-full px-2.5 py-1.5 border rounded-lg text-xs font-mono transition-colors ${
-                      retornoEmAberto
-                        ? 'bg-slate-100 text-slate-400 border-slate-200 cursor-not-allowed'
-                        : 'bg-white text-slate-900 border-slate-300 focus:outline-none focus:border-[#05202B]'
-                    }`}
-                  />
-                </div>
-              </div>
-
-              {retornoEmAberto && (
-                <div className="bg-blue-50/70 border border-blue-200 rounded-lg p-2.5 flex items-center gap-2 text-xs text-blue-900">
-                  <Clock className="w-4 h-4 text-blue-600 shrink-0" />
-                  <span>
-                    <strong>Retorno em aberto:</strong> A data e o horário de retorno não são obrigatórios inicialmente e serão preenchidos pelo motorista diretamente no fechamento do Diário de Bordo Oficial.
-                  </span>
-                </div>
-              )}
-            </div>
-          </div>
-          )}
+              )
+            )}
 
           {/* 4. QUANTIDADE DE PASSAGEIROS & ADIÇÃO POR MATRÍCULA (OCULTO ATÉ CONFIRMAÇÃO DO ITEM 3) */}
           {item4Habilitado && (
-            <div className="pt-4 border-t border-slate-100 space-y-4 animate-in fade-in slide-in-from-top-3 duration-300">
-              <div className="bg-slate-50/70 p-4 sm:p-5 rounded-2xl border border-slate-200/90 space-y-4">
+            item4Confirmado && !item4Expandido ? (
+              /* CARD AGRUPADO / COMPACTO (SINAL DE + PARA ABRIR) */
+              <div className="p-4 rounded-2xl bg-emerald-50/70 border border-emerald-200/90 flex flex-col sm:flex-row sm:items-center justify-between gap-3 animate-in fade-in duration-200">
+                <div className="flex items-center gap-3">
+                  <div className="w-10 h-10 rounded-xl bg-emerald-600 text-white flex items-center justify-center font-bold text-sm shadow-sm shrink-0">
+                    <CheckCircle2 className="w-5 h-5 text-emerald-100" />
+                  </div>
+                  <div>
+                    <div className="flex items-center gap-2 flex-wrap">
+                      <span className="font-bold text-slate-900 text-sm">Passageiros do Deslocamento</span>
+                      <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[11px] font-bold bg-emerald-100 text-emerald-800 border border-emerald-300">
+                        <CheckCircle2 className="w-3 h-3 text-emerald-700" />
+                        <span>Etapa Concluída</span>
+                      </span>
+                    </div>
+                    <p className="text-xs text-slate-600 mt-0.5">
+                      Total: <strong>{passageirosQtd} {passageirosQtd === 1 ? 'ocupante' : 'ocupantes'} no veículo</strong> • 1º: {solicitanteNome} (Titular){passageirosDetalhes.length > 0 ? ` + ${passageirosDetalhes.length} acompanhante(s)` : ''}
+                    </p>
+                  </div>
+                </div>
+
+                <button
+                  type="button"
+                  onClick={() => setItem4Expandido(true)}
+                  className="px-3.5 py-2 rounded-xl text-xs font-bold bg-white hover:bg-slate-50 text-[#05202B] border border-slate-300 shadow-2xs flex items-center gap-1.5 transition-all cursor-pointer self-start sm:self-auto hover:border-slate-400"
+                >
+                  <Plus className="w-4 h-4 text-emerald-600 font-bold" />
+                  <span>(+) Abrir Conteúdo</span>
+                </button>
+              </div>
+            ) : (
+              /* CARD EXPANDIDO (COM BOTÃO DE REDUZIR (-) SE CONFIRMADO) */
+              <div className="bg-slate-50/70 p-4 sm:p-5 rounded-2xl border border-slate-200/90 space-y-4 animate-in fade-in">
                 <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
                   <div>
                     <div className="flex items-center gap-2 flex-wrap">
                       <h3 className="text-xs sm:text-sm font-bold text-slate-900 flex items-center gap-2">
                         <Users className="w-4 h-4 text-[#05202B]" />
-                        <span>4. Quantidade de Passageiros & Adição por Matrícula</span>
+                        <span>Passageiros do Deslocamento</span>
                       </h3>
                       {item4Confirmado ? (
                         <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[11px] font-bold bg-emerald-50 text-emerald-700 border border-emerald-200 shadow-2xs animate-in fade-in">
@@ -1782,282 +1966,309 @@ export const VisitorPortal: React.FC<VisitorPortalProps> = ({
                       <span>{passageirosQtd} {passageirosQtd === 1 ? 'pessoa' : 'pessoas'}</span>
                     </div>
 
-                    <div>
-                      {!item4Confirmado ? (
-                        <button
-                          type="button"
-                          onClick={handleConfirmarPassageiros}
-                          className="px-4 py-2 rounded-xl text-xs font-bold bg-[#05202B] hover:bg-[#082E3C] text-white flex items-center gap-1.5 shadow-sm transition-all hover:scale-[1.01] cursor-pointer"
-                        >
-                          <CheckCircle2 className="w-3.5 h-3.5 text-amber-300" />
-                          <span>Confirmar Passageiros</span>
-                        </button>
-                      ) : (
-                        <button
-                          type="button"
-                          onClick={() => setItem4Confirmado(false)}
-                          className="px-3 py-1 rounded-xl text-xs font-semibold text-slate-600 hover:text-slate-900 bg-white hover:bg-slate-100 border border-slate-300 flex items-center gap-1 transition-colors cursor-pointer shadow-2xs"
-                          title="Clique para alterar passageiros"
-                        >
-                          <Pencil className="w-3 h-3 text-slate-400" />
-                          <span>Alterar Passageiros</span>
-                        </button>
-                      )}
-                    </div>
-                  </div>
-                </div>
-
-              {/* BARRA DE MATRÍCULA FUNCIONAL (ADICIONAR PASSAGEIRO) */}
-              <div className="bg-white rounded-xl p-4 border border-slate-200/90 shadow-2xs space-y-3">
-                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-1">
-                  <label className="block text-xs font-bold text-slate-900">
-                    2. Matrícula Funcional do Servidor / Passageiro:
-                  </label>
-                  <span className="text-[11px] text-slate-500">
-                    Preenchimento automático imediato ao inserir a matrícula funcional
-                  </span>
-                </div>
-
-                {/* Input de Busca de Matrícula */}
-                <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2">
-                  <div className="relative flex-1">
-                    <SearchCode className="w-4 h-4 text-slate-400 absolute left-3 top-1/2 -translate-y-1/2" />
-                    <input
-                      type="text"
-                      placeholder="Digite a Matrícula do Passageiro (Ex: TJPR-45.210-9 ou 45210)"
-                      value={novoPassageiroMatricula}
-                      onChange={(e) => setNovoPassageiroMatricula(e.target.value)}
-                      onKeyDown={(e) => {
-                        if (e.key === 'Enter') {
-                          e.preventDefault();
-                          handleAdicionarPassageiroPorMatricula(novoPassageiroMatricula);
-                        }
-                      }}
-                      className="w-full pl-9 pr-3 py-2.5 bg-slate-50 border border-slate-300 rounded-xl text-xs font-mono font-bold text-slate-900 focus:outline-none focus:bg-white focus:border-[#05202B] focus:ring-1 focus:ring-[#05202B]"
-                    />
-                  </div>
-
-                  <button
-                    type="button"
-                    onClick={() => handleAdicionarPassageiroPorMatricula(novoPassageiroMatricula)}
-                    className="px-4 py-2.5 rounded-xl bg-[#05202B] hover:bg-[#082E3C] text-white text-xs font-bold flex items-center justify-center gap-1.5 transition-colors cursor-pointer shrink-0 shadow-2xs"
-                  >
-                    <Sparkles className="w-3.5 h-3.5 text-amber-300" />
-                    <span>Adicionar por Matrícula</span>
-                  </button>
-                </div>
-
-                {/* Exemplos TJPR */}
-                <div className="flex items-center gap-1.5 flex-wrap pt-0.5">
-                  <span className="text-[10px] text-slate-500 font-semibold">Exemplos cadastrados:</span>
-                  {HERCULES_SERVIDORES.filter(s => s.matricula !== matriculaInput).map((serv) => (
-                    <button
-                      key={serv.matricula}
-                      type="button"
-                      onClick={() => {
-                        setNovoPassageiroMatricula(serv.matricula);
-                        handleAdicionarPassageiroPorMatricula(serv.matricula);
-                      }}
-                      className="text-[10px] px-2.5 py-1 rounded-md border bg-white hover:bg-slate-100 text-slate-700 border-slate-200 transition-all cursor-pointer font-medium hover:border-[#05202B]"
-                      title={`Adicionar ${serv.nome} como passageiro`}
-                    >
-                      {serv.nome.split(' ')[0]} {serv.nome.split(' ')[1]} ({serv.matricula})
-                    </button>
-                  ))}
-                </div>
-
-                {/* Feedback de Adição / Erro */}
-                {novoPassageiroFeedback && (
-                  <div className={`p-2.5 rounded-lg text-xs font-semibold flex items-center gap-2 animate-in fade-in ${
-                    novoPassageiroFeedback.tipo === 'sucesso' 
-                      ? 'bg-emerald-50 text-emerald-900 border border-emerald-200' 
-                      : 'bg-red-50 text-red-900 border border-red-200'
-                  }`}>
-                    {novoPassageiroFeedback.tipo === 'sucesso' ? (
-                      <CheckCircle2 className="w-4 h-4 text-emerald-600 shrink-0" />
-                    ) : (
-                      <AlertCircle className="w-4 h-4 text-red-600 shrink-0" />
+                    {item4Confirmado && (
+                      <button
+                        type="button"
+                        onClick={() => setItem4Expandido(false)}
+                        className="px-3.5 py-1.5 rounded-xl text-xs font-semibold text-slate-600 hover:text-slate-900 bg-white hover:bg-slate-100 border border-slate-300 flex items-center gap-1.5 transition-colors cursor-pointer shadow-2xs"
+                        title="Reduzir / agrupar passageiros"
+                      >
+                        <Minus className="w-3.5 h-3.5 text-slate-500 stroke-[2.5]" />
+                        <span>(-) Reduzir</span>
+                      </button>
                     )}
-                    <span>{novoPassageiroFeedback.texto}</span>
                   </div>
-                )}
-              </div>
-
-              {/* LISTA COMPLETA DOS PASSAGEIROS DA VIAGEM */}
-              <div className="space-y-2 pt-1">
-                <div className="flex items-center justify-between">
-                  <span className="text-[11px] font-bold uppercase tracking-wider text-slate-600">
-                    Ocupantes Confirmados no Veículo ({passageirosQtd}):
-                  </span>
-                  
-                  {/* Botão para Convidado sem Matrícula (via CPF) */}
-                  <button
-                    type="button"
-                    onClick={() => setShowAddConvidadoModal(!showAddConvidadoModal)}
-                    className="text-[11px] text-blue-700 hover:text-blue-900 font-semibold flex items-center gap-1 cursor-pointer"
-                  >
-                    <Plus className="w-3.5 h-3.5" />
-                    <span>{showAddConvidadoModal ? 'Ocultar Inclusão via CPF' : 'Adicionar Convidado/Cônjuge (sem Matrícula via CPF)'}</span>
-                  </button>
                 </div>
 
-                {/* Mini formulário retrátil para Convidado sem Matrícula (via CPF) */}
-                {showAddConvidadoModal && (
-                  <div className="bg-white rounded-xl p-3.5 border border-blue-200 shadow-2xs space-y-3 animate-in fade-in">
-                    <div className="flex items-center justify-between">
-                      <span className="text-xs font-bold text-blue-950 flex items-center gap-1.5">
-                        <FileText className="w-3.5 h-3.5 text-blue-600" />
-                        Inclusão de Passageiro Convidado ou Cônjuge (Receita Federal)
-                      </span>
-                      <button
-                        type="button"
-                        onClick={() => setShowAddConvidadoModal(false)}
-                        className="text-slate-400 hover:text-slate-600 cursor-pointer"
-                      >
-                        <X className="w-4 h-4" />
-                      </button>
-                    </div>
-
-                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
-                      <div>
-                        <label className="block text-[10px] font-semibold text-slate-600 mb-1">
-                          CPF do Convidado:
-                        </label>
-                        <input
-                          type="text"
-                          placeholder="000.000.000-00 (Ex: 055.891.239-08)"
-                          value={convidadoCpfInput}
-                          onChange={(e) => {
-                            const cpf = e.target.value;
-                            setConvidadoCpfInput(cpf);
-                            const achado = lookupReceitaFederalCpf(cpf);
-                            if (achado) {
-                              setConvidadoNomeInput(achado.nome);
-                            }
-                          }}
-                          className="w-full px-2.5 py-1.5 bg-slate-50 border border-slate-200 rounded-lg text-xs font-mono text-slate-900 focus:outline-none focus:border-[#05202B]"
-                        />
-                      </div>
-
-                      <div>
-                        <label className="block text-[10px] font-semibold text-slate-600 mb-1">
-                          Nome Completo:
-                        </label>
-                        <input
-                          type="text"
-                          placeholder="Nome completo do convidado ou cônjuge"
-                          value={convidadoNomeInput}
-                          onChange={(e) => setConvidadoNomeInput(e.target.value)}
-                          className="w-full px-2.5 py-1.5 bg-slate-50 border border-slate-200 rounded-lg text-xs text-slate-900 focus:outline-none focus:border-[#05202B]"
-                        />
-                      </div>
-                    </div>
-
-                    <div className="flex justify-end">
-                      <button
-                        type="button"
-                        onClick={() => handleAdicionarConvidadoCpf(convidadoCpfInput, convidadoNomeInput)}
-                        disabled={!convidadoCpfInput.trim() || !convidadoNomeInput.trim()}
-                        className="px-3.5 py-1.5 rounded-lg bg-[#05202B] hover:bg-[#082E3C] disabled:bg-slate-300 text-white text-xs font-semibold flex items-center gap-1.5 transition-colors cursor-pointer"
-                      >
-                        <Plus className="w-3.5 h-3.5" />
-                        <span>Confirmar e Adicionar Convidado</span>
-                      </button>
-                    </div>
-                  </div>
-                )}
-
-                {/* Card 1: Solicitante Titular */}
-                <div className="bg-white rounded-xl p-3 border border-emerald-300/80 shadow-2xs flex flex-col sm:flex-row sm:items-center justify-between gap-2">
-                  <div className="flex items-center gap-3">
-                    <div className="w-8 h-8 rounded-lg bg-emerald-100 text-emerald-900 flex items-center justify-center font-bold text-xs shrink-0 border border-emerald-200">
-                      1
-                    </div>
-                    <div>
-                      <div className="flex items-center gap-2 flex-wrap">
-                        <strong className="text-xs text-slate-900">{solicitanteNome}</strong>
-                        <span className="text-[10px] bg-emerald-100 text-emerald-800 font-bold px-1.5 py-0.2 rounded border border-emerald-200">
-                          Solicitante Titular
-                        </span>
-                        <span className="font-mono text-[10px] text-slate-600 font-semibold bg-slate-100 px-1.5 py-0.2 rounded">
-                          {matriculaInput}
-                        </span>
-                      </div>
-                      <p className="text-[11px] text-slate-500 mt-0.5">
-                        {cargoServidor} • {lotacaoServidor}
-                      </p>
-                    </div>
+                {/* BARRA DE MATRÍCULA FUNCIONAL (ADICIONAR PASSAGEIRO) */}
+                <div className="bg-white rounded-xl p-4 border border-slate-200/90 shadow-2xs space-y-3">
+                  <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-1">
+                    <label className="block text-xs font-bold text-slate-900">
+                      Matrícula Funcional do Servidor / Passageiro:
+                    </label>
+                    <span className="text-[11px] text-slate-500">
+                      Preenchimento automático imediato ao inserir a matrícula funcional
+                    </span>
                   </div>
 
-                  <span className="text-[10px] text-emerald-800 font-bold bg-emerald-50 px-2 py-0.5 rounded border border-emerald-200 self-start sm:self-auto flex items-center gap-1">
-                    <Check className="w-3 h-3 text-emerald-600" />
-                    <span>Visto Digital Principal</span>
-                  </span>
+                  {/* Input de Busca de Matrícula */}
+                  <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2">
+                    <div className="relative flex-1">
+                      <SearchCode className="w-4 h-4 text-slate-400 absolute left-3 top-1/2 -translate-y-1/2" />
+                      <input
+                        type="text"
+                        placeholder="Digite a Matrícula do Passageiro (Ex: TJPR-45.210-9 ou 45210)"
+                        value={novoPassageiroMatricula}
+                        onChange={(e) => setNovoPassageiroMatricula(e.target.value)}
+                        onKeyDown={(e) => {
+                          if (e.key === 'Enter') {
+                            e.preventDefault();
+                            handleAdicionarPassageiroPorMatricula(novoPassageiroMatricula);
+                          }
+                        }}
+                        className="w-full pl-9 pr-3 py-2.5 bg-slate-50 border border-slate-300 rounded-xl text-xs font-mono font-bold text-slate-900 focus:outline-none focus:bg-white focus:border-[#05202B] focus:ring-1 focus:ring-[#05202B]"
+                      />
+                    </div>
+
+                    <button
+                      type="button"
+                      onClick={() => handleAdicionarPassageiroPorMatricula(novoPassageiroMatricula)}
+                      className="px-4 py-2.5 rounded-xl bg-[#05202B] hover:bg-[#082E3C] text-white text-xs font-bold flex items-center justify-center gap-1.5 transition-colors cursor-pointer shrink-0 shadow-2xs"
+                    >
+                      <Sparkles className="w-3.5 h-3.5 text-amber-300" />
+                      <span>Adicionar por Matrícula</span>
+                    </button>
+                  </div>
+
+                  {/* Exemplos TJPR */}
+                  <div className="flex items-center gap-1.5 flex-wrap pt-0.5">
+                    <span className="text-[10px] text-slate-500 font-semibold">Exemplos cadastrados:</span>
+                    {HERCULES_SERVIDORES.filter(s => s.matricula !== matriculaInput).map((serv) => (
+                      <button
+                        key={serv.matricula}
+                        type="button"
+                        onClick={() => {
+                          setNovoPassageiroMatricula(serv.matricula);
+                          handleAdicionarPassageiroPorMatricula(serv.matricula);
+                        }}
+                        className="text-[10px] px-2.5 py-1 rounded-md border bg-white hover:bg-slate-100 text-slate-700 border-slate-200 transition-all cursor-pointer font-medium hover:border-[#05202B]"
+                        title={`Adicionar ${serv.nome} como passageiro`}
+                      >
+                        {serv.nome.split(' ')[0]} {serv.nome.split(' ')[1]} ({serv.matricula})
+                      </button>
+                    ))}
+                  </div>
+
+                  {/* Feedback de Adição / Erro */}
+                  {novoPassageiroFeedback && (
+                    <div className={`p-2.5 rounded-lg text-xs font-semibold flex items-center gap-2 animate-in fade-in ${
+                      novoPassageiroFeedback.tipo === 'sucesso' 
+                        ? 'bg-emerald-50 text-emerald-900 border border-emerald-200' 
+                        : 'bg-red-50 text-red-900 border border-red-200'
+                    }`}>
+                      {novoPassageiroFeedback.tipo === 'sucesso' ? (
+                        <CheckCircle2 className="w-4 h-4 text-emerald-600 shrink-0" />
+                      ) : (
+                        <AlertCircle className="w-4 h-4 text-red-600 shrink-0" />
+                      )}
+                      <span>{novoPassageiroFeedback.texto}</span>
+                    </div>
+                  )}
                 </div>
 
-                {/* Demais Passageiros Adicionados */}
-                {passageirosDetalhes.map((p, idx) => (
-                  <div 
-                    key={p.id}
-                    className="bg-white rounded-xl p-3 border border-slate-200 hover:border-slate-300 shadow-2xs flex flex-col sm:flex-row sm:items-center justify-between gap-2 transition-all animate-in fade-in"
-                  >
+                {/* LISTA COMPLETA DOS PASSAGEIROS DA VIAGEM */}
+                <div className="space-y-2 pt-1">
+                  <div className="flex items-center justify-between">
+                    <span className="text-[11px] font-bold uppercase tracking-wider text-slate-600">
+                      Ocupantes Confirmados no Veículo ({passageirosQtd}):
+                    </span>
+                    
+                    {/* Botão para Convidado sem Matrícula (via CPF) */}
+                    <button
+                      type="button"
+                      onClick={() => setShowAddConvidadoModal(!showAddConvidadoModal)}
+                      className="text-[11px] text-blue-700 hover:text-blue-900 font-semibold flex items-center gap-1 cursor-pointer"
+                    >
+                      <Plus className="w-3.5 h-3.5" />
+                      <span>{showAddConvidadoModal ? 'Ocultar Inclusão via CPF' : 'Adicionar Convidado/Cônjuge (sem Matrícula via CPF)'}</span>
+                    </button>
+                  </div>
+
+                  {/* Mini formulário retrátil para Convidado sem Matrícula (via CPF) */}
+                  {showAddConvidadoModal && (
+                    <div className="bg-white rounded-xl p-3.5 border border-blue-200 shadow-2xs space-y-3 animate-in fade-in">
+                      <div className="flex items-center justify-between">
+                        <span className="text-xs font-bold text-blue-950 flex items-center gap-1.5">
+                          <FileText className="w-3.5 h-3.5 text-blue-600" />
+                          Inclusão de Passageiro Convidado ou Cônjuge (Receita Federal)
+                        </span>
+                        <button
+                          type="button"
+                          onClick={() => setShowAddConvidadoModal(false)}
+                          className="text-slate-400 hover:text-slate-600 cursor-pointer"
+                        >
+                          <X className="w-4 h-4" />
+                        </button>
+                      </div>
+
+                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
+                        <div>
+                          <label className="block text-[10px] font-semibold text-slate-600 mb-1">
+                            CPF do Convidado:
+                          </label>
+                          <input
+                            type="text"
+                            placeholder="000.000.000-00 (Ex: 055.891.239-08)"
+                            value={convidadoCpfInput}
+                            onChange={(e) => {
+                              const cpf = e.target.value;
+                              setConvidadoCpfInput(cpf);
+                              const achado = lookupReceitaFederalCpf(cpf);
+                              if (achado) {
+                                setConvidadoNomeInput(achado.nome);
+                              }
+                            }}
+                            className="w-full px-2.5 py-1.5 bg-slate-50 border border-slate-200 rounded-lg text-xs font-mono text-slate-900 focus:outline-none focus:border-[#05202B]"
+                          />
+                        </div>
+
+                        <div>
+                          <label className="block text-[10px] font-semibold text-slate-600 mb-1">
+                            Nome Completo:
+                          </label>
+                          <input
+                            type="text"
+                            placeholder="Nome completo do convidado ou cônjuge"
+                            value={convidadoNomeInput}
+                            onChange={(e) => setConvidadoNomeInput(e.target.value)}
+                            className="w-full px-2.5 py-1.5 bg-slate-50 border border-slate-200 rounded-lg text-xs text-slate-900 focus:outline-none focus:border-[#05202B]"
+                          />
+                        </div>
+                      </div>
+
+                      <div className="flex justify-end">
+                        <button
+                          type="button"
+                          onClick={() => handleAdicionarConvidadoCpf(convidadoCpfInput, convidadoNomeInput)}
+                          disabled={!convidadoCpfInput.trim() || !convidadoNomeInput.trim()}
+                          className="px-3.5 py-1.5 rounded-lg bg-[#05202B] hover:bg-[#082E3C] disabled:bg-slate-300 text-white text-xs font-semibold flex items-center gap-1.5 transition-colors cursor-pointer"
+                        >
+                          <Plus className="w-3.5 h-3.5" />
+                          <span>Confirmar e Adicionar Convidado</span>
+                        </button>
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Card 1: Solicitante Titular */}
+                  <div className="bg-white rounded-xl p-3 border border-emerald-300/80 shadow-2xs flex flex-col sm:flex-row sm:items-center justify-between gap-2">
                     <div className="flex items-center gap-3">
-                      <div className="w-8 h-8 rounded-lg bg-slate-100 text-slate-700 flex items-center justify-center font-bold text-xs shrink-0 border border-slate-200">
-                        {idx + 2}
+                      <div className="w-8 h-8 rounded-lg bg-emerald-100 text-emerald-900 flex items-center justify-center font-bold text-xs shrink-0 border border-emerald-200">
+                        1
                       </div>
                       <div>
                         <div className="flex items-center gap-2 flex-wrap">
-                          <strong className="text-xs text-slate-900">{p.nome}</strong>
-                          {p.matricula && (
-                            <span className="font-mono text-[10px] text-[#05202B] bg-slate-100 px-1.5 py-0.2 rounded font-bold border border-slate-200">
-                              Matr. {p.matricula}
-                            </span>
-                          )}
-                          {p.cpf && (
-                            <span className="font-mono text-[10px] text-slate-600 bg-slate-100 px-1.5 py-0.2 rounded border border-slate-200">
-                              CPF: {p.cpf}
-                            </span>
-                          )}
-                          <span className="text-[10px] bg-blue-50 text-blue-800 font-bold px-1.5 py-0.2 rounded border border-blue-200 flex items-center gap-1">
-                            <Check className="w-3 h-3 text-blue-600" />
-                            <span>{p.tipo === 'servidor_hercules' ? 'Hércules TJPR' : 'Receita Federal'}</span>
+                          <strong className="text-xs text-slate-900">{solicitanteNome}</strong>
+                          <span className="text-[10px] bg-emerald-100 text-emerald-800 font-bold px-1.5 py-0.2 rounded border border-emerald-200">
+                            Solicitante Titular
+                          </span>
+                          <span className="font-mono text-[10px] text-slate-600 font-semibold bg-slate-100 px-1.5 py-0.2 rounded">
+                            {matriculaInput}
                           </span>
                         </div>
                         <p className="text-[11px] text-slate-500 mt-0.5">
-                          {p.cargo || 'Passageiro confirmado'}
+                          {cargoServidor} • {lotacaoServidor}
                         </p>
                       </div>
                     </div>
 
+                    <span className="text-[10px] text-emerald-800 font-bold bg-emerald-50 px-2 py-0.5 rounded border border-emerald-200 self-start sm:self-auto flex items-center gap-1">
+                      <Check className="w-3 h-3 text-emerald-600" />
+                      <span>Visto Digital Principal</span>
+                    </span>
+                  </div>
+
+                  {/* Demais Passageiros Adicionados */}
+                  {passageirosDetalhes.map((p, idx) => (
+                    <div 
+                      key={p.id}
+                      className="bg-white rounded-xl p-3 border border-slate-200 hover:border-slate-300 shadow-2xs flex flex-col sm:flex-row sm:items-center justify-between gap-2 transition-all animate-in fade-in"
+                    >
+                      <div className="flex items-center gap-3">
+                        <div className="w-8 h-8 rounded-lg bg-slate-100 text-slate-700 flex items-center justify-center font-bold text-xs shrink-0 border border-slate-200">
+                          {idx + 2}
+                        </div>
+                        <div>
+                          <div className="flex items-center gap-2 flex-wrap">
+                            <strong className="text-xs text-slate-900">{p.nome}</strong>
+                            {p.matricula && (
+                              <span className="font-mono text-[10px] text-[#05202B] bg-slate-100 px-1.5 py-0.2 rounded font-bold border border-slate-200">
+                                Matr. {p.matricula}
+                              </span>
+                            )}
+                            {p.cpf && (
+                              <span className="font-mono text-[10px] text-slate-600 bg-slate-100 px-1.5 py-0.2 rounded border border-slate-200">
+                                CPF: {p.cpf}
+                              </span>
+                            )}
+                            <span className="text-[10px] bg-blue-50 text-blue-800 font-bold px-1.5 py-0.2 rounded border border-blue-200 flex items-center gap-1">
+                              <Check className="w-3 h-3 text-blue-600" />
+                              <span>{p.tipo === 'servidor_hercules' ? 'Hércules TJPR' : 'Receita Federal'}</span>
+                            </span>
+                          </div>
+                          <p className="text-[11px] text-slate-500 mt-0.5">
+                            {p.cargo || 'Passageiro confirmado'}
+                          </p>
+                        </div>
+                      </div>
+
+                      <button
+                        type="button"
+                        onClick={() => handleRemoverPassageiro(p.id)}
+                        className="text-xs text-red-600 hover:text-red-800 hover:bg-red-50 px-2 py-1 rounded-lg font-semibold flex items-center gap-1 transition-colors cursor-pointer self-end sm:self-auto border border-transparent hover:border-red-200"
+                        title="Remover passageiro"
+                      >
+                        <X className="w-3.5 h-3.5" />
+                        <span>Remover</span>
+                      </button>
+                    </div>
+                  ))}
+                </div>
+
+                {/* Observações Adicionais */}
+                <div>
+                  <label className="block text-xs font-semibold text-slate-700 mb-1">
+                    Observações Adicionais / Menção de Passageiros Especiais (Opcional):
+                  </label>
+                  <textarea
+                    rows={2}
+                    placeholder="Ex: Bagagens volumosas, autos de processos, necessidade de acessibilidade ou menção a convidados adicionais..."
+                    value={observacoes}
+                    onChange={(e) => setObservacoes(e.target.value)}
+                    className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs text-slate-900 focus:outline-none focus:bg-white focus:border-[#05202B]"
+                  />
+                </div>
+
+                {/* AÇÕES ABAIXO DOS CAMPOS DO ITEM 4 */}
+                <div className="pt-3 flex flex-col sm:flex-row items-center justify-between gap-3 border-t border-slate-200/70">
+                  <span className="text-xs text-slate-500">
+                    {item4Confirmado 
+                      ? '✓ Quantidade e lista de passageiros validadas para este deslocamento.' 
+                      : 'Confira os passageiros e clique no botão para confirmar esta etapa.'}
+                  </span>
+
+                  <div className="flex items-center gap-2 self-end sm:self-auto flex-wrap">
                     <button
                       type="button"
-                      onClick={() => handleRemoverPassageiro(p.id)}
-                      className="text-xs text-red-600 hover:text-red-800 hover:bg-red-50 px-2 py-1 rounded-lg font-semibold flex items-center gap-1 transition-colors cursor-pointer self-end sm:self-auto border border-transparent hover:border-red-200"
-                      title="Remover passageiro"
+                      onClick={handleConfirmarPassageiros}
+                      className={`px-4 py-2.5 rounded-xl text-xs font-bold flex items-center gap-2 transition-all shadow-xs cursor-pointer ${
+                        item4Confirmado
+                          ? 'bg-emerald-600 hover:bg-emerald-700 text-white'
+                          : 'bg-[#05202B] hover:bg-[#082E3C] text-white hover:scale-[1.01]'
+                      }`}
                     >
-                      <X className="w-3.5 h-3.5" />
-                      <span>Remover</span>
+                      <CheckCircle2 className="w-4 h-4 text-emerald-300" />
+                      <span>{item4Confirmado ? 'Passageiros Confirmados ✓' : 'Confirmar Quantidade & Passageiros'}</span>
                     </button>
-                  </div>
-                ))}
-              </div>
-            </div>
 
-              {/* Observações Adicionais */}
-              <div>
-                <label className="block text-xs font-semibold text-slate-700 mb-1">
-                  Observações Adicionais / Menção de Passageiros Especiais (Opcional):
-                </label>
-                <textarea
-                  rows={2}
-                  placeholder="Ex: Bagagens volumosas, autos de processos, necessidade de acessibilidade ou menção a convidados adicionais..."
-                  value={observacoes}
-                  onChange={(e) => setObservacoes(e.target.value)}
-                  className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs text-slate-900 focus:outline-none focus:bg-white focus:border-[#05202B]"
-                />
+                    {item4Confirmado && (
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setItem4Confirmado(false);
+                          setItem4Expandido(true);
+                        }}
+                        className="px-3.5 py-2.5 rounded-xl text-xs font-semibold text-slate-700 hover:text-slate-900 bg-white hover:bg-slate-100 border border-slate-300 flex items-center gap-1.5 transition-colors shadow-2xs cursor-pointer"
+                      >
+                        <Pencil className="w-3.5 h-3.5 text-slate-500" />
+                        <span>Alterar Passageiros</span>
+                      </button>
+                    )}
+                  </div>
+                </div>
               </div>
-            </div>
-            )}
+            )
+          )}
 
             {/* Mensagem de Erro/Validação se houver */}
             {formError && (
