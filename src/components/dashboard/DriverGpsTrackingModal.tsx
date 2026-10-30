@@ -34,6 +34,7 @@ import {
   Plus,
   LayoutGrid,
   Maximize2,
+  Minimize2,
   Sliders,
   ChevronRight,
   TrendingUp,
@@ -71,6 +72,7 @@ export interface DriverGpsTrackingModalProps {
   allVehicles?: Vehicle[];
   allTrips?: Trip[];
   allDrivers?: Driver[];
+  initialFullScreen?: boolean;
   onOpenOfficialOrder?: (trip: Trip) => void;
   onSaveTripSignature?: (tripId: string, signatureData: TripSignatureData) => void;
 }
@@ -285,10 +287,25 @@ export const DriverGpsTrackingModal: React.FC<DriverGpsTrackingModalProps> = ({
   allVehicles = [],
   allTrips = [],
   allDrivers = [],
+  initialFullScreen = true,
   onOpenOfficialOrder,
   onSaveTripSignature,
 }) => {
   if (!isOpen) return null;
+
+  // Estado Full Screen: por padrão ativado (ocupa 100% da tela) quando o botão é acionado
+  const [isFullScreen, setIsFullScreen] = useState(initialFullScreen);
+
+  // Fechar com tecla ESC
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') {
+        onClose();
+      }
+    };
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [onClose]);
 
   // Modo de Visualização: Mosaico Simultâneo (Multi-Telas) vs Foco Individual
   const [viewMode, setViewMode] = useState<'mosaico' | 'individual'>('mosaico');
@@ -560,8 +577,16 @@ export const DriverGpsTrackingModal: React.FC<DriverGpsTrackingModalProps> = ({
   const availableToAdd = allVehicles.filter(v => !sessions.some(s => s.vehicle.prefixo === v.prefixo));
 
   return (
-    <div className="fixed inset-0 z-50 bg-slate-950/80 backdrop-blur-md flex items-center justify-center p-2 sm:p-4 overflow-y-auto">
-      <div className="bg-white w-full max-w-7xl rounded-2xl shadow-2xl border border-slate-300 overflow-hidden flex flex-col max-h-[96vh] my-auto">
+    <div className={`fixed inset-0 z-50 transition-all duration-150 ${
+      isFullScreen 
+        ? 'w-screen h-screen bg-[#001726] p-0 m-0 overflow-hidden flex flex-col' 
+        : 'bg-slate-950/80 backdrop-blur-md flex items-center justify-center p-2 sm:p-4 overflow-y-auto'
+    }`}>
+      <div className={`bg-white w-full flex flex-col overflow-hidden transition-all duration-150 ${
+        isFullScreen
+          ? 'h-screen w-screen max-w-none max-h-none rounded-none border-none shadow-none m-0'
+          : 'max-w-7xl rounded-2xl shadow-2xl border border-slate-300 max-h-[96vh] my-auto'
+      }`}>
         
         {/* ========================================================= */}
         {/* 1. CABEÇALHO DO MODAL: TÍTULO, MULTI-TELAS & CONTROLES    */}
@@ -580,6 +605,12 @@ export const DriverGpsTrackingModal: React.FC<DriverGpsTrackingModalProps> = ({
                 <span className="text-xs bg-amber-400/20 text-amber-300 px-2.5 py-0.5 rounded font-mono font-bold border border-amber-300/30">
                   {sessions.length} {sessions.length === 1 ? 'Veículo Monitorado' : 'Acompanhamentos Simultâneos'}
                 </span>
+                {isFullScreen && (
+                  <span className="hidden xl:inline-flex items-center gap-1 px-2.5 py-0.5 rounded text-xs font-mono font-bold bg-white/15 text-white border border-white/25">
+                    <Maximize2 className="w-3 h-3 text-amber-300" />
+                    Tela Cheia (Full Screen)
+                  </span>
+                )}
               </div>
               <h2 className="text-xl sm:text-2xl font-black text-white tracking-tight mt-1">
                 Acompanhamento por GPS via Celular dos Motoristas
@@ -642,11 +673,32 @@ export const DriverGpsTrackingModal: React.FC<DriverGpsTrackingModalProps> = ({
               )}
             </button>
 
+            {/* Botão Alternar Tela Cheia (Full Screen) */}
+            <button
+              type="button"
+              onClick={() => setIsFullScreen(!isFullScreen)}
+              className="flex items-center gap-1.5 px-3 py-2 bg-white/10 hover:bg-white/20 text-white rounded-xl text-xs font-bold transition-colors cursor-pointer border border-white/15"
+              title={isFullScreen ? "Restaurar para janela normal" : "Expandir para Tela Cheia total (Full Screen)"}
+            >
+              {isFullScreen ? (
+                <>
+                  <Minimize2 className="w-4 h-4 text-amber-300" />
+                  <span className="hidden sm:inline">Restaurar Janela</span>
+                </>
+              ) : (
+                <>
+                  <Maximize2 className="w-4 h-4 text-emerald-300" />
+                  <span className="hidden sm:inline">Tela Cheia</span>
+                </>
+              )}
+            </button>
+
             {/* Botão Fechar Modal */}
             <button
               onClick={onClose}
               className="p-2 rounded-xl text-slate-300 hover:text-white hover:bg-white/15 transition-colors cursor-pointer"
               aria-label="Fechar"
+              title="Fechar (ESC)"
             >
               <X className="w-6 h-6" />
             </button>
@@ -1242,8 +1294,27 @@ export const DriverGpsTrackingModal: React.FC<DriverGpsTrackingModalProps> = ({
           <div className="flex items-center gap-2">
             <button
               type="button"
+              onClick={() => setIsFullScreen(!isFullScreen)}
+              className="px-4 py-2 bg-slate-200 hover:bg-slate-300 text-slate-800 font-bold rounded-xl transition-colors cursor-pointer flex items-center gap-1.5"
+              title={isFullScreen ? "Reduzir para janela normal" : "Expandir para Tela Cheia (Full Screen)"}
+            >
+              {isFullScreen ? (
+                <>
+                  <Minimize2 className="w-3.5 h-3.5 text-amber-700" />
+                  <span>Restaurar Janela</span>
+                </>
+              ) : (
+                <>
+                  <Maximize2 className="w-3.5 h-3.5 text-[#002B49]" />
+                  <span>Tela Cheia (Full Screen)</span>
+                </>
+              )}
+            </button>
+
+            <button
+              type="button"
               onClick={onClose}
-              className="px-5 py-2 bg-slate-200 hover:bg-slate-300 text-slate-800 font-bold rounded-xl transition-colors cursor-pointer"
+              className="px-5 py-2 bg-[#002B49] hover:bg-[#003C66] text-white font-bold rounded-xl transition-colors cursor-pointer"
             >
               Fechar Acompanhamento
             </button>

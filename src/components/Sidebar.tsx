@@ -106,7 +106,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
     {
       id: 'calendario' as MainNavTab,
       icon: CalendarDays,
-      badge: undefined,
+      badge: isDriver ? '12' : undefined,
     },
     {
       id: 'chamados' as MainNavTab,
@@ -160,7 +160,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
     {
       role: 'motorista',
       label: 'Motorista',
-      sub: 'Condutor Oficial • 4 Módulos',
+      sub: 'Condutor Oficial • Agenda de Serviços',
       icon: Car,
     },
     {
@@ -171,8 +171,8 @@ export const Sidebar: React.FC<SidebarProps> = ({
     },
     {
       role: 'supervisor_operacional',
-      label: 'Supervisor Operacional',
-      sub: 'Escala, Frotas & Despachos',
+      label: 'Supervisor de Rodízio',
+      sub: 'Escala de Rodízio & Despachos',
       icon: LifeBuoy,
     },
     {

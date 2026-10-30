@@ -100,8 +100,8 @@ import { AccessRestrictedView } from './components/common/AccessRestrictedView';
 import { DriverSessionBar } from './components/common/DriverSessionBar';
 
 export default function App() {
-  // Estado principal de navegação e perfis (Iniciando no Diário de Bordo & Frota unificado)
-  const [activeNavTab, setActiveNavTab] = useState<MainNavTab>('operacoes');
+  // Estado principal de navegação e perfis (Iniciando na Agenda de Serviços para Motorista)
+  const [activeNavTab, setActiveNavTab] = useState<MainNavTab>('calendario');
   const [currentRole, setCurrentRole] = useState<Role>('motorista');
   const [selectedComarca, setSelectedComarca] = useState<string>('Todas as Comarcas');
 
@@ -378,7 +378,7 @@ export default function App() {
       )
     );
 
-    // 5. Notificação imediata ao Supervisor Operacional & Registro em Relatório de Pesquisa
+    // 5. Notificação imediata ao Supervisor de Rodízio & Registro em Relatório de Pesquisa
     const supervisorNotif: NotificationItem = {
       id: `notif-survey-sup-${Date.now()}`,
       titulo: `⭐ Pesquisa de Satisfação Recebida • Chamado ${data.chamadoCodigo}`,
@@ -392,7 +392,7 @@ export default function App() {
     };
     setNotifications((prev) => [supervisorNotif, ...prev]);
 
-    showToast(`Avaliação ${data.rating}/5 registrada! Notificação transmitida à Supervisão Operacional e incluída no Relatório de Pesquisa.`);
+    showToast(`Avaliação ${data.rating}/5 registrada! Notificação transmitida à Supervisão de Rodízio e incluída no Relatório de Pesquisa.`);
   };
 
   // Confirmação e registro de envio de reserva via WhatsApp
@@ -645,26 +645,32 @@ export default function App() {
     setChamados((prev) =>
       prev.map((c) => {
         if (c.id === chamadoId) {
-          const despachoMsg = `Coordenação de Frotas TJPR direcionou os recursos para atendimento:\n• Motorista Designado: ${selectedDriver?.nome || 'Motorista Oficial'} (Matrícula: ${selectedDriver?.matricula || '---'} | CNH: ${selectedDriver?.cnhCategoria || 'D'})\n• Veículo Designado: ${selectedVehicle?.prefixo || '---'} - ${selectedVehicle?.modelo || '---'} (Placa: ${selectedVehicle?.placa || '---'})\n${instrucoes ? `• Instruções: "${instrucoes}"` : ''}`;
+          const despachoMsg = `Supervisor de Rodízio realizou a designação dos recursos para o atendimento:\n• Motorista Designado: ${selectedDriver?.nome || 'Motorista Oficial'} (Matrícula: ${selectedDriver?.matricula || '---'} | CNH: ${selectedDriver?.cnhCategoria || 'D'})\n• Veículo Designado: ${selectedVehicle?.prefixo || '---'} - ${selectedVehicle?.modelo || '---'} (Placa: ${selectedVehicle?.placa || '---'})\n${instrucoes ? `• Instruções: "${instrucoes}"` : ''}`;
 
           return {
             ...c,
             status: 'em_atendimento',
+            escalaPreSelecionada: false,
+            escalaConfirmada: true,
             motoristaId: selectedDriver?.id,
             motoristaNome: selectedDriver?.nome,
+            motoristaMatricula: selectedDriver?.matricula,
             motoristaTelefone: selectedDriver?.telefone,
             veiculoId: selectedVehicle?.id,
             veiculoPrefixo: selectedVehicle?.prefixo,
             veiculoModelo: selectedVehicle?.modelo,
             veiculoPlaca: selectedVehicle?.placa,
+            slaCumprido: true,
+            slaStatus: 'cumprido',
+            slaDataConfirmacao: formattedDate,
             respostas: [
               ...c.respostas,
               {
                 id: `resp-${Date.now()}`,
                 dataHora: formattedDate,
-                autor: 'Coordenação Regional de Transportes',
-                cargo: 'Coordenadora Regional',
-                mensagem: despachoMsg,
+                autor: 'Supervisor de Rodízio',
+                cargo: 'Supervisão do Rodízio TJPR',
+                mensagem: `${despachoMsg}\n[SLA 30 min]: Atendimento concluído pelo Supervisor de Rodízio dentro do prazo regulamentar.`,
                 isAdmin: true,
               },
             ],
@@ -674,7 +680,98 @@ export default function App() {
       })
     );
 
-    showToast(`Motorista (${selectedDriver?.nome}) e Veículo (${selectedVehicle?.prefixo}) direcionados com sucesso!`);
+    // Atualizar viagem vinculada se houver
+    if (selectedDriver && selectedVehicle) {
+      setTrips((prev) =>
+        prev.map((t) => {
+          const targetC = chamados.find((c) => c.id === chamadoId);
+          if (targetC && (t.id === targetC.tripIdVinculada || t.codigo === targetC.codigo)) {
+            return {
+              ...t,
+              status: 'aprovada',
+              motoristaId: selectedDriver.id,
+              motoristaNome: selectedDriver.nome,
+              veiculoId: selectedVehicle.id,
+              veiculoPrefixo: selectedVehicle.prefixo,
+            };
+          }
+          return t;
+        })
+      );
+    }
+
+    showToast(`Motorista (${selectedDriver?.nome}) e Veículo (${selectedVehicle?.prefixo}) atualizados com sucesso pelo Supervisor de Rodízio! SLA cumprido.`);
+  };
+
+  // Supervisor de Rodízio: Confirmar a escala pré-selecionada do motorista
+  const handleConfirmEscala = (chamadoId: string) => {
+    const targetChamado = chamados.find((c) => c.id === chamadoId);
+    if (!targetChamado) return;
+
+    const now = new Date();
+    const formattedDate = `${now.toISOString().split('T')[0]} ${now.toTimeString().split(' ')[0].substring(0, 5)}`;
+    const driverName = targetChamado.motoristaNome || 'Motorista Escalado';
+    const vehiclePrefixo = targetChamado.veiculoPrefixo || 'TJ-113';
+
+    setChamados((prev) =>
+      prev.map((c) => {
+        if (c.id === chamadoId) {
+          return {
+            ...c,
+            escalaConfirmada: true,
+            status: 'em_atendimento',
+            slaCumprido: true,
+            slaStatus: 'cumprido',
+            slaDataConfirmacao: formattedDate,
+            respostas: [
+              ...c.respostas,
+              {
+                id: `resp-escala-${Date.now()}`,
+                dataHora: formattedDate,
+                autor: 'Juliana Mendes',
+                cargo: 'Supervisor de Rodízio',
+                mensagem: `ESCALA DE RODÍZIO CONFIRMADA:\nO Supervisor de Rodízio homologou a designação do condutor oficial ${driverName} (Matrícula: ${c.motoristaMatricula || '41.720-3'} • Veículo ${vehiclePrefixo} - Virtus TSI) conforme escala regular do TJPR dentro do SLA de 30 minutos.`,
+                isAdmin: true,
+              },
+            ],
+          };
+        }
+        return c;
+      })
+    );
+
+    // Se houver viagem vinculada, homologa para aprovada
+    if (targetChamado.tripIdVinculada) {
+      setTrips((prev) =>
+        prev.map((t) =>
+          t.id === targetChamado.tripIdVinculada
+            ? {
+                ...t,
+                status: 'aprovada',
+                motoristaId: targetChamado.motoristaId,
+                motoristaNome: targetChamado.motoristaNome,
+                veiculoPrefixo: targetChamado.veiculoPrefixo,
+                veiculoId: targetChamado.veiculoId,
+              }
+            : t
+        )
+      );
+    }
+
+    // Notificação interna
+    setNotifications((prev) => [
+      {
+        id: `notif-esc-${Date.now()}`,
+        titulo: `Escala Confirmada • ${targetChamado.codigo}`,
+        mensagem: `A escala do motorista ${driverName} (${vehiclePrefixo}) foi confirmada com sucesso pelo Supervisor de Rodízio.`,
+        dataHora: `Hoje às ${formattedDate.split(' ')[1]}`,
+        lida: false,
+        tipo: 'viagem',
+      },
+      ...prev,
+    ]);
+
+    showToast(`Escala de rodízio confirmada! Motorista ${driverName} (${vehiclePrefixo}) pronto para atendimento.`);
   };
 
   // Requisito 3: Somente o coordenador pode encerrar o chamado
@@ -1141,7 +1238,40 @@ export default function App() {
     const tripId = `trip-vis-${Date.now()}`;
     const chamadoId = `cham-vis-${Date.now()}`;
 
-    // 1. Criar a Trip correspondente com status 'solicitada'
+    // 1. Localizar o condutor de plantão escalado no rodízio oficial TJPR
+    let scheduledDriver: Driver | undefined;
+    let scheduledVehicle: Vehicle | undefined;
+
+    if (solicitation.tipoServico === 'com_motorista') {
+      const openChamadosDriverIds = chamados
+        .filter((c) => c.status === 'aberto' && c.escalaPreSelecionada && c.motoristaId)
+        .map((c) => c.motoristaId);
+
+      // Prioriza condutores da escala que estão 'escalado' ou 'disponivel_base', sem chamado concorrente
+      const candidateSchedule = driverSchedules.find((sch) => {
+        const drv = drivers.find((d) => d.id === sch.driverId);
+        return (
+          (sch.statusEscala === 'escalado' || sch.statusEscala === 'disponivel_base') &&
+          drv?.status === 'disponivel' &&
+          !openChamadosDriverIds.includes(sch.driverId)
+        );
+      }) || driverSchedules.find((sch) => {
+        const drv = drivers.find((d) => d.id === sch.driverId);
+        return drv?.status === 'disponivel';
+      }) || driverSchedules[12] || driverSchedules[0];
+
+      if (candidateSchedule) {
+        scheduledDriver = drivers.find((d) => d.id === candidateSchedule.driverId);
+        if (scheduledDriver) {
+          scheduledVehicle =
+            vehicles.find((v) => v.prefixo === scheduledDriver?.veiculoPrefixoAtual) ||
+            vehicles.find((v) => v.prefixo === candidateSchedule.veiculoPrefixo) ||
+            vehicles[0];
+        }
+      }
+    }
+
+    // 2. Criar a Trip correspondente
     const newTrip: Trip = {
       id: tripId,
       codigo: tripCodigo,
@@ -1157,6 +1287,10 @@ export default function App() {
       solicitanteVara: `Solicitação de Veículo TJPR • ${solicitation.orgaoOuVinculo}`,
       comarca: solicitation.comarca,
       finalidade: `${solicitation.tipoServico === 'com_motorista' ? '[Viagem c/ Motorista Oficial]' : '[Reserva de Carro - Direção Própria]'} ${solicitation.finalidade || 'Deslocamento Institucional TJPR'}`,
+      motoristaId: scheduledDriver?.id,
+      motoristaNome: scheduledDriver?.nome,
+      veiculoId: scheduledVehicle?.id,
+      veiculoPrefixo: scheduledVehicle?.prefixo,
       passageiros: [
         solicitation.solicitanteNome,
         ...(solicitation.demaisPassageiros && solicitation.demaisPassageiros.length > 0
@@ -1169,7 +1303,7 @@ export default function App() {
       processoSei: `VIS-${solicitation.documentoOuCpf.replace(/\D/g, '').substring(0, 7) || '2026'}.8.16.6000`,
     };
 
-    // 2. Criar o Chamado Oficial com status 'aberto' (cai na lista de chamados abertos da Coordenação)
+    // 3. Criar o Chamado Oficial com escala pré-selecionada (fila do Supervisor de Rodízio)
     const newChamado: Chamado = {
       id: chamadoId,
       codigo: chamadoCodigo,
@@ -1188,13 +1322,29 @@ export default function App() {
       prazoSugerido: `${solicitation.dataSaida} ${solicitation.horaSaida}`,
       tripIdVinculada: tripId,
       processoSei: newTrip.processoSei,
+      escalaPreSelecionada: !!scheduledDriver,
+      escalaConfirmada: false,
+      slaRodizioMinutos: 30,
+      slaMinutosRestantes: 30,
+      slaStatus: 'dentro_prazo',
+      slaAberturaTimestamp: Date.now(),
+      motoristaId: scheduledDriver?.id,
+      motoristaNome: scheduledDriver?.nome,
+      motoristaMatricula: scheduledDriver?.matricula,
+      motoristaTelefone: scheduledDriver?.telefone,
+      veiculoId: scheduledVehicle?.id,
+      veiculoPrefixo: scheduledVehicle?.prefixo,
+      veiculoModelo: scheduledVehicle?.modelo,
+      veiculoPlaca: scheduledVehicle?.placa,
       respostas: [
         {
           id: `resp-${Date.now()}`,
-          autor: 'Sistema SIGPAT (Solicitação de Veículo)',
-          cargo: 'Protocolo Eletrônico TJPR',
+          autor: 'Sistema SIGPAT (Escala de Rodízio)',
+          cargo: 'Escala Automática TJPR',
           dataHora: formattedDate,
-          mensagem: `Demanda protocolada sob nº ${chamadoCodigo}. Entrada direta na fila de chamados em aberto da Coordenação de Frotas de ${solicitation.comarca}. Aguardando direcionamento de motorista e veículo.`,
+          mensagem: scheduledDriver
+            ? `Demanda protocolada sob nº ${chamadoCodigo}. Conforme escala oficial de rodízio da Comarca, o motorista escalado ${scheduledDriver.nome} (Matrícula: ${scheduledDriver.matricula} • Veículo ${scheduledVehicle?.prefixo}) foi pré-selecionado automaticamente. O chamado aguarda confirmação da escala ou alteração do condutor pelo Supervisor de Rodízio.`
+            : `Demanda protocolada sob nº ${chamadoCodigo}. Entrada direta na fila de chamados em aberto do Supervisor de Rodízio de ${solicitation.comarca}. Aguardando direcionamento de motorista e veículo.`,
           isAdmin: false,
         },
       ],
@@ -1203,11 +1353,11 @@ export default function App() {
     setTrips((prev) => [newTrip, ...prev]);
     setChamados((prev) => [newChamado, ...prev]);
 
-    // 3. Notificação no sistema para o coordenador
+    // 4. Notificação no sistema para o Supervisor de Rodízio
     const coordNotif: NotificationItem = {
       id: `notif-vis-${Date.now()}`,
-      titulo: `Novo Chamado em Aberto: ${chamadoCodigo} (Solicitação de Veículo)`,
-      mensagem: `${solicitation.solicitanteNome} (${solicitation.orgaoOuVinculo}) solicitou transporte para "${solicitation.destino}". Aberto para direcionamento do coordenador.`,
+      titulo: `Novo Chamado: ${chamadoCodigo} • Escala Pré-Selecionada`,
+      mensagem: `${solicitation.solicitanteNome} (${solicitation.orgaoOuVinculo}) solicitou transporte para "${solicitation.destino}". Motorista escalado no rodízio: ${scheduledDriver ? `${scheduledDriver.nome} (${scheduledVehicle?.prefixo})` : 'Aguardando alocação'}. Pendente de confirmação pelo Supervisor de Rodízio.`,
       dataHora: `Hoje às ${now.toTimeString().split(' ')[0].substring(0, 5)}`,
       lida: false,
       tipo: 'viagem',
@@ -1215,7 +1365,11 @@ export default function App() {
     };
     setNotifications((prev) => [coordNotif, ...prev]);
 
-    showToast(`Solicitação ${chamadoCodigo} protocolada! Caiu diretamente na lista de chamados abertos da Coordenação.`);
+    showToast(
+      scheduledDriver
+        ? `Solicitação ${chamadoCodigo} protocolada! Motorista escalado (${scheduledDriver.nome}) pré-selecionado no rodízio.`
+        : `Solicitação ${chamadoCodigo} protocolada com sucesso!`
+    );
     return { chamadoCodigo, tripCodigo };
   };
 
@@ -1469,7 +1623,7 @@ export default function App() {
             <span className="text-slate-600">
               {currentRole === 'motorista' || currentRole === 'operador' ? (
                 <span className="text-amber-800 font-semibold bg-amber-100/60 px-1.5 py-0.5 rounded border border-amber-300/40">
-                  Portal do Condutor • Acesso Restrito aos 4 Módulos
+                  Portal do Condutor • Agenda de Serviços Oficial
                 </span>
               ) : (
                 <span>SIGPAT Transportes • Monitoramento em Tempo Real</span>
@@ -1672,6 +1826,7 @@ export default function App() {
                         onOpenNewChamadoModal={() => setNewChamadoModalOpen(true)}
                         onUpdateChamadoStatus={handleUpdateChamadoStatus}
                         onAssignDriverAndVehicle={handleAssignDriverAndVehicle}
+                        onConfirmEscala={handleConfirmEscala}
                         onCloseChamadoByCoordinator={handleCloseChamadoByCoordinator}
                         onAddChamadoResposta={handleAddChamadoResposta}
                         onNavigateToRelatorios={() => setActiveNavTab('relatorios')}
@@ -1715,20 +1870,34 @@ export default function App() {
 
             {/* ABA: Calendário de Eventos & Agenda de Serviços (Alimentada Automaticamente) */}
             {activeNavTab === 'calendario' && (
-              <CalendarEventsView
-                trips={trips}
-                maintenances={maintenances}
-                chamados={chamados}
-                fuelLogs={fuelLogs}
-                vehicles={vehicles}
-                drivers={drivers}
-                selectedComarca={selectedComarca}
-                currentRole={currentRole}
-                currentDriver={currentDriver}
-                onOpenTripDetails={(trip) => setTripLogTrip(trip)}
-                onOpenTripSignature={(trip) => setSignatureModalTrip(trip)}
-                onNavigateToTab={(tab) => setActiveNavTab(tab)}
-              />
+              isDriverRole(currentRole) ? (
+                <DriverPortal
+                  currentDriver={currentDriver}
+                  trips={trips}
+                  vehicles={vehicles}
+                  fuelLogs={fuelLogs}
+                  onStartTripClick={handleStartTripClick}
+                  onFinishTripClick={handleFinishTripClick}
+                  onOpenTripLog={(trip) => setTripLogTrip(trip)}
+                  onOpenOfficialOrder={(trip) => setOfficialOrderTrip(trip)}
+                  onOpenQuickFuel={() => setQuickFuelOpen(true)}
+                />
+              ) : (
+                <CalendarEventsView
+                  trips={trips}
+                  maintenances={maintenances}
+                  chamados={chamados}
+                  fuelLogs={fuelLogs}
+                  vehicles={vehicles}
+                  drivers={drivers}
+                  selectedComarca={selectedComarca}
+                  currentRole={currentRole}
+                  currentDriver={currentDriver}
+                  onOpenTripDetails={(trip) => setTripLogTrip(trip)}
+                  onOpenTripSignature={(trip) => setSignatureModalTrip(trip)}
+                  onNavigateToTab={(tab) => setActiveNavTab(tab)}
+                />
+              )
             )}
 
             {/* ABA: Central de Chamados & Apoio Logístico */}
@@ -1744,6 +1913,7 @@ export default function App() {
                 onOpenNewChamadoModal={() => setNewChamadoModalOpen(true)}
                 onUpdateChamadoStatus={handleUpdateChamadoStatus}
                 onAssignDriverAndVehicle={handleAssignDriverAndVehicle}
+                onConfirmEscala={handleConfirmEscala}
                 onCloseChamadoByCoordinator={handleCloseChamadoByCoordinator}
                 onAddChamadoResposta={handleAddChamadoResposta}
                 onNavigateToRelatorios={() => setActiveNavTab('relatorios')}

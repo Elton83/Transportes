@@ -48,6 +48,16 @@ export interface Chamado {
   motoristaId?: string;
   motoristaNome?: string;
   motoristaTelefone?: string;
+  motoristaMatricula?: string;
+  escalaPreSelecionada?: boolean;
+  escalaConfirmada?: boolean;
+  // SLA de Confirmação da Escala (30 minutos para o Supervisor de Rodízio)
+  slaRodizioMinutos?: number; // Padrão: 30 minutos
+  slaMinutosRestantes?: number;
+  slaStatus?: 'dentro_prazo' | 'atencao' | 'estourado' | 'cumprido';
+  slaCumprido?: boolean;
+  slaDataConfirmacao?: string;
+  slaAberturaTimestamp?: number;
   processoSei?: string;
   prazoSugerido?: string;
   respostas: ChamadoResposta[];

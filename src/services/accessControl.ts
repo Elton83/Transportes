@@ -49,12 +49,11 @@ export const ROLE_CONFIGS: Record<Role, RoleConfig> = {
     label: 'Motorista',
     shortLabel: 'Motorista',
     badgeLabel: 'Condutor Oficial TJPR',
-    sub: 'Rotina & Condução',
-    description: 'Acesso estrito ao rodízio de demandas e agenda de viagens oficiais.',
+    sub: 'Agenda de Serviços',
+    description: 'Acesso estrito à agenda de serviços do condutor oficial.',
     color: 'amber',
     allowedTabs: [
-      'operacoes',      // Rodízio (Minhas Demandas, Viagens, Checklists, Ordens)
-      'calendario',     // Agenda de Serviços (Minhas viagens e atividades agendadas)
+      'calendario',     // Agenda de Serviços (Item único do menu: viagens e atividades integradas)
     ],
     canViewGlobalFleet: false,
     canApproveTrips: false,
@@ -88,11 +87,11 @@ export const ROLE_CONFIGS: Record<Role, RoleConfig> = {
   },
   supervisor_operacional: {
     role: 'supervisor_operacional',
-    label: 'Supervisor Operacional',
-    shortLabel: 'Sup. Operacional',
-    badgeLabel: 'Escala & Frotas',
-    sub: 'Supervisão Operacional',
-    description: 'Gestão operacional de veículos, escala de motoristas, despacho de viagens e chamados da comarca.',
+    label: 'Supervisor de Rodízio',
+    shortLabel: 'Sup. de Rodízio',
+    badgeLabel: 'Escala & Rodízio TJPR',
+    sub: 'Supervisão do Rodízio',
+    description: 'Gestão da escala de motoristas, rodízio de diligências, confirmação e despacho de veículos da comarca.',
     color: 'sky',
     allowedTabs: [
       'operacoes',
@@ -155,11 +154,11 @@ export const ROLE_CONFIGS: Record<Role, RoleConfig> = {
   },
   coordenador: {
     role: 'coordenador',
-    label: 'Supervisor Operacional',
-    shortLabel: 'Sup. Operacional',
-    badgeLabel: 'Escala & Frotas',
-    sub: 'Supervisão Operacional',
-    description: 'Acompanhamento regional da comarca, gestão de chamados de apoio e escala local.',
+    label: 'Supervisor de Rodízio',
+    shortLabel: 'Sup. de Rodízio',
+    badgeLabel: 'Escala & Rodízio TJPR',
+    sub: 'Supervisão do Rodízio',
+    description: 'Acompanhamento regional da comarca, gestão de chamados de apoio e escala local de rodízio.',
     color: 'sky',
     allowedTabs: [
       'operacoes',
@@ -181,12 +180,11 @@ export const ROLE_CONFIGS: Record<Role, RoleConfig> = {
     label: 'Motorista',
     shortLabel: 'Motorista',
     badgeLabel: 'Condutor Oficial TJPR',
-    sub: 'Rotina & Condução',
-    description: 'Acesso estrito ao rodízio de demandas e agenda de viagens oficiais.',
+    sub: 'Agenda de Serviços',
+    description: 'Acesso estrito à agenda de serviços do condutor oficial.',
     color: 'amber',
     allowedTabs: [
-      'operacoes',
-      'calendario',
+      'calendario',     // Agenda de Serviços (Item único do menu: viagens e atividades integradas)
     ],
     canViewGlobalFleet: false,
     canApproveTrips: false,

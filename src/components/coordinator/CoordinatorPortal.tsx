@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   AlertCircle,
   BarChart3,
@@ -64,6 +64,7 @@ interface CoordinatorPortalProps {
   onOpenNewChamadoModal: () => void;
   onUpdateChamadoStatus?: (chamadoId: string, novoStatus: ChamadoStatus) => void;
   onAssignDriverAndVehicle?: (chamadoId: string, driverId: string, vehicleId: string, instrucoes?: string) => void;
+  onConfirmEscala?: (chamadoId: string) => void;
   onCloseChamadoByCoordinator?: (chamadoId: string, justificativa: string) => void;
   onAddChamadoResposta?: (chamadoId: string, mensagem: string) => void;
   onNavigateToRelatorios: () => void;
@@ -87,6 +88,7 @@ export const CoordinatorPortal: React.FC<CoordinatorPortalProps> = ({
   onOpenNewChamadoModal,
   onUpdateChamadoStatus,
   onAssignDriverAndVehicle,
+  onConfirmEscala,
   onCloseChamadoByCoordinator,
   onAddChamadoResposta,
   onNavigateToRelatorios,
@@ -122,6 +124,25 @@ export const CoordinatorPortal: React.FC<CoordinatorPortalProps> = ({
   // 4. Modal para inspecionar assinatura e atesto do solicitante
   const [inspectingSignatureTrip, setInspectingSignatureTrip] = useState<Trip | null>(null);
 
+  // 5. Modal com todos os Detalhes do Chamado (visão limpa no card)
+  const [detailsChamado, setDetailsChamado] = useState<Chamado | null>(null);
+
+  // SLA de 30 minutos: Contador em tempo real
+  const [slaTick, setSlaTick] = useState<number>(0);
+  useEffect(() => {
+    const interval = setInterval(() => {
+      setSlaTick((prev) => prev + 1);
+    }, 60000);
+    return () => clearInterval(interval);
+  }, []);
+
+  const getSlaRemainingMinutes = (c: Chamado): number => {
+    if (c.slaMinutosRestantes !== undefined) {
+      return Math.max(-120, c.slaMinutosRestantes - slaTick);
+    }
+    return 24;
+  };
+
   // Filtragem dos dados conforme a comarca selecionada
   const filteredVehicles = vehicles.filter(
     (v) => selectedComarca === 'Todas as Comarcas' || v.comarca === selectedComarca
@@ -137,6 +158,8 @@ export const CoordinatorPortal: React.FC<CoordinatorPortalProps> = ({
     c.titulo?.toLowerCase().includes('portal do visitante') ||
     c.codigo?.includes('VIS') ||
     c.titulo?.toLowerCase().includes('(portal do visitante)');
+
+  const canClose = currentRole === 'coordenador' || currentRole === 'supervisor_operacional' || currentRole === 'administrador';
 
   // Filtragem dos Chamados
   const filteredChamados = chamados.filter((c) => {
@@ -594,12 +617,105 @@ export const CoordinatorPortal: React.FC<CoordinatorPortalProps> = ({
                           <span className="text-xs text-slate-500 font-mono">{chamado.dataAbertura}</span>
                         </div>
 
-                        <h3 className="text-sm font-bold text-slate-900 mt-1 flex items-center gap-2">
-                          <span>{chamado.titulo}</span>
+                        <h3 className="text-sm font-bold text-slate-900 mt-1">
+                          {chamado.titulo}
                         </h3>
-                        <p className="text-xs text-slate-600 leading-relaxed max-w-3xl">
-                          {chamado.descricao}
-                        </p>
+
+                        {/* Linha única com: Detalhes, Confirmar Escala e Alterar Motorista */}
+                        <div className="mt-2.5 flex items-center gap-2 flex-wrap">
+                          {/* 1. Detalhes */}
+                          <button
+                            type="button"
+                            onClick={() => setDetailsChamado(chamado)}
+                            className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-bold text-[#002B49] bg-amber-50 hover:bg-amber-100 border border-amber-300 transition-all shadow-2xs hover:shadow-xs cursor-pointer"
+                            title="Visualizar todos os detalhes do chamado"
+                          >
+                            <FileText className="w-3.5 h-3.5 text-amber-700" />
+                            <span>Detalhes</span>
+                          </button>
+
+                          {/* 2. Confirmar Escala (se escala pré-selecionada e ainda não confirmada) */}
+                          {chamado.escalaPreSelecionada && !chamado.escalaConfirmada && (
+                            <button
+                              type="button"
+                              onClick={() => onConfirmEscala && onConfirmEscala(chamado.id)}
+                              className="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs shadow-xs transition-all cursor-pointer"
+                              title="Confirmar o motorista e veículo pré-escalados pelo rodízio"
+                            >
+                              <Check className="w-3.5 h-3.5 text-emerald-100" />
+                              <span>Confirmar Escala</span>
+                            </button>
+                          )}
+
+                          {/* Indicador se a escala já estiver confirmada */}
+                          {chamado.escalaConfirmada && (
+                            <span className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-emerald-50 text-emerald-800 border border-emerald-300 text-xs font-bold">
+                              <Check className="w-3.5 h-3.5 text-emerald-600" />
+                              <span>Escala Confirmada</span>
+                            </span>
+                          )}
+
+                          {/* 3. Alterar Motorista */}
+                          {!isConcluido && (
+                            <button
+                              type="button"
+                              onClick={() => handleOpenManageChamado(chamado)}
+                              className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-white hover:bg-slate-50 text-slate-800 font-bold text-xs border border-slate-300 hover:border-slate-400 transition-all cursor-pointer shadow-2xs"
+                              title="Alterar condutor oficial ou veículo"
+                            >
+                              <User className="w-3.5 h-3.5 text-slate-600" />
+                              <span>Alterar Motorista</span>
+                            </button>
+                          )}
+
+                          {/* 4. SLA DE 30 MINUTOS PARA CONFIRMAR OU ALTERAR */}
+                          {chamado.escalaPreSelecionada && (
+                            chamado.escalaConfirmada || chamado.slaCumprido ? (
+                              <span 
+                                className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-emerald-50 text-emerald-800 border border-emerald-200 text-xs font-semibold shadow-2xs"
+                                title="Escala homologada dentro do prazo de SLA de 30 minutos regulamentar TJPR"
+                              >
+                                <CheckCircle2 className="w-3.5 h-3.5 text-emerald-600" />
+                                <span>SLA Cumprido (30m)</span>
+                              </span>
+                            ) : (
+                              (() => {
+                                const remaining = getSlaRemainingMinutes(chamado);
+                                if (remaining > 10) {
+                                  return (
+                                    <span 
+                                      className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-sky-50 text-sky-900 border border-sky-300 text-xs font-bold shadow-2xs"
+                                      title="SLA Oficial TJPR: O Supervisor de Rodízio tem até 30 minutos para confirmar a escala ou alterar o condutor"
+                                    >
+                                      <Clock className="w-3.5 h-3.5 text-sky-700 animate-pulse" />
+                                      <span>SLA Rodízio: <strong>{remaining} min restantes</strong> (30m máx)</span>
+                                    </span>
+                                  );
+                                } else if (remaining > 0) {
+                                  return (
+                                    <span 
+                                      className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-amber-50 text-amber-900 border border-amber-400 text-xs font-bold shadow-2xs animate-pulse"
+                                      title="Atenção: Prazo de 30 minutos para confirmação da escala está acabando!"
+                                    >
+                                      <AlertTriangle className="w-3.5 h-3.5 text-amber-700" />
+                                      <span>SLA Crítico: <strong>{remaining} min restantes</strong> (30m máx)</span>
+                                    </span>
+                                  );
+                                } else {
+                                  return (
+                                    <span 
+                                      className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-red-100 text-red-900 border border-red-300 text-xs font-bold shadow-2xs"
+                                      title="SLA Estourado: Prazo de 30 minutos para confirmação da escala ultrapassado!"
+                                    >
+                                      <AlertCircle className="w-3.5 h-3.5 text-red-700" />
+                                      <span>SLA Expirado (+{Math.abs(remaining)}m atraso)</span>
+                                    </span>
+                                  );
+                                }
+                              })()
+                            )
+                          )}
+                        </div>
                       </div>
 
                       {/* Status Atual do Chamado */}
@@ -619,7 +735,7 @@ export const CoordinatorPortal: React.FC<CoordinatorPortalProps> = ({
                         {isConcluido && (
                           <span className="px-3 py-1 rounded-full text-xs font-bold bg-emerald-100 text-emerald-800 border border-emerald-300 flex items-center gap-1">
                             <CheckCircle2 className="w-3.5 h-3.5 text-emerald-600" />
-                            Encerrado pelo Coordenador
+                            Encerrado pelo Supervisor de Rodízio
                           </span>
                         )}
 
@@ -752,136 +868,7 @@ export const CoordinatorPortal: React.FC<CoordinatorPortalProps> = ({
                       </div>
                     )}
 
-                    {/* RODAPÉ DO CARD COM AÇÕES DO COORDENADOR */}
-                    <div className="mt-4 pt-3 border-t border-slate-100 flex flex-col sm:flex-row sm:items-center justify-between gap-3 text-xs">
-                      
-                      <div className="flex items-center gap-2">
-                        <button
-                          type="button"
-                          onClick={() => setSelectedChamado(isSelected ? null : chamado)}
-                          className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold text-[#002B49] bg-slate-100 hover:bg-slate-200 transition-colors cursor-pointer"
-                        >
-                          <MessageSquare className="w-3.5 h-3.5" />
-                          <span>{chamado.respostas.length} Despachos</span>
-                        </button>
 
-                        {/* Botão de Inspecionar Assinatura do Solicitante se houver */}
-                        {chamado.atividadeConcluida && (
-                          <button
-                            type="button"
-                            onClick={() => {
-                              const relatedTrip = trips.find(t => 
-                                t.id === chamado.tripIdVinculada || 
-                                t.solicitanteNome.toLowerCase().includes(chamado.solicitanteNome.toLowerCase())
-                              ) || trips[0];
-                              setInspectingSignatureTrip(relatedTrip);
-                            }}
-                            className="flex items-center gap-1 px-2.5 py-1.5 rounded-lg text-xs font-semibold text-emerald-800 bg-emerald-50 hover:bg-emerald-100 border border-emerald-200 transition-colors cursor-pointer"
-                            title="Ver atesto e rubrica digital via tablet"
-                          >
-                            <Tablet className="w-3.5 h-3.5 text-emerald-600" />
-                            <span>Ver Assinatura do Solicitante</span>
-                          </button>
-                        )}
-                      </div>
-
-                      {/* GRUPO DE AÇÕES */}
-                      <div className="flex flex-wrap items-center gap-2">
-                        {/* REQUISITO 2: GERENCIAR & DIRECIONAR (MOTORISTA E VEÍCULO) */}
-                        {!isConcluido && (
-                          <button
-                            type="button"
-                            onClick={() => handleOpenManageChamado(chamado)}
-                            className="flex items-center gap-1.5 px-3.5 py-1.5 rounded-xl bg-[#002B49] hover:bg-[#003B66] text-white font-bold text-xs shadow-xs transition-all cursor-pointer"
-                          >
-                            <User className="w-3.5 h-3.5 text-amber-300" />
-                            <span>{chamado.motoristaNome ? 'Alterar Recursos' : 'Direcionar Motorista & Veículo'}</span>
-                          </button>
-                        )}
-
-                        {/* REQUISITO 3: SOMENTE O COORDENADOR PODE ENCERRAR O CHAMADO */}
-                        {!isConcluido && (
-                          canClose ? (
-                            <button
-                              type="button"
-                              onClick={() => handleOpenCloseChamado(chamado)}
-                              className="flex items-center gap-1.5 px-3.5 py-1.5 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs shadow-xs transition-all cursor-pointer"
-                              title="Somente a supervisão operacional/coordenação pode homologar o encerramento do chamado"
-                            >
-                              <CheckCircle2 className="w-3.5 h-3.5 text-emerald-200" />
-                              <span>Encerrar Chamado</span>
-                            </button>
-                          ) : (
-                            <span 
-                              className="px-2.5 py-1 rounded-lg text-[10px] font-semibold text-slate-500 bg-slate-100 border border-slate-200 flex items-center gap-1"
-                              title="Apenas usuários com perfil Supervisor Operacional têm prerrogativa de encerramento"
-                            >
-                              <Lock className="w-3 h-3 text-slate-400" />
-                              Encerramento exclusivo da Supervisão Operacional
-                            </span>
-                          )
-                        )}
-
-                      </div>
-
-                    </div>
-
-                    {/* Timeline de Despachos e Respostas Expandida */}
-                    {isSelected && (
-                      <div className="mt-4 pt-4 border-t border-slate-200 space-y-3 bg-slate-50/70 p-4 rounded-xl">
-                        <h4 className="text-xs font-bold text-[#002B49] uppercase tracking-wider">
-                          Histórico de Tramitação e Despachos do Chamado
-                        </h4>
-
-                        <div className="space-y-2">
-                          {chamado.respostas.length === 0 ? (
-                            <p className="text-xs text-slate-400 italic">
-                              Aguardando primeiro despacho da Coordenação Regional.
-                            </p>
-                          ) : (
-                            chamado.respostas.map((resp) => (
-                              <div
-                                key={resp.id}
-                                className={`p-3 rounded-xl text-xs ${
-                                  resp.isAdmin
-                                    ? 'bg-blue-50 border border-blue-200 text-blue-950'
-                                    : 'bg-white border border-slate-200 text-slate-800'
-                                }`}
-                              >
-                                <div className="flex justify-between items-center mb-1">
-                                  <span className="font-bold flex items-center gap-1">
-                                    {resp.isAdmin && <Shield className="w-3.5 h-3.5 text-blue-700" />}
-                                    {resp.autor} ({resp.cargo})
-                                  </span>
-                                  <span className="text-[10px] text-slate-500 font-mono">{resp.dataHora}</span>
-                                </div>
-                                <p className="text-xs leading-relaxed whitespace-pre-line">{resp.mensagem}</p>
-                              </div>
-                            ))
-                          )}
-                        </div>
-
-                        {/* Campo de Enviar Nova Resposta / Despacho */}
-                        <div className="flex items-center gap-2 pt-2">
-                          <input
-                            type="text"
-                            placeholder="Inserir despacho oficial da Coordenação..."
-                            value={respostaText}
-                            onChange={(e) => setRespostaText(e.target.value)}
-                            onKeyDown={(e) => e.key === 'Enter' && handleSendResposta()}
-                            className="flex-1 px-3 py-2 text-xs rounded-xl border border-slate-300 bg-white focus:outline-hidden focus:ring-2 focus:ring-[#002B49]"
-                          />
-                          <button
-                            type="button"
-                            onClick={handleSendResposta}
-                            className="px-4 py-2 rounded-xl bg-[#002B49] text-white font-bold text-xs hover:bg-[#00385F] transition-colors flex items-center gap-1.5 cursor-pointer"
-                          >
-                            <Send className="w-3.5 h-3.5" />
-                            <span>Despachar</span>
-                          </button>
-                        </div>
-                      </div>
-                    )}
 
                   </div>
                 );
@@ -1302,6 +1289,409 @@ export const CoordinatorPortal: React.FC<CoordinatorPortalProps> = ({
           vehicle={vehicles.find(v => v.id === inspectingSignatureTrip.veiculoId || v.prefixo === inspectingSignatureTrip.veiculoPrefixo)}
           driver={drivers.find(d => d.id === inspectingSignatureTrip.motoristaId || d.nome === inspectingSignatureTrip.motoristaNome)}
         />
+      )}
+
+      {/* ========================================================= */}
+      {/* 5. MODAL DE DETALHES COMPLETOS DO CHAMADO (VISÃO LIMPA)   */}
+      {/* ========================================================= */}
+      {detailsChamado && (
+        <div className="fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-xs flex items-center justify-center p-4 overflow-y-auto animate-in fade-in duration-200">
+          <div className="bg-white rounded-2xl shadow-2xl max-w-2xl w-full max-h-[90vh] flex flex-col overflow-hidden border border-slate-200">
+            
+            {/* Cabeçalho do Modal no padrão TJPR */}
+            <div className="px-6 py-4 bg-[#002B49] text-white flex items-center justify-between relative overflow-hidden shrink-0">
+              <div className="absolute top-0 right-0 w-64 h-32 bg-amber-500/10 rounded-full blur-2xl pointer-events-none" />
+              <div className="flex items-center gap-3 relative z-10">
+                <div className="w-10 h-10 rounded-xl bg-white/10 border border-white/20 flex items-center justify-center text-amber-400">
+                  <FileText className="w-5 h-5" />
+                </div>
+                <div>
+                  <div className="flex items-center gap-2">
+                    <span className="font-mono font-bold text-xs bg-amber-400/20 text-amber-300 px-2 py-0.5 rounded border border-amber-400/30">
+                      {detailsChamado.codigo}
+                    </span>
+                    <span className="text-[11px] text-slate-300 font-mono">
+                      SEI: {detailsChamado.processoSei || 'Integrado'}
+                    </span>
+                  </div>
+                  <h3 className="font-bold text-base text-white mt-0.5">
+                    Detalhes do Chamado
+                  </h3>
+                </div>
+              </div>
+              <button
+                type="button"
+                onClick={() => setDetailsChamado(null)}
+                className="w-8 h-8 rounded-lg bg-white/10 hover:bg-white/20 text-white flex items-center justify-center transition-colors cursor-pointer relative z-10"
+              >
+                <X className="w-4 h-4" />
+              </button>
+            </div>
+
+            {/* Conteúdo com rolagem */}
+            <div className="p-6 overflow-y-auto space-y-4 text-xs">
+              
+              {/* Título e Status */}
+              <div className="p-4 rounded-xl bg-slate-50 border border-slate-200 space-y-2">
+                <div className="flex flex-wrap items-center justify-between gap-2">
+                  <div className="flex items-center gap-2 flex-wrap">
+                    {detailsChamado.status === 'aberto' && (
+                      <span className="px-2.5 py-0.5 rounded-full text-[11px] font-bold bg-red-100 text-red-800 border border-red-200 flex items-center gap-1">
+                        <span className="w-2 h-2 rounded-full bg-red-500 animate-pulse" />
+                        Aberto • Pendente
+                      </span>
+                    )}
+                    {detailsChamado.status === 'em_atendimento' && (
+                      <span className="px-2.5 py-0.5 rounded-full text-[11px] font-bold bg-blue-100 text-blue-800 border border-blue-200 flex items-center gap-1">
+                        <Car className="w-3.5 h-3.5 text-blue-700" />
+                        Em Atendimento
+                      </span>
+                    )}
+                    {detailsChamado.status === 'concluido' && (
+                      <span className="px-2.5 py-0.5 rounded-full text-[11px] font-bold bg-emerald-100 text-emerald-800 border border-emerald-300 flex items-center gap-1">
+                        <CheckCircle2 className="w-3.5 h-3.5 text-emerald-600" />
+                        Encerrado pelo Supervisor
+                      </span>
+                    )}
+                    <span className="px-2.5 py-0.5 rounded-full text-[11px] font-bold bg-slate-200 text-slate-800">
+                      {detailsChamado.prioridade.toUpperCase()}
+                    </span>
+                    <span className="text-slate-400 font-mono text-[11px]">
+                      Abertura: {detailsChamado.dataAbertura}
+                    </span>
+                  </div>
+                  {detailsChamado.prazoSugerido && (
+                    <span className="text-[11px] text-slate-600 font-mono bg-white px-2 py-0.5 rounded border border-slate-200">
+                      Prazo: <strong>{detailsChamado.prazoSugerido}</strong>
+                    </span>
+                  )}
+                </div>
+                <h4 className="text-sm font-bold text-[#002B49] leading-snug">
+                  {detailsChamado.titulo}
+                </h4>
+              </div>
+
+              {/* Grid: Solicitante & Escala de Recursos */}
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                
+                {/* 1. Solicitante */}
+                <div className="p-3.5 rounded-xl border border-slate-200 bg-white shadow-2xs space-y-2">
+                  <div className="flex items-center gap-2 text-[#002B49] font-bold text-xs border-b border-slate-100 pb-1.5">
+                    <User className="w-4 h-4 text-amber-600" />
+                    <span>Dados do Solicitante</span>
+                  </div>
+                  <div className="space-y-1">
+                    <p className="text-slate-800 font-semibold text-xs">{detailsChamado.solicitanteNome}</p>
+                    <p className="text-slate-500 text-[11px]">{detailsChamado.solicitanteCargo}</p>
+                    <div className="flex items-center gap-2 text-[10px] text-slate-500 font-mono pt-1">
+                      <span>Doc/Matrícula: {detailsChamado.solicitanteMatricula || 'N/A'}</span>
+                    </div>
+                    <div className="text-[11px] text-slate-600 flex items-center gap-1.5 pt-0.5">
+                      <MapPin className="w-3.5 h-3.5 text-slate-400 shrink-0" />
+                      <span>{detailsChamado.comarca}</span>
+                    </div>
+                  </div>
+                </div>
+
+                {/* 2. Recursos Alocados & Rodízio */}
+                <div className="p-3.5 rounded-xl border border-slate-200 bg-white shadow-2xs space-y-2">
+                  <div className="flex items-center gap-2 text-[#002B49] font-bold text-xs border-b border-slate-100 pb-1.5">
+                    <Car className="w-4 h-4 text-amber-600" />
+                    <span>Recursos & Escala de Rodízio</span>
+                  </div>
+                  <div className="space-y-1.5">
+                    <div>
+                      <span className="text-[10px] text-slate-400 font-bold uppercase tracking-wider block">Motorista</span>
+                      {detailsChamado.motoristaNome ? (
+                        <div className="flex items-center justify-between gap-1">
+                          <strong className="text-slate-800 text-xs">{detailsChamado.motoristaNome}</strong>
+                          <span className="text-[10px] text-slate-500 font-mono">{detailsChamado.motoristaTelefone || '(41) 98722-5566'}</span>
+                        </div>
+                      ) : (
+                        <span className="text-amber-700 bg-amber-50 px-2 py-0.5 rounded text-[10px] font-semibold">Pendente de Direcionamento</span>
+                      )}
+                    </div>
+                    <div>
+                      <span className="text-[10px] text-slate-400 font-bold uppercase tracking-wider block">Veículo Oficial</span>
+                      {detailsChamado.veiculoPrefixo ? (
+                        <div className="flex items-center justify-between gap-1">
+                          <strong className="text-slate-800 text-xs">{detailsChamado.veiculoPrefixo} • {detailsChamado.veiculoModelo || 'Volkswagen Virtus TSI'}</strong>
+                          <span className="text-[10px] text-slate-500 font-mono">Placa: {detailsChamado.veiculoPlaca || 'Oficial TJPR'}</span>
+                        </div>
+                      ) : (
+                        <span className="text-amber-700 bg-amber-50 px-2 py-0.5 rounded text-[10px] font-semibold">Pendente de Alocação</span>
+                      )}
+                    </div>
+
+                    {detailsChamado.escalaPreSelecionada && (
+                      <div className="pt-1">
+                        {detailsChamado.escalaConfirmada ? (
+                          <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded text-[10px] font-bold bg-emerald-100 text-emerald-800 border border-emerald-200">
+                            <Check className="w-3 h-3 text-emerald-600" />
+                            Escala Confirmada pelo Supervisor
+                          </span>
+                        ) : (
+                          <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded text-[10px] font-bold bg-amber-100 text-amber-800 border border-amber-300">
+                            <Calendar className="w-3 h-3 text-amber-600" />
+                            Escala Pré-Selecionada (Aguardando Confirmação)
+                          </span>
+                        )}
+                      </div>
+                    )}
+                  </div>
+                </div>
+
+              </div>
+
+              {/* BLOCO DE SLA DE 30 MINUTOS PARA HOMOLOGAÇÃO DA ESCALA */}
+              {detailsChamado.escalaPreSelecionada && (
+                <div className={`p-3.5 rounded-xl border flex items-start gap-3 ${
+                  detailsChamado.escalaConfirmada || detailsChamado.slaCumprido
+                    ? 'bg-emerald-50/80 border-emerald-200'
+                    : (getSlaRemainingMinutes(detailsChamado)) > 10
+                    ? 'bg-sky-50/80 border-sky-300'
+                    : (getSlaRemainingMinutes(detailsChamado)) > 0
+                    ? 'bg-amber-50/90 border-amber-300'
+                    : 'bg-red-50/90 border-red-300'
+                }`}>
+                  <div className={`w-9 h-9 rounded-xl flex items-center justify-center shrink-0 ${
+                    detailsChamado.escalaConfirmada || detailsChamado.slaCumprido
+                      ? 'bg-emerald-600 text-white'
+                      : (getSlaRemainingMinutes(detailsChamado)) > 10
+                      ? 'bg-sky-600 text-white'
+                      : (getSlaRemainingMinutes(detailsChamado)) > 0
+                      ? 'bg-amber-600 text-white'
+                      : 'bg-red-600 text-white'
+                  }`}>
+                    <Clock className="w-5 h-5" />
+                  </div>
+                  <div className="flex-1 space-y-1">
+                    <div className="flex items-center justify-between flex-wrap gap-2">
+                      <span className="font-bold text-slate-900 text-xs flex items-center gap-1.5">
+                        <span>SLA Regulamentar de Atendimento: 30 minutos</span>
+                      </span>
+                      {detailsChamado.escalaConfirmada || detailsChamado.slaCumprido ? (
+                        <span className="px-2.5 py-0.5 rounded-full text-[11px] font-bold bg-emerald-100 text-emerald-800 border border-emerald-300 flex items-center gap-1">
+                          <Check className="w-3.5 h-3.5" />
+                          SLA Cumprido com Sucesso
+                        </span>
+                      ) : (getSlaRemainingMinutes(detailsChamado)) > 10 ? (
+                        <span className="px-2.5 py-0.5 rounded-full text-[11px] font-bold bg-sky-100 text-sky-800 border border-sky-300 flex items-center gap-1">
+                          <Clock className="w-3.5 h-3.5 animate-pulse" />
+                          {getSlaRemainingMinutes(detailsChamado)} minutos restantes
+                        </span>
+                      ) : (getSlaRemainingMinutes(detailsChamado)) > 0 ? (
+                        <span className="px-2.5 py-0.5 rounded-full text-[11px] font-bold bg-amber-100 text-amber-900 border border-amber-400 flex items-center gap-1 animate-pulse">
+                          <AlertTriangle className="w-3.5 h-3.5" />
+                          Atenção: {getSlaRemainingMinutes(detailsChamado)} minutos restantes
+                        </span>
+                      ) : (
+                        <span className="px-2.5 py-0.5 rounded-full text-[11px] font-bold bg-red-100 text-red-900 border border-red-300 flex items-center gap-1">
+                          <AlertCircle className="w-3.5 h-3.5" />
+                          SLA Expirado (+{Math.abs(getSlaRemainingMinutes(detailsChamado))}m em atraso)
+                        </span>
+                      )}
+                    </div>
+                    <p className="text-[11px] text-slate-600 leading-relaxed">
+                      {detailsChamado.escalaConfirmada || detailsChamado.slaCumprido
+                        ? `A designação foi homologada pelo Supervisor de Rodízio dentro da janela de 30 minutos estabelecida para confirmação ou alteração da escala.`
+                        : `O Supervisor de Rodízio dispõe de até 30 minutos a partir da abertura do chamado para homologar a escala ou realizar a substituição do condutor oficial TJPR.`
+                      }
+                    </p>
+                  </div>
+                </div>
+              )}
+
+              {/* Informações Completas da Demanda / Descrição */}
+              <div className="p-4 rounded-xl border border-slate-200 bg-slate-50/70 space-y-2">
+                <div className="flex items-center gap-2 text-[#002B49] font-bold text-xs border-b border-slate-200 pb-1.5">
+                  <FileText className="w-4 h-4 text-amber-600" />
+                  <span>Conteúdo Completo da Solicitação</span>
+                </div>
+                <div className="bg-white p-3 rounded-lg border border-slate-200 whitespace-pre-wrap text-slate-700 leading-relaxed font-sans text-xs">
+                  {detailsChamado.descricao}
+                </div>
+              </div>
+
+              {/* Histórico de Despachos */}
+              {detailsChamado.respostas && detailsChamado.respostas.length > 0 && (
+                <div className="p-3.5 rounded-xl border border-slate-200 bg-white space-y-2">
+                  <div className="flex items-center gap-2 text-[#002B49] font-bold text-xs border-b border-slate-100 pb-1.5">
+                    <MessageSquare className="w-4 h-4 text-amber-600" />
+                    <span>Despachos ({detailsChamado.respostas.length})</span>
+                  </div>
+                  <div className="space-y-2 max-h-40 overflow-y-auto pr-1">
+                    {detailsChamado.respostas.map((resp) => (
+                      <div key={resp.id} className="p-2.5 rounded-lg bg-slate-50 border border-slate-200 text-xs">
+                        <div className="flex items-center justify-between font-bold text-slate-800 mb-0.5">
+                          <span>{resp.autor} ({resp.cargo})</span>
+                          <span className="text-[10px] text-slate-400 font-mono">{resp.dataHora}</span>
+                        </div>
+                        <p className="text-slate-600">{resp.mensagem}</p>
+                      </div>
+                    ))}
+                  </div>
+
+                  {/* Campo de Enviar Despacho no modal de detalhes */}
+                  <div className="flex items-center gap-2 pt-2 border-t border-slate-100">
+                    <input
+                      type="text"
+                      placeholder="Adicionar novo despacho oficial..."
+                      value={respostaText}
+                      onChange={(e) => setRespostaText(e.target.value)}
+                      onKeyDown={(e) => {
+                        if (e.key === 'Enter' && respostaText.trim() && onAddChamadoResposta) {
+                          onAddChamadoResposta(detailsChamado.id, respostaText.trim());
+                          setDetailsChamado({
+                            ...detailsChamado,
+                            respostas: [
+                              ...detailsChamado.respostas,
+                              {
+                                id: `resp-${Date.now()}`,
+                                autor: 'Supervisor de Rodízio',
+                                cargo: 'Coordenação de Transportes',
+                                dataHora: new Date().toISOString().replace('T', ' ').slice(0, 16),
+                                mensagem: respostaText.trim(),
+                                isAdmin: true,
+                              }
+                            ]
+                          });
+                          setRespostaText('');
+                        }
+                      }}
+                      className="flex-1 px-3 py-2 text-xs rounded-xl border border-slate-300 bg-white focus:outline-hidden focus:ring-2 focus:ring-[#002B49]"
+                    />
+                    <button
+                      type="button"
+                      onClick={() => {
+                        if (respostaText.trim() && onAddChamadoResposta) {
+                          onAddChamadoResposta(detailsChamado.id, respostaText.trim());
+                          setDetailsChamado({
+                            ...detailsChamado,
+                            respostas: [
+                              ...detailsChamado.respostas,
+                              {
+                                id: `resp-${Date.now()}`,
+                                autor: 'Supervisor de Rodízio',
+                                cargo: 'Coordenação de Transportes',
+                                dataHora: new Date().toISOString().replace('T', ' ').slice(0, 16),
+                                mensagem: respostaText.trim(),
+                                isAdmin: true,
+                              }
+                            ]
+                          });
+                          setRespostaText('');
+                        }
+                      }}
+                      className="px-3.5 py-2 rounded-xl bg-[#002B49] text-white font-bold text-xs hover:bg-[#00385F] transition-colors flex items-center gap-1.5 cursor-pointer"
+                    >
+                      <Send className="w-3.5 h-3.5" />
+                      <span>Despachar</span>
+                    </button>
+                  </div>
+                </div>
+              )}
+
+              {/* Dados de Encerramento (se concluído) */}
+              {detailsChamado.status === 'concluido' && detailsChamado.dataEncerramento && (
+                <div className="p-3.5 rounded-xl border border-emerald-200 bg-emerald-50/70 space-y-1">
+                  <div className="flex items-center gap-1.5 text-emerald-900 font-bold text-xs">
+                    <CheckCircle2 className="w-4 h-4 text-emerald-700" />
+                    <span>Homologado por: {detailsChamado.encerradoPor || 'Supervisor de Rodízio'}</span>
+                  </div>
+                  <p className="text-[11px] text-emerald-800">
+                    Data: {detailsChamado.dataEncerramento} • Parecer: "{detailsChamado.justificativaEncerramento}"
+                  </p>
+                </div>
+              )}
+
+            </div>
+
+            {/* Rodapé com botões de ação */}
+            <div className="px-6 py-3.5 bg-slate-50 border-t border-slate-200 flex flex-wrap items-center justify-between gap-2 shrink-0">
+              <button
+                type="button"
+                onClick={() => setDetailsChamado(null)}
+                className="px-4 py-2 bg-slate-200 hover:bg-slate-300 text-slate-800 font-bold rounded-xl text-xs transition-colors cursor-pointer"
+              >
+                Fechar
+              </button>
+
+              <div className="flex flex-wrap items-center gap-2">
+                {/* Botão de Inspecionar Assinatura se houver */}
+                {detailsChamado.atividadeConcluida && (
+                  <button
+                    type="button"
+                    onClick={() => {
+                      const relatedTrip = trips.find(t => 
+                        t.id === detailsChamado.tripIdVinculada || 
+                        t.solicitanteNome.toLowerCase().includes(detailsChamado.solicitanteNome.toLowerCase())
+                      ) || trips[0];
+                      setInspectingSignatureTrip(relatedTrip);
+                    }}
+                    className="flex items-center gap-1 px-3 py-2 rounded-xl text-xs font-semibold text-emerald-800 bg-emerald-50 hover:bg-emerald-100 border border-emerald-200 transition-colors cursor-pointer"
+                  >
+                    <Tablet className="w-3.5 h-3.5 text-emerald-600" />
+                    <span>Ver Assinatura</span>
+                  </button>
+                )}
+
+                {/* Botão de Confirmar Escala direto do modal de detalhes */}
+                {detailsChamado.escalaPreSelecionada && !detailsChamado.escalaConfirmada && (
+                  <button
+                    type="button"
+                    onClick={() => {
+                      if (onConfirmEscala) {
+                        onConfirmEscala(detailsChamado.id);
+                      }
+                      setDetailsChamado({
+                        ...detailsChamado,
+                        escalaConfirmada: true,
+                      });
+                    }}
+                    className="flex items-center gap-1.5 px-4 py-2 rounded-xl bg-amber-500 hover:bg-amber-600 text-white font-black text-xs shadow-md transition-all cursor-pointer"
+                  >
+                    <Check className="w-4 h-4" />
+                    <span>Confirmar Escala</span>
+                  </button>
+                )}
+
+                {/* Botão para Gerenciar Recursos */}
+                {detailsChamado.status !== 'concluido' && (
+                  <button
+                    type="button"
+                    onClick={() => {
+                      const c = detailsChamado;
+                      setDetailsChamado(null);
+                      handleOpenManageChamado(c);
+                    }}
+                    className="flex items-center gap-1.5 px-4 py-2 rounded-xl bg-[#002B49] hover:bg-[#003B66] text-white font-bold text-xs shadow-md transition-all cursor-pointer"
+                  >
+                    <User className="w-3.5 h-3.5 text-amber-300" />
+                    <span>{detailsChamado.motoristaNome ? 'Alterar Recursos' : 'Direcionar Recursos'}</span>
+                  </button>
+                )}
+
+                {/* Botão para Encerrar Chamado */}
+                {detailsChamado.status !== 'concluido' && canClose && (
+                  <button
+                    type="button"
+                    onClick={() => {
+                      const c = detailsChamado;
+                      setDetailsChamado(null);
+                      handleOpenCloseChamado(c);
+                    }}
+                    className="flex items-center gap-1.5 px-4 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs shadow-md transition-all cursor-pointer"
+                  >
+                    <CheckCircle2 className="w-4 h-4 text-emerald-200" />
+                    <span>Encerrar Chamado</span>
+                  </button>
+                )}
+              </div>
+            </div>
+
+          </div>
+        </div>
       )}
 
     </div>

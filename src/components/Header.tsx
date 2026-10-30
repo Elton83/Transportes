@@ -300,10 +300,10 @@ export const Header: React.FC<HeaderProps> = ({
                     ? 'bg-white/15 text-white shadow-xs font-semibold'
                     : 'text-[#8E9CA8] hover:text-white hover:bg-white/5'
                 }`}
-                title="Supervisão Operacional: despacho de viagens, alocação de motoristas/veículos e chamados da comarca"
+                title="Supervisão de Rodízio: despacho de viagens, alocação e escala de rodízio de motoristas/veículos"
               >
                 <LifeBuoy className="w-3.5 h-3.5" />
-                <span>Supervisor Operacional</span>
+                <span>Supervisor de Rodízio</span>
               </button>
 
               {/* 5. Solicitação do Veículo */}
@@ -345,7 +345,7 @@ export const Header: React.FC<HeaderProps> = ({
                 <option value="administrador" className="bg-[#05202B] text-white">Administrador</option>
                 <option value="motorista" className="bg-[#05202B] text-white">Motorista (Restrito)</option>
                 <option value="supervisor_administrativo" className="bg-[#05202B] text-white">Supervisor Administrativo</option>
-                <option value="supervisor_operacional" className="bg-[#05202B] text-white">Supervisor Operacional</option>
+                <option value="supervisor_operacional" className="bg-[#05202B] text-white">Supervisor de Rodízio</option>
                 <option value="visitante" className="bg-[#05202B] text-white">Solicitação do Veículo</option>
               </select>
             </div>
@@ -544,7 +544,7 @@ export const Header: React.FC<HeaderProps> = ({
                   {isDriver
                     ? `Matr. ${currentDriver?.matricula || '48.912-3'}`
                     : currentRole === 'supervisor_operacional' || currentRole === 'coordenador'
-                    ? 'Supervisora Operacional'
+                    ? 'Supervisor de Rodízio'
                     : currentRole === 'supervisor_administrativo' || currentRole === 'solicitante'
                     ? 'Supervisor Administrativo'
                     : currentRole === 'visitante'

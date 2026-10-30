@@ -273,7 +273,7 @@ export const RelatoriosView: React.FC<RelatoriosViewProps> = ({
           `"${c.avaliacaoLabel}"`,
           `"${(c.avaliacaoTags || []).join(' | ')}"`,
           `"${(c.avaliacaoComentario || '').replace(/"/g, '""')}"`,
-          'Notificado ao Supervisor Operacional'
+          'Notificado ao Supervisor de Rodízio'
         ]);
         break;
 
