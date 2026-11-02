@@ -336,55 +336,22 @@ export const CoordinatorPortal: React.FC<CoordinatorPortalProps> = ({
   return (
     <div className="space-y-6">
       
-      {/* 1. Header do Portal da Coordenação */}
-      <div className="bg-white rounded-2xl p-4 sm:p-5 border border-slate-200/90 shadow-2xs space-y-4">
-        <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
-          <div className="flex items-center gap-3.5">
-            <div className="w-11 h-11 rounded-xl bg-[#002B49] text-amber-300 flex items-center justify-center shrink-0 shadow-xs border border-[#C4A052]/30">
-              <Shield className="w-5 h-5 text-amber-300" />
-            </div>
-            <div>
-              <div className="flex items-center gap-2 flex-wrap">
-                <h1 className="text-lg sm:text-xl font-bold tracking-tight text-slate-900">
-                  Coordenação de Frotas & Comarcas
-                </h1>
-                <span className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full text-[10px] font-semibold bg-emerald-50 text-emerald-700 border border-emerald-200">
-                  <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
-                  {selectedComarca}
-                </span>
-              </div>
-              <p className="text-xs text-slate-500 mt-0.5">
-                Chamados operacionais, escala de motoristas e veículos oficiais
-              </p>
-            </div>
-          </div>
-
-          <div className="flex flex-wrap items-center gap-2 shrink-0">
-            <button
-              id="coord-btn-novo-chamado"
-              onClick={onOpenNewChamadoModal}
-              className="h-9 sm:h-10 px-4 rounded-xl bg-[#002B49] hover:bg-[#003860] text-white font-semibold text-xs flex items-center gap-2 transition-all shadow-xs cursor-pointer hover:shadow-md"
-            >
-              <Plus className="w-4 h-4 text-amber-300" />
-              <span>Novo Chamado</span>
-            </button>
-          </div>
-        </div>
-
-        {/* Abas Internas de Navegação do Coordenador */}
-        <div className="flex items-center gap-1.5 pt-3 border-t border-slate-100 overflow-x-auto no-scrollbar">
+      {/* 1. Barra de Navegação & Ações da Coordenação */}
+      <div className="bg-white rounded-2xl p-2.5 sm:p-3 border border-slate-200/90 shadow-2xs flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+        {/* Abas Principais em Formato de Segmented Control */}
+        <div className="flex items-center gap-1.5 p-1 bg-slate-100/90 rounded-xl border border-slate-200/70 overflow-x-auto no-scrollbar">
           <button
             onClick={() => setActiveTab('chamados')}
-            className={`flex items-center gap-2 px-3.5 py-1.5 rounded-lg text-xs font-bold transition-all cursor-pointer ${
+            className={`flex items-center gap-2 px-3.5 sm:px-4 py-2 rounded-lg text-xs font-bold transition-all cursor-pointer ${
               activeTab === 'chamados'
-                ? 'bg-[#002B49] text-white shadow-2xs'
-                : 'text-slate-600 hover:bg-slate-100'
+                ? 'bg-[#002B49] text-white shadow-sm ring-1 ring-[#002B49]/30'
+                : 'text-slate-600 hover:text-slate-900 hover:bg-white/80'
             }`}
           >
-            <LifeBuoy className="w-3.5 h-3.5" />
+            <LifeBuoy className={`w-4 h-4 shrink-0 ${activeTab === 'chamados' ? 'text-amber-300' : 'text-slate-500'}`} />
             <span>Gestão de Chamados</span>
             {countAbertos > 0 && (
-              <span className={`px-1.5 py-0.2 rounded-full text-[10px] font-extrabold ${
+              <span className={`px-2 py-0.5 rounded-full text-[11px] font-extrabold shadow-2xs ${
                 activeTab === 'chamados' ? 'bg-red-500 text-white' : 'bg-red-100 text-red-700'
               }`}>
                 {countAbertos}
@@ -394,17 +361,33 @@ export const CoordinatorPortal: React.FC<CoordinatorPortalProps> = ({
 
           <button
             onClick={() => setActiveTab('dia_a_dia')}
-            className={`flex items-center gap-2 px-3.5 py-1.5 rounded-lg text-xs font-bold transition-all cursor-pointer ${
+            className={`flex items-center gap-2 px-3.5 sm:px-4 py-2 rounded-lg text-xs font-bold transition-all cursor-pointer ${
               activeTab === 'dia_a_dia'
-                ? 'bg-[#002B49] text-white shadow-2xs'
-                : 'text-slate-600 hover:bg-slate-100'
+                ? 'bg-[#002B49] text-white shadow-sm ring-1 ring-[#002B49]/30'
+                : 'text-slate-600 hover:text-slate-900 hover:bg-white/80'
             }`}
           >
-            <Calendar className="w-3.5 h-3.5" />
+            <Calendar className={`w-4 h-4 shrink-0 ${activeTab === 'dia_a_dia' ? 'text-amber-300' : 'text-slate-500'}`} />
             <span>Operação do Dia a Dia</span>
           </button>
+        </div>
 
-
+        {/* Ações & Comarca */}
+        <div className="flex items-center justify-end gap-2.5 shrink-0">
+          {selectedComarca && (
+            <span className="hidden md:inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg text-[11px] font-semibold bg-slate-50 text-slate-600 border border-slate-200">
+              <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
+              {selectedComarca}
+            </span>
+          )}
+          <button
+            id="coord-btn-novo-chamado"
+            onClick={onOpenNewChamadoModal}
+            className="h-10 px-4 rounded-xl bg-[#002B49] hover:bg-[#003860] active:scale-[0.98] text-white font-semibold text-xs flex items-center gap-2 transition-all shadow-xs cursor-pointer hover:shadow-md"
+          >
+            <Plus className="w-4 h-4 text-amber-300" />
+            <span>Novo Chamado</span>
+          </button>
         </div>
       </div>
 

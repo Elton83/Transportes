@@ -96,11 +96,7 @@ export const ROLE_CONFIGS: Record<Role, RoleConfig> = {
     allowedTabs: [
       'operacoes',
       'calendario',
-      'chamados',
-      'oficinas',
-      'abastecer',
       'relatorios',
-      'visitante',
     ],
     canViewGlobalFleet: true,
     canApproveTrips: true,
@@ -163,11 +159,7 @@ export const ROLE_CONFIGS: Record<Role, RoleConfig> = {
     allowedTabs: [
       'operacoes',
       'calendario',
-      'chamados',
-      'oficinas',
-      'abastecer',
       'relatorios',
-      'visitante',
     ],
     canViewGlobalFleet: true,
     canApproveTrips: true,

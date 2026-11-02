@@ -2039,8 +2039,8 @@ export default function App() {
                 onSubmitSolicitation={handleVisitorSolicitation}
                 onNavigateToCoordinator={() => {
                   handleRoleChange('supervisor_operacional');
-                  setActiveNavTab('chamados');
-                  showToast('Alternado para Supervisão Operacional: solicitação de veículo aberta no topo da lista de chamados!');
+                  setActiveNavTab('operacoes');
+                  showToast('Alternado para Supervisor de Rodízio: visualizando percursos e escala!');
                 }}
                 recentChamados={chamados}
                 trips={trips}
