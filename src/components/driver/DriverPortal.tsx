@@ -135,7 +135,7 @@ export const DriverPortal: React.FC<DriverPortalProps> = ({
   const [viewMode, setViewMode] = useState<'lista' | 'calendario'>('lista');
 
   // Filtro de status da lista
-  const [statusFilter, setStatusFilter] = useState<'todas' | 'em_andamento' | 'agendadas' | 'concluidas' | 'atividades'>('todas');
+  const [statusFilter, setStatusFilter] = useState<'todas' | 'em_andamento' | 'aguardando' | 'agendadas' | 'concluidas' | 'atividades'>('todas');
 
   // Navegação do mini-calendário mensal (Outubro de 2026)
   const [calendarMonth, setCalendarMonth] = useState<Date>(() => new Date(2026, 9, 1)); // Outubro 2026
@@ -174,7 +174,8 @@ export const DriverPortal: React.FC<DriverPortalProps> = ({
         return false;
       }
       if (statusFilter === 'em_andamento') return t.status === 'em_andamento';
-      if (statusFilter === 'agendadas') return t.status === 'aprovada' || t.status === 'solicitada';
+      if (statusFilter === 'aguardando') return t.status === 'solicitada';
+      if (statusFilter === 'agendadas') return t.status === 'aprovada';
       if (statusFilter === 'concluidas') return t.status === 'concluida';
       if (statusFilter === 'atividades') return false;
       return true;
@@ -183,6 +184,7 @@ export const DriverPortal: React.FC<DriverPortalProps> = ({
 
   // Filtragem dos compromissos operacionais (plantões/vistorias)
   const filteredActivities = useMemo(() => {
+    if (statusFilter === 'aguardando') return [];
     if (statusFilter === 'em_andamento' || statusFilter === 'concluidas') {
       return SAMPLE_OPERATIONAL_ACTIVITIES.filter((a) => {
         if (selectedCalendarDate && a.data !== selectedCalendarDate) return false;
@@ -193,6 +195,12 @@ export const DriverPortal: React.FC<DriverPortalProps> = ({
       return SAMPLE_OPERATIONAL_ACTIVITIES.filter((a) => {
         if (selectedCalendarDate && a.data !== selectedCalendarDate) return false;
         return a.status === 'agendado';
+      });
+    }
+    if (statusFilter === 'atividades') {
+      return SAMPLE_OPERATIONAL_ACTIVITIES.filter((a) => {
+        if (selectedCalendarDate && a.data !== selectedCalendarDate) return false;
+        return true;
       });
     }
     return SAMPLE_OPERATIONAL_ACTIVITIES.filter((a) => {
@@ -290,7 +298,7 @@ export const DriverPortal: React.FC<DriverPortalProps> = ({
               </div>
               
               <p className="text-xs text-slate-500 mt-1">
-                Condutor Oficial TJPR • Matrícula: <strong className="text-slate-800">{currentDriver.matricula}</strong> • Lotação: {currentDriver.comarca}
+                Condutor Oficial TJPR • Matrícula: <strong className="text-slate-800">{currentDriver.matricula}</strong> • Lotação: {currentDriver.comarca ? currentDriver.comarca.replace('Sede Administrativa', 'Divisão de Transportes') : 'Curitiba - Divisão de Transportes'}
               </p>
 
               {/* Informações Funcionais */}
@@ -302,9 +310,9 @@ export const DriverPortal: React.FC<DriverPortalProps> = ({
                   <Shield className="w-3.5 h-3.5 text-blue-700" />
                   Direção Defensiva até {new Date(currentDriver.cursoDirecaoDefensivaValidade).toLocaleDateString('pt-BR')}
                 </span>
-                <span className="bg-amber-50 text-amber-900 px-2.5 py-1 rounded-lg border border-amber-200 font-medium flex items-center gap-1">
-                  <Car className="w-3.5 h-3.5 text-amber-700" />
-                  Veículo: <strong>{assignedVehicle.prefixo}</strong> ({assignedVehicle.modelo})
+                <span className="bg-emerald-50 text-emerald-800 px-2.5 py-1 rounded-lg border border-emerald-200 font-medium flex items-center gap-1">
+                  <FileCheck className="w-3.5 h-3.5 text-emerald-600" />
+                  Exame Toxicológico até {currentDriver.exameToxicologicoValidade ? new Date(currentDriver.exameToxicologicoValidade).toLocaleDateString('pt-BR') : '10/09/2028'}
                 </span>
               </div>
             </div>
@@ -566,54 +574,70 @@ export const DriverPortal: React.FC<DriverPortalProps> = ({
             <div className="flex items-center gap-1.5 flex-wrap text-xs">
               <button
                 onClick={() => setStatusFilter('todas')}
-                className={`px-3 py-1.5 rounded-xl font-bold transition-all cursor-pointer ${
+                className={`px-3 py-1.5 rounded-xl font-bold transition-all cursor-pointer border ${
                   statusFilter === 'todas'
-                    ? 'bg-[#002B49] text-white shadow-xs'
-                    : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
+                    ? 'bg-[#002B49] text-white border-[#002B49] shadow-xs'
+                    : 'bg-slate-100 text-slate-700 border-slate-200 hover:bg-slate-200'
                 }`}
               >
                 Todas ({totalAgendaItems})
               </button>
 
+              {/* Em Andamento - Caixa em azul */}
               <button
                 onClick={() => setStatusFilter('em_andamento')}
-                className={`px-3 py-1.5 rounded-xl font-bold transition-all cursor-pointer ${
+                className={`px-3 py-1.5 rounded-xl font-bold transition-all cursor-pointer border ${
                   statusFilter === 'em_andamento'
-                    ? 'bg-blue-700 text-white shadow-xs'
-                    : 'bg-blue-50 text-blue-800 hover:bg-blue-100'
+                    ? 'bg-blue-600 text-white border-blue-700 shadow-xs ring-2 ring-blue-500/20'
+                    : 'bg-blue-50 text-blue-700 border-blue-300 hover:bg-blue-100'
                 }`}
               >
                 Em Andamento ({driverTrips.filter(t => t.status === 'em_andamento').length})
               </button>
 
+              {/* Aguardando Atendimento - Caixa em Vermelho */}
+              <button
+                onClick={() => setStatusFilter('aguardando')}
+                className={`px-3 py-1.5 rounded-xl font-bold transition-all cursor-pointer border ${
+                  statusFilter === 'aguardando'
+                    ? 'bg-red-600 text-white border-red-700 shadow-xs ring-2 ring-red-500/20'
+                    : 'bg-red-50 text-red-700 border-red-300 hover:bg-red-100'
+                }`}
+              >
+                Aguardando Atendimento ({driverTrips.filter(t => t.status === 'solicitada').length})
+              </button>
+
+              {/* Agendadas - Caixa em Amarelo */}
               <button
                 onClick={() => setStatusFilter('agendadas')}
-                className={`px-3 py-1.5 rounded-xl font-bold transition-all cursor-pointer ${
+                className={`px-3 py-1.5 rounded-xl font-bold transition-all cursor-pointer border ${
                   statusFilter === 'agendadas'
-                    ? 'bg-emerald-700 text-white shadow-xs'
-                    : 'bg-emerald-50 text-emerald-800 hover:bg-emerald-100'
+                    ? 'bg-amber-400 text-slate-950 border-amber-500 font-black shadow-xs ring-2 ring-amber-400/20'
+                    : 'bg-amber-50 text-amber-800 border-amber-300 hover:bg-amber-100'
                 }`}
               >
                 Agendadas ({driverTrips.filter(t => t.status === 'aprovada').length + SAMPLE_OPERATIONAL_ACTIVITIES.filter(a => a.status === 'agendado').length})
               </button>
 
+              {/* Concluídas - Caixa em Verde */}
               <button
                 onClick={() => setStatusFilter('concluidas')}
-                className={`px-3 py-1.5 rounded-xl font-bold transition-all cursor-pointer ${
+                className={`px-3 py-1.5 rounded-xl font-bold transition-all cursor-pointer border ${
                   statusFilter === 'concluidas'
-                    ? 'bg-slate-800 text-white shadow-xs'
-                    : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
+                    ? 'bg-emerald-600 text-white border-emerald-700 shadow-xs ring-2 ring-emerald-500/20'
+                    : 'bg-emerald-50 text-emerald-800 border-emerald-300 hover:bg-emerald-100'
                 }`}
               >
                 Concluídas ({driverTrips.filter(t => t.status === 'concluida').length})
               </button>
 
+              {/* Plantões & Atividades - Caixa em Roxo Claro */}
               <button
                 onClick={() => setStatusFilter('atividades')}
-                className={`px-3 py-1.5 rounded-xl font-bold transition-all cursor-pointer ${
+                className={`px-3 py-1.5 rounded-xl font-bold transition-all cursor-pointer border ${
                   statusFilter === 'atividades'
-                    ? 'bg-purple-700 text-white shadow-xs'
-                    : 'bg-purple-50 text-purple-800 hover:bg-purple-100'
+                    ? 'bg-purple-600 text-white border-purple-700 shadow-xs ring-2 ring-purple-500/20'
+                    : 'bg-purple-50 text-purple-800 border-purple-200 hover:bg-purple-100'
                 }`}
               >
                 Plantões & Atividades ({SAMPLE_OPERATIONAL_ACTIVITIES.length})
@@ -754,52 +778,75 @@ export const DriverPortal: React.FC<DriverPortalProps> = ({
             {/* Viagens */}
             {filteredTrips.map((trip) => {
               const tripVehicle = vehicles.find((v) => v.id === trip.veiculoId);
+
+              // Caixa Maior com a cor correspondente à finalidade / status:
+              // Em Andamento: Azul
+              // Aguardando Atendimento: Vermelho
+              // Agendadas: Amarelo
+              // Concluídas: Verde
+              const cardColorStyle = 
+                trip.status === 'em_andamento'
+                  ? 'bg-blue-50/60 border-2 border-blue-400 hover:border-blue-500 hover:bg-blue-50/80 shadow-xs'
+                  : trip.status === 'solicitada'
+                  ? 'bg-red-50/60 border-2 border-red-400 hover:border-red-500 hover:bg-red-50/80 shadow-xs'
+                  : trip.status === 'aprovada'
+                  ? 'bg-amber-50/60 border-2 border-amber-400 hover:border-amber-500 hover:bg-amber-50/80 shadow-xs'
+                  : trip.status === 'concluida'
+                  ? 'bg-emerald-50/50 border-2 border-emerald-400 hover:border-emerald-500 hover:bg-emerald-50/70 shadow-xs'
+                  : 'bg-white border-2 border-slate-200 hover:border-slate-300 shadow-xs';
+
               return (
                 <div
                   key={trip.id}
-                  className="p-4 rounded-2xl border border-slate-200 hover:border-slate-300 bg-white transition-all shadow-xs flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 text-xs"
+                  className={`p-4 rounded-2xl transition-all flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 text-xs ${cardColorStyle}`}
                 >
                   <div className="space-y-1.5 flex-1 min-w-0">
                     <div className="flex items-center gap-2 flex-wrap">
-                      <span className="font-mono font-bold text-[#002B49] bg-slate-100 px-2 py-0.5 rounded-md">
+                      <span className="font-mono font-bold text-[#002B49] bg-white px-2 py-0.5 rounded-md border border-slate-200 shadow-2xs">
                         {trip.codigo}
                       </span>
                       
                       {trip.status === 'em_andamento' && (
-                        <span className="bg-blue-100 text-blue-800 font-bold px-2 py-0.5 rounded-full text-[10px] flex items-center gap-1">
+                        <span className="bg-blue-100 text-blue-900 border border-blue-300 font-bold px-2.5 py-0.5 rounded-full text-[10px] flex items-center gap-1 shadow-2xs">
                           <span className="w-1.5 h-1.5 rounded-full bg-blue-600 animate-pulse" />
                           <span>Em Andamento</span>
                         </span>
                       )}
+                      {trip.status === 'solicitada' && (
+                        <span className="bg-red-100 text-red-900 border border-red-300 font-bold px-2.5 py-0.5 rounded-full text-[10px] flex items-center gap-1 shadow-2xs">
+                          <span className="w-1.5 h-1.5 rounded-full bg-red-600 animate-pulse" />
+                          <span>Aguardando Atendimento</span>
+                        </span>
+                      )}
                       {trip.status === 'aprovada' && (
-                        <span className="bg-emerald-100 text-emerald-800 font-bold px-2 py-0.5 rounded-full text-[10px]">
+                        <span className="bg-amber-100 text-amber-950 border border-amber-300 font-bold px-2.5 py-0.5 rounded-full text-[10px] shadow-2xs">
                           Agendada / Pronta
                         </span>
                       )}
                       {trip.status === 'concluida' && (
-                        <span className="bg-slate-100 text-slate-700 font-bold px-2 py-0.5 rounded-full text-[10px]">
+                        <span className="bg-emerald-100 text-emerald-900 border border-emerald-300 font-bold px-2.5 py-0.5 rounded-full text-[10px] shadow-2xs">
                           Concluída
                         </span>
                       )}
 
-                      <span className="text-slate-400 font-mono text-[11px]">
+                      <span className="text-slate-500 font-mono text-[11px]">
                         SEI: {trip.processoSei.split('.')[0]}
                       </span>
                     </div>
 
-                    <div className="flex items-center gap-1.5 text-slate-800 font-bold text-xs">
+                    <div className="flex items-center gap-1.5 text-slate-900 font-bold text-xs">
                       <MapPin className="w-3.5 h-3.5 text-emerald-600 shrink-0" />
                       <span className="truncate">{trip.origem}</span>
                       <ArrowRight className="w-3.5 h-3.5 text-slate-400 shrink-0" />
                       <span className="text-[#002B49] truncate">{trip.destino}</span>
                     </div>
 
-                    <div className="text-[11px] text-slate-500 flex items-center gap-3 flex-wrap">
+                    <div className="text-[11px] text-slate-600 flex items-center gap-3 flex-wrap">
                       <span>Saída: <strong>{trip.dataSaida} às {trip.horaSaida}</strong></span>
                       <span>Autoridade: <strong>{trip.solicitanteNome}</strong></span>
-                      <span>Veículo: <strong>{trip.veiculoPrefixo || tripVehicle?.prefixo} ({tripVehicle?.modelo})</strong></span>
+                      <span>Veículo: <strong>{trip.veiculoPrefixo || tripVehicle?.prefixo} ({tripVehicle?.modelo || 'Oficial TJPR'})</strong></span>
                       {trip.kmInicial && trip.kmFinal && (
-                        <span className="text-emerald-700 font-mono font-bold">
+                        <span className="text-emerald-800 font-mono font-bold bg-white/80 px-1.5 py-0.5 rounded border border-emerald-300">
                           Total: {trip.kmFinal - trip.kmInicial} km
                         </span>
                       )}
@@ -810,7 +857,7 @@ export const DriverPortal: React.FC<DriverPortalProps> = ({
                     <button
                       type="button"
                       onClick={() => onOpenOfficialOrder(trip)}
-                      className="px-3 py-1.5 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-xl font-semibold text-xs flex items-center gap-1.5 transition-colors cursor-pointer"
+                      className="px-3 py-1.5 bg-white hover:bg-slate-50 text-slate-700 border border-slate-300 rounded-xl font-semibold text-xs flex items-center gap-1.5 transition-colors cursor-pointer shadow-2xs"
                     >
                       <FileText className="w-3.5 h-3.5 text-[#002B49]" />
                       <span>Guia Oficial</span>
@@ -820,7 +867,7 @@ export const DriverPortal: React.FC<DriverPortalProps> = ({
                       <button
                         type="button"
                         onClick={() => onOpenTripLog(trip)}
-                        className="px-3 py-1.5 bg-[#002B49] text-white hover:bg-[#003a66] rounded-xl font-bold text-xs flex items-center gap-1.5 transition-colors cursor-pointer"
+                        className="px-3 py-1.5 bg-[#002B49] text-white hover:bg-[#003a66] rounded-xl font-bold text-xs flex items-center gap-1.5 transition-colors cursor-pointer shadow-xs"
                       >
                         <Route className="w-3.5 h-3.5" />
                         <span>Diário</span>
@@ -835,25 +882,25 @@ export const DriverPortal: React.FC<DriverPortalProps> = ({
             {filteredActivities.map((act) => (
               <div
                 key={act.id}
-                className="p-4 rounded-2xl border border-purple-200/90 bg-purple-50/20 hover:bg-purple-50/40 transition-all shadow-xs flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 text-xs"
+                className="p-4 rounded-2xl border-2 border-purple-300 bg-purple-50/50 hover:bg-purple-50/70 hover:border-purple-400 transition-all shadow-xs flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 text-xs"
               >
                 <div className="space-y-1.5 flex-1 min-w-0">
                   <div className="flex items-center gap-2 flex-wrap">
-                    <span className="font-bold text-purple-900 bg-purple-100 px-2 py-0.5 rounded-full text-[10px]">
+                    <span className="font-bold text-purple-900 bg-purple-100 border border-purple-200 px-2.5 py-0.5 rounded-full text-[10px] shadow-2xs">
                       {act.categoriaLabel}
                     </span>
                     
                     {act.status === 'em_andamento' ? (
-                      <span className="bg-blue-100 text-blue-800 font-bold px-2 py-0.5 rounded-full text-[10px]">
+                      <span className="bg-blue-100 text-blue-800 border border-blue-300 font-bold px-2 py-0.5 rounded-full text-[10px]">
                         Em Execução Hoje
                       </span>
                     ) : (
-                      <span className="bg-slate-100 text-slate-700 font-bold px-2 py-0.5 rounded-full text-[10px]">
+                      <span className="bg-purple-100 text-purple-800 border border-purple-200 font-bold px-2 py-0.5 rounded-full text-[10px]">
                         Escalado
                       </span>
                     )}
 
-                    <span className="text-slate-500 font-mono text-[11px]">
+                    <span className="text-slate-600 font-mono text-[11px]">
                       Veículo Designado: <strong>{act.veiculoPrefixo}</strong>
                     </span>
                   </div>
@@ -862,19 +909,19 @@ export const DriverPortal: React.FC<DriverPortalProps> = ({
                     {act.titulo}
                   </h4>
 
-                  <div className="flex items-center gap-1.5 text-slate-600">
-                    <Building2 className="w-3.5 h-3.5 text-purple-600 shrink-0" />
+                  <div className="flex items-center gap-1.5 text-slate-700">
+                    <Building2 className="w-3.5 h-3.5 text-purple-700 shrink-0" />
                     <span className="truncate">{act.local}</span>
                   </div>
 
-                  <div className="text-[11px] text-slate-500 flex items-center gap-3 flex-wrap">
+                  <div className="text-[11px] text-slate-600 flex items-center gap-3 flex-wrap">
                     <span>Data: <strong>{new Date(act.data + 'T12:00:00').toLocaleDateString('pt-BR')}</strong> ({act.horaInicio} às {act.horaFim})</span>
                     <span>Responsável: <strong>{act.responsavel}</strong></span>
                   </div>
                 </div>
 
                 <div className="shrink-0 self-end sm:self-auto">
-                  <span className="text-[11px] text-purple-800 font-semibold bg-white px-2.5 py-1 rounded-xl border border-purple-200 flex items-center gap-1 shadow-2xs">
+                  <span className="text-[11px] text-purple-900 font-semibold bg-white px-2.5 py-1 rounded-xl border border-purple-200 flex items-center gap-1 shadow-2xs">
                     <CheckCircle2 className="w-3.5 h-3.5 text-purple-600" />
                     <span>Condução Confirmada</span>
                   </span>

@@ -135,6 +135,7 @@ export interface Driver {
   totalViagens: number;
   mediaAvaliacao: number;
   cursoDirecaoDefensivaValidade: string;
+  exameToxicologicoValidade?: string;
   veiculoPrefixoAtual?: string;
 }
 

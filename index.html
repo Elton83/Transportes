@@ -2,6 +2,49 @@
 <html lang="en">
   <head>
     <meta charset="UTF-8" />
+    <script>
+      (function() {
+        function shouldSuppress(text) {
+          var s = String(text || '');
+          return s.indexOf('MetaMask') !== -1 ||
+                 s.indexOf('nkbihfbeogaeaoehlefnkodbefgpgknn') !== -1 ||
+                 s.indexOf('chrome-extension://') !== -1 ||
+                 s.indexOf('moz-extension://') !== -1;
+        }
+
+        var oldOnError = window.onerror;
+        window.onerror = function(msg, url, line, col, error) {
+          if (shouldSuppress(msg) || shouldSuppress(url) || (error && shouldSuppress(error.stack))) {
+            return true;
+          }
+          if (typeof oldOnError === 'function') {
+            return oldOnError.apply(this, arguments);
+          }
+        };
+
+        window.addEventListener('error', function(event) {
+          var msg = event.message || '';
+          var file = event.filename || '';
+          var stack = (event.error && event.error.stack) ? event.error.stack : '';
+          if (shouldSuppress(msg) || shouldSuppress(file) || shouldSuppress(stack)) {
+            event.stopImmediatePropagation();
+            event.preventDefault();
+            return true;
+          }
+        }, true);
+
+        window.addEventListener('unhandledrejection', function(event) {
+          var reason = event.reason;
+          var msg = typeof reason === 'string' ? reason : (reason && reason.message) || '';
+          var stack = (reason && reason.stack) ? reason.stack : '';
+          if (shouldSuppress(msg) || shouldSuppress(stack)) {
+            event.stopImmediatePropagation();
+            event.preventDefault();
+            return true;
+          }
+        }, true);
+      })();
+    </script>
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>SIGPAT Transportes - TJPR | Tribunal de Justiça do Paraná</title>
     <meta name="description" content="Sistema Integrado de Gestão de Transportes e Frotas Oficiais do Tribunal de Justiça do Estado do Paraná (TJPR)." />
