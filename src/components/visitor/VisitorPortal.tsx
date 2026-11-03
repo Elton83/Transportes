@@ -858,7 +858,7 @@ export const VisitorPortal: React.FC<VisitorPortalProps> = ({
                   Solicitação de Veículo Protocolada com Sucesso
                 </span>
                 <h2 className="text-xl sm:text-2xl font-black text-slate-900 mt-1">
-                  Demanda Aberta na Coordenação de Frotas
+                  Demanda Aberta da DiTrans
                 </h2>
                 <p className="text-xs text-slate-500 mt-0.5">
                   Seu pedido já consta na fila da comarca para alocação e despacho de veículo oficial.
@@ -889,7 +889,7 @@ export const VisitorPortal: React.FC<VisitorPortalProps> = ({
           {/* Resumo do Pedido Protocolado */}
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-3 bg-slate-50/80 p-4 rounded-xl border border-slate-200/80 text-xs">
             <div>
-              <span className="text-slate-400 text-[11px] block">Solicitante (Hércules):</span>
+              <span className="text-slate-400 text-[11px] block">Solicitante:</span>
               <strong className="text-slate-900">{submissionResult.solicitacao.solicitanteNome}</strong>
               <p className="text-[11px] text-slate-500">{submissionResult.solicitacao.matriculaServidor} • {submissionResult.solicitacao.cargoServidor}</p>
             </div>
@@ -900,7 +900,6 @@ export const VisitorPortal: React.FC<VisitorPortalProps> = ({
                   ? '🚗 Solicitação de veículo com motorista'
                   : '🔑 Solicitação de veículo sem motorista (Você será o condutor)'}
               </strong>
-              <p className="text-[11px] text-emerald-700 font-medium">Veículo dimensionado pela coordenação</p>
             </div>
             <div>
               <span className="text-slate-400 text-[11px] block">Itinerário:</span>
