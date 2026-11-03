@@ -42,9 +42,12 @@ import {
   Minus,
   Pencil,
   Save,
-  Star
+  Star,
+  Eye,
+  FileCheck2,
+  Shield
 } from 'lucide-react';
-import { Chamado, Trip, Vehicle, VisitorSolicitationData, PassengerDetail } from '../../types';
+import { Chamado, Trip, Vehicle, VisitorSolicitationData, PassengerDetail, OfficialDocument } from '../../types';
 import { 
   lookupHerculesServidor, 
   lookupReceitaFederalCpf, 
@@ -56,6 +59,7 @@ import {
   getWhatsAppWebLink 
 } from '../../services/whatsappService';
 import { SolicitationReportModal } from './SolicitationReportModal';
+import { DocumentPreviewModal } from '../documents/DocumentPreviewModal';
 
 interface VisitorPortalProps {
   comarcas?: string[];
@@ -64,6 +68,7 @@ interface VisitorPortalProps {
   recentChamados?: Chamado[];
   trips?: Trip[];
   vehicles?: Vehicle[];
+  documents?: OfficialDocument[];
   onOpenTripSignature?: (trip: Trip) => void;
   onOpenTripDetails?: (trip: Trip) => void;
   onOpenSatisfactionSurvey?: (item: {
@@ -98,6 +103,7 @@ export const VisitorPortal: React.FC<VisitorPortalProps> = ({
   recentChamados = [],
   trips = [],
   vehicles = [],
+  documents = [],
   onOpenTripSignature,
   onOpenTripDetails,
   onOpenSatisfactionSurvey,
@@ -212,6 +218,71 @@ export const VisitorPortal: React.FC<VisitorPortalProps> = ({
     trip?: Trip;
     chamado?: Chamado;
   } | null>(null);
+
+  // Modal de Prévia de Documento Oficial de Autorização
+  const [docPreviewModalOpen, setDocPreviewModalOpen] = useState(false);
+  const [docForPreview, setDocForPreview] = useState<OfficialDocument | null>(null);
+
+  // Documento oficial de autorização para conduzir vinculado automaticamente ao solicitante
+  const autorizacaoDocumento = useMemo<OfficialDocument>(() => {
+    const existing = (documents || []).find(
+      (d) =>
+        d.id === 'doc-aut-conduzir-oficial' ||
+        d.titulo.toLowerCase().includes('autorização para conduzir') ||
+        d.titulo.toLowerCase().includes('autorizacao para conduzir')
+    );
+    if (existing) {
+      return {
+        ...existing,
+        motoristaNome: solicitanteNome,
+        conteudoPrevia: {
+          ...existing.conteudoPrevia,
+          camposPrincipais: [
+            { rotulo: 'Ato de Autorização', valor: 'Portaria DiTrans nº 412/2025-TJPR' },
+            { rotulo: 'Processo SEI', valor: '0018492-41.2025.8.16.6000' },
+            { rotulo: 'Condutor Autorizado', valor: `${solicitanteNome} (${cargoServidor || 'Servidor TJPR'})` },
+            { rotulo: 'Matrícula Funcional', valor: matriculaInput || 'TJPR-98.341-2' },
+            { rotulo: 'CNH do Condutor', valor: '04829104820 (Cat. B) • Válida até 19/11/2028' },
+            { rotulo: 'Base Legal', valor: 'Resolução TJPR nº 315/2021 - Art. 12' },
+            { rotulo: 'Situação Cadastral', valor: 'Regular e Homologada no SEI / DiTrans' },
+            { rotulo: 'Órgão Competente', valor: 'Divisão de Transportes e Frotas (DiTrans)' },
+          ],
+        },
+      };
+    }
+    return {
+      id: `doc-aut-conduzir-${matriculaInput || 'tjpr'}`,
+      titulo: 'Autorização para Conduzir Veículos Oficiais',
+      categoria: 'demais_situacoes',
+      subtipo: 'autorizacao_trafego_especial',
+      numeroDocumento: 'Portaria DiTrans nº 412/2025-TJPR',
+      orgaoEmissor: 'Tribunal de Justiça do Estado do Paraná - Divisão de Transportes (DiTrans)',
+      dataEmissao: '2025-02-10',
+      dataValidade: '2028-11-19',
+      statusValidade: 'valido',
+      motoristaNome: solicitanteNome,
+      processoSei: '0018492-41.2025.8.16.6000',
+      arquivoNome: 'Autorizacao_Conduzir_Veiculos_Oficiais_TJPR_412_2025.pdf',
+      arquivoTamanho: '1.2 MB',
+      formato: 'PDF',
+      observacoes: 'Autorização individual formal para condução própria de veículos oficiais da frota institucional do TJPR em deslocamentos de serviço e atos jurisdicionais, nos termos da Resolução TJPR nº 315/2021 e Decreto Estadual nº 4.512/2020.',
+      dataUpload: '2025-02-12 14:30',
+      conteudoPrevia: {
+        camposPrincipais: [
+          { rotulo: 'Ato de Autorização', valor: 'Portaria DiTrans nº 412/2025-TJPR' },
+          { rotulo: 'Processo SEI', valor: '0018492-41.2025.8.16.6000' },
+          { rotulo: 'Condutor Autorizado', valor: `${solicitanteNome} (${cargoServidor || 'Servidor TJPR'})` },
+          { rotulo: 'Matrícula Funcional', valor: matriculaInput || 'TJPR-98.341-2' },
+          { rotulo: 'CNH do Condutor', valor: '04829104820 (Cat. B) • Válida até 19/11/2028' },
+          { rotulo: 'Base Legal', valor: 'Resolução TJPR nº 315/2021 - Art. 12' },
+          { rotulo: 'Situação Cadastral', valor: 'Regular e Homologada no SEI / DiTrans' },
+          { rotulo: 'Órgão Competente', valor: 'Divisão de Transportes e Frotas (DiTrans)' },
+        ],
+        autenticidadeCodigo: 'SEI-TJPR-AUT-2025-0412-DITRANS',
+        qrcodeSimulado: true,
+      },
+    };
+  }, [documents, solicitanteNome, matriculaInput, cargoServidor]);
 
   // Sugestões Rápidas de Origem e Destino
   const origensRapidas = [
@@ -588,6 +659,9 @@ export const VisitorPortal: React.FC<VisitorPortalProps> = ({
       categoriaVeiculoPreferida: 'A cargo da Coordenação de Frotas TJPR',
       observacoes: observacoes.trim(),
       enviarWhatsApp: true,
+      documentoAutorizacaoVinculado: tipoServico === 'reserva_veiculo'
+        ? `${autorizacaoDocumento.numeroDocumento} (SEI ${autorizacaoDocumento.processoSei})`
+        : undefined,
     };
 
     const res = onSubmitSolicitation(payload);
@@ -917,6 +991,43 @@ export const VisitorPortal: React.FC<VisitorPortalProps> = ({
             </div>
           </div>
 
+          {/* Documento Vinculado da Autorização de Condução quando sem motorista */}
+          {submissionResult.solicitacao.tipoServico === 'reserva_veiculo' && (
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 p-3.5 bg-blue-50/80 border border-blue-200 rounded-xl text-xs shadow-2xs animate-in fade-in">
+              <div className="flex items-center gap-3 min-w-0">
+                <div className="w-10 h-10 rounded-xl bg-blue-100 text-blue-800 flex items-center justify-center shrink-0 border border-blue-200 shadow-2xs">
+                  <FileSignature className="w-5 h-5" />
+                </div>
+                <div className="min-w-0">
+                  <div className="flex items-center gap-2 flex-wrap">
+                    <span className="text-xs font-bold text-blue-950">
+                      Documento Vinculado: Autorização para Conduzir Veículos Oficiais
+                    </span>
+                    <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold bg-emerald-50 text-emerald-700 border border-emerald-200">
+                      <CheckCircle2 className="w-3 h-3 text-emerald-600" />
+                      <span>Regular no SEI / DiTrans</span>
+                    </span>
+                  </div>
+                  <p className="text-[11px] text-slate-600 mt-0.5 truncate">
+                    {autorizacaoDocumento.numeroDocumento} • Processo SEI: {autorizacaoDocumento.processoSei} • Condutor Autorizado: {submissionResult.solicitacao.solicitanteNome}
+                  </p>
+                </div>
+              </div>
+
+              <button
+                type="button"
+                onClick={() => {
+                  setDocForPreview(autorizacaoDocumento);
+                  setDocPreviewModalOpen(true);
+                }}
+                className="px-3.5 py-1.5 rounded-lg bg-white hover:bg-blue-50 border border-blue-300 text-blue-800 text-xs font-bold flex items-center gap-1.5 transition-colors cursor-pointer self-start sm:self-auto shrink-0 shadow-2xs"
+              >
+                <Eye className="w-3.5 h-3.5" />
+                <span>Visualizar Documento</span>
+              </button>
+            </div>
+          )}
+
           {/* REQUISITO 2.3: DISPARO DE CONFIRMAÇÃO DIRETO NO WHATSAPP DO SOLICITANTE */}
           <div className="bg-[#EBF7EE] border border-emerald-300 rounded-xl p-4 space-y-3">
             <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-emerald-200/80 pb-2.5">
@@ -1041,6 +1152,58 @@ export const VisitorPortal: React.FC<VisitorPortalProps> = ({
                     <span>Abrir Conteúdo (+)</span>
                   </button>
                 </div>
+
+                {/* Exibição da Necessidade de Autorização e Documento Vinculado Automaticamente */}
+                {tipoServico === 'reserva_veiculo' && (
+                  <div className="mt-4 pt-3.5 border-t border-blue-100/90 space-y-3 animate-in fade-in duration-200">
+                    {/* Alerta de Obrigatoriedade Institucional */}
+                    <div className="flex items-start gap-2.5 p-3 rounded-xl bg-amber-50/90 border border-amber-200/90 text-amber-950 text-xs shadow-2xs">
+                      <AlertCircle className="w-4 h-4 text-amber-600 shrink-0 mt-0.5" />
+                      <div className="leading-relaxed">
+                        <strong className="font-bold text-amber-900">Requisito Obrigatório:</strong>{' '}
+                        <span>
+                          Para conduzir veículo oficial desacompanhado de motorista, é necessária a prévia{' '}
+                          <strong className="font-black text-amber-950">"Autorização para Conduzir Veículos Oficiais"</strong> nos termos da Resolução TJPR nº 315/2021 e regulamentação da DiTrans.
+                        </span>
+                      </div>
+                    </div>
+
+                    {/* Card do Documento Vinculado Automaticamente */}
+                    <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 p-3.5 rounded-xl bg-white border border-blue-200/90 shadow-2xs">
+                      <div className="flex items-center gap-3 min-w-0">
+                        <div className="w-11 h-11 rounded-xl bg-blue-50 text-blue-700 flex items-center justify-center shrink-0 border border-blue-200 shadow-2xs">
+                          <FileSignature className="w-6 h-6" />
+                        </div>
+                        <div className="min-w-0">
+                          <div className="flex items-center gap-2 flex-wrap">
+                            <span className="text-xs sm:text-sm font-bold text-slate-900">
+                              Autorização para Conduzir Veículos Oficiais
+                            </span>
+                            <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-emerald-50 text-emerald-700 border border-emerald-200 shadow-2xs">
+                              <CheckCircle2 className="w-3.5 h-3.5 text-emerald-600 stroke-[2.5]" />
+                              <span>Documento Vinculado Automaticamente</span>
+                            </span>
+                          </div>
+                          <p className="text-[11px] text-slate-500 mt-0.5 truncate">
+                            {autorizacaoDocumento.numeroDocumento} • Processo SEI: {autorizacaoDocumento.processoSei} • CNH Regular (Validade: 19/11/2028)
+                          </p>
+                        </div>
+                      </div>
+
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setDocForPreview(autorizacaoDocumento);
+                          setDocPreviewModalOpen(true);
+                        }}
+                        className="px-3.5 py-2 rounded-xl bg-blue-50 hover:bg-blue-100 text-blue-800 hover:text-blue-950 border border-blue-200 text-xs font-bold flex items-center gap-1.5 transition-colors cursor-pointer self-start sm:self-auto shrink-0 shadow-2xs"
+                      >
+                        <Eye className="w-4 h-4 text-blue-700" />
+                        <span>Visualizar Documento</span>
+                      </button>
+                    </div>
+                  </div>
+                )}
               </div>
             ) : (
               /* ESTADO EXPANDIDO (Sem cabeçalho '1. modalidade...', com botão de reduzir se aprovado) */
@@ -1170,6 +1333,14 @@ export const VisitorPortal: React.FC<VisitorPortalProps> = ({
                         }`}>
                           (Você será o condutor)
                         </span>
+                        <span className={`inline-flex items-center gap-1 mt-2 text-[11px] font-semibold px-2 py-0.5 rounded-md border ${
+                          tipoServico === 'reserva_veiculo' && item1Confirmado
+                            ? 'bg-blue-900/50 text-amber-300 border-amber-300/30'
+                            : 'bg-amber-50 text-amber-800 border-amber-200'
+                        }`}>
+                          <AlertCircle className="w-3 h-3 text-amber-600 shrink-0" />
+                          <span>Requer "Autorização para Conduzir Veículos Oficiais"</span>
+                        </span>
                       </div>
                     </div>
 
@@ -1185,6 +1356,53 @@ export const VisitorPortal: React.FC<VisitorPortalProps> = ({
                     </div>
                   </button>
                 </div>
+
+                {/* Seção Informativa do Documento Vinculado na Modalidade Sem Motorista (Estado Expandido) */}
+                {tipoServico === 'reserva_veiculo' && (
+                  <div className="mt-4 p-4 rounded-2xl bg-blue-50/70 border border-blue-200/90 shadow-2xs space-y-3 animate-in fade-in duration-200">
+                    <div className="flex items-start gap-2.5">
+                      <AlertCircle className="w-4 h-4 text-blue-700 shrink-0 mt-0.5" />
+                      <div className="text-xs text-blue-950">
+                        <strong>Aviso Institucional (DiTrans TJPR):</strong> Para condução de veículo oficial sem motorista,
+                        é indispensável a prévia <strong>"Autorização para Conduzir Veículos Oficiais"</strong> com CNH regular e válida.
+                      </div>
+                    </div>
+
+                    <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 p-3 bg-white rounded-xl border border-blue-200 shadow-2xs">
+                      <div className="flex items-center gap-3 min-w-0">
+                        <div className="w-10 h-10 rounded-xl bg-blue-100 text-blue-800 flex items-center justify-center shrink-0 border border-blue-200">
+                          <FileSignature className="w-5 h-5" />
+                        </div>
+                        <div className="min-w-0">
+                          <div className="flex items-center gap-2 flex-wrap">
+                            <span className="text-xs font-bold text-slate-900">
+                              Autorização para Conduzir Veículos Oficiais
+                            </span>
+                            <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold bg-emerald-50 text-emerald-700 border border-emerald-200">
+                              <CheckCircle2 className="w-3 h-3 text-emerald-600" />
+                              <span>Documento Vinculado Automaticamente</span>
+                            </span>
+                          </div>
+                          <p className="text-[11px] text-slate-500 mt-0.5 truncate">
+                            {autorizacaoDocumento.numeroDocumento} • Processo SEI: {autorizacaoDocumento.processoSei} • Condutor: {solicitanteNome}
+                          </p>
+                        </div>
+                      </div>
+
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setDocForPreview(autorizacaoDocumento);
+                          setDocPreviewModalOpen(true);
+                        }}
+                        className="px-3.5 py-1.5 rounded-lg bg-blue-50 hover:bg-blue-100 text-blue-700 hover:text-blue-900 border border-blue-200 text-xs font-bold flex items-center gap-1.5 transition-colors cursor-pointer self-start sm:self-auto shrink-0 shadow-2xs"
+                      >
+                        <Eye className="w-3.5 h-3.5" />
+                        <span>Visualizar Documento</span>
+                      </button>
+                    </div>
+                  </div>
+                )}
               </div>
             )}
 
@@ -2844,6 +3062,13 @@ export const VisitorPortal: React.FC<VisitorPortalProps> = ({
           onClose={() => setReportModalItem(null)}
         />
       )}
+
+      {/* Modal de Prévia Oficial do Documento de Autorização */}
+      <DocumentPreviewModal
+        isOpen={docPreviewModalOpen}
+        onClose={() => setDocPreviewModalOpen(false)}
+        document={docForPreview}
+      />
 
     </div>
   );

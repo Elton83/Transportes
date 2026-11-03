@@ -654,6 +654,7 @@ export interface VisitorSolicitationData {
   categoriaVeiculoPreferida?: string;
   observacoes?: string;
   enviarWhatsApp?: boolean;
+  documentoAutorizacaoVinculado?: string;
 }
 
 // =========================================================

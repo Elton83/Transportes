@@ -731,6 +731,38 @@ export const INITIAL_DOCUMENTS: OfficialDocument[] = [
       qrcodeSimulado: true,
     },
   },
+  {
+    id: 'doc-aut-conduzir-oficial',
+    titulo: 'Autorização para Conduzir Veículos Oficiais',
+    categoria: 'demais_situacoes',
+    subtipo: 'autorizacao_trafego_especial',
+    numeroDocumento: 'Portaria DiTrans nº 412/2025-TJPR',
+    orgaoEmissor: 'Tribunal de Justiça do Estado do Paraná - Divisão de Transportes (DiTrans)',
+    dataEmissao: '2025-02-10',
+    dataValidade: '2028-11-19',
+    statusValidade: 'valido',
+    motoristaNome: 'Dr. Elton Rabelo',
+    processoSei: '0018492-41.2025.8.16.6000',
+    arquivoNome: 'Autorizacao_Conduzir_Veiculos_Oficiais_TJPR_412_2025.pdf',
+    arquivoTamanho: '1.2 MB',
+    formato: 'PDF',
+    observacoes: 'Autorização formal individual para condução própria de veículos oficiais da frota institucional do TJPR em deslocamentos de serviço e atos jurisdicionais, nos termos da Resolução TJPR nº 315/2021 e Decreto Estadual nº 4.512/2020.',
+    dataUpload: '2025-02-12 14:30',
+    conteudoPrevia: {
+      camposPrincipais: [
+        { rotulo: 'Ato de Autorização', valor: 'Portaria DiTrans nº 412/2025-TJPR' },
+        { rotulo: 'Processo SEI', valor: '0018492-41.2025.8.16.6000' },
+        { rotulo: 'Condutor Autorizado', valor: 'Dr. Elton Rabelo (Juiz de Direito Substituto)' },
+        { rotulo: 'Matrícula Funcional', valor: 'TJPR-98.341-2' },
+        { rotulo: 'CNH do Condutor', valor: '04829104820 (Cat. B) • Válida até 19/11/2028' },
+        { rotulo: 'Base Legal', valor: 'Resolução TJPR nº 315/2021 - Art. 12' },
+        { rotulo: 'Situação Cadastral', valor: 'Regular e Homologada no SEI / DiTrans' },
+        { rotulo: 'Órgão Competente', valor: 'Divisão de Transportes e Frotas (DiTrans)' },
+      ],
+      autenticidadeCodigo: 'SEI-TJPR-AUT-2025-0412-DITRANS',
+      qrcodeSimulado: true,
+    },
+  },
 
   // ==================== REPOSITÓRIO INTERNO: LEIS, NORMAS, PORTARIAS & MANUAIS ====================
   {
