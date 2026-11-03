@@ -1137,53 +1137,28 @@ export const VisitorPortal: React.FC<VisitorPortalProps> = ({
                     </div>
                   </button>
 
-                  {/* Opção B: Solicitação de veículo sem motorista (Ícone colorido: motorista ao volante com cinto de segurança) */}
+                  {/* Opção B: Solicitação de veículo sem motorista (Ícone do veículo oficial correspondente ao anexo) */}
                   <button
                     type="button"
                     onClick={() => handleSelectModalidade('reserva_veiculo')}
                     className={`group relative flex items-center justify-between p-4 sm:p-5 rounded-2xl border text-left transition-all duration-200 cursor-pointer ${
                       tipoServico === 'reserva_veiculo' && item1Confirmado
                         ? 'bg-[#05202B] border-[#05202B] text-white shadow-lg ring-2 ring-[#05202B]/20'
-                        : 'bg-white border-slate-200 text-slate-800 hover:border-emerald-400 hover:bg-emerald-50/20 hover:shadow-md'
+                        : 'bg-white border-slate-200 text-slate-800 hover:border-blue-400 hover:bg-blue-50/20 hover:shadow-md'
                     }`}
                   >
                     <div className="flex items-center gap-4 sm:gap-5 min-w-0">
                       <div className={`w-18 h-18 sm:w-20 sm:h-20 rounded-2xl flex items-center justify-center shrink-0 p-2 transition-transform group-hover:scale-105 shadow-sm ${
                         tipoServico === 'reserva_veiculo' && item1Confirmado
-                          ? 'bg-gradient-to-br from-emerald-950/60 via-slate-800 to-[#05202B] border border-emerald-400/40 shadow-emerald-500/20'
-                          : 'bg-gradient-to-br from-emerald-50 via-teal-50 to-emerald-100/70 border-2 border-emerald-200/80 group-hover:border-emerald-300'
+                          ? 'bg-gradient-to-br from-blue-900/60 via-slate-800 to-[#05202B] border border-blue-400/40 shadow-blue-500/20'
+                          : 'bg-gradient-to-br from-blue-50 via-sky-50 to-indigo-100/70 border-2 border-blue-200/80 group-hover:border-blue-300'
                       }`}>
-                        {/* Ícone colorido correspondente à 3ª imagem: Condutor segurando volante com cinto de segurança */}
-                        <svg className="w-13 h-13 sm:w-15 sm:h-15 drop-shadow-sm" viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg">
-                          {/* Cabeça do Condutor */}
-                          <circle cx="50" cy="25" r="16" fill="#FCD34D" />
-                          <path d="M34 25 C 34 16 42 10 50 10 C 58 10 66 16 66 25 C 66 21 58 13 50 13 C 42 13 34 21 34 25 Z" fill="#1E293B" />
-                          
-                          {/* Tronco do Condutor (em verde institucional / esmeralda) */}
-                          <path d="M19 68 C 19 54 28 46 39 46 L 61 46 C 72 46 81 54 81 68 L 81 74 L 19 74 Z" fill="#059669" />
-                          
-                          {/* Cinto de Segurança Diagonal (amarelo/âmbar de alta segurança) */}
-                          <path d="M64 46 L 76 56 L 39 74 L 27 65 Z" fill="#F59E0B" stroke="#D97706" strokeWidth="1.5" />
-                          <path d="M63 47 L 74 56" stroke="#FEF3C7" strokeWidth="1" strokeLinecap="round" />
-
-                          {/* Coluna da Direção */}
-                          <path d="M43 88 L 47 70 L 53 70 L 57 88 Z" fill="#334155" />
-                          
-                          {/* Aro do Volante com acabamento em couro escuro */}
-                          <path d="M20 74 C 20 54 33 42 50 42 C 67 42 80 54 80 74" stroke="#0F172A" strokeWidth="9" strokeLinecap="round" />
-                          <path d="M21 73 C 21 55 34 44 50 44 C 66 44 79 55 79 73" stroke="#475569" strokeWidth="3" strokeLinecap="round" />
-
-                          {/* Centro e Raios do Volante */}
-                          <circle cx="50" cy="72" r="8" fill="#1E293B" stroke="#64748B" strokeWidth="2" />
-                          <circle cx="50" cy="72" r="4" fill="#10B981" />
-                          <path d="M25 72 L 42 72 M 58 72 L 75 72" stroke="#64748B" strokeWidth="4" strokeLinecap="round" />
-
-                          {/* Mãos do Condutor Empunhando o Volante (posições 10 e 2) */}
-                          <circle cx="23" cy="71" r="6" fill="#FCD34D" stroke="#D97706" strokeWidth="1" />
-                          <ellipse cx="23" cy="69" rx="5" ry="3" fill="#FDE68A" />
-                          <circle cx="77" cy="71" r="6" fill="#FCD34D" stroke="#D97706" strokeWidth="1" />
-                          <ellipse cx="77" cy="69" rx="5" ry="3" fill="#FDE68A" />
-                        </svg>
+                        {/* Imagem do ícone do veículo oficial mantendo a mesma proporção e harmonia de cor */}
+                        <img
+                          src="/assets/aistudio/image_d2bd0ba9.png"
+                          alt="Solicitação de veículo sem motorista"
+                          className="w-13 h-13 sm:w-15 sm:h-15 object-contain drop-shadow-sm select-none"
+                        />
                       </div>
                       <div className="min-w-0 py-1">
                         <span className={`text-base sm:text-lg lg:text-xl font-extrabold block tracking-tight leading-snug ${
@@ -1192,7 +1167,7 @@ export const VisitorPortal: React.FC<VisitorPortalProps> = ({
                           Solicitação de veículo sem motorista
                         </span>
                         <span className={`text-sm sm:text-base font-bold block mt-1.5 ${
-                          tipoServico === 'reserva_veiculo' && item1Confirmado ? 'text-emerald-300' : 'text-emerald-700'
+                          tipoServico === 'reserva_veiculo' && item1Confirmado ? 'text-blue-300' : 'text-blue-600'
                         }`}>
                           (Você será o condutor)
                         </span>
@@ -1201,12 +1176,12 @@ export const VisitorPortal: React.FC<VisitorPortalProps> = ({
 
                     <div className="shrink-0 pl-3">
                       {tipoServico === 'reserva_veiculo' && item1Confirmado ? (
-                        <span className="inline-flex items-center gap-1.5 text-xs font-bold text-emerald-300 bg-white/10 px-3 py-1.5 rounded-full border border-emerald-300/30 shadow-2xs">
+                        <span className="inline-flex items-center gap-1.5 text-xs font-bold text-amber-300 bg-white/10 px-3 py-1.5 rounded-full border border-amber-300/30 shadow-2xs">
                           <Check className="w-4 h-4 stroke-[2.5]" />
                           <span>Selecionado</span>
                         </span>
                       ) : (
-                        <div className="w-6 h-6 rounded-full border-2 border-slate-300 group-hover:border-emerald-500 flex items-center justify-center transition-colors" />
+                        <div className="w-6 h-6 rounded-full border-2 border-slate-300 group-hover:border-blue-500 flex items-center justify-center transition-colors" />
                       )}
                     </div>
                   </button>
