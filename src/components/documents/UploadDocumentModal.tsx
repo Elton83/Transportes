@@ -430,7 +430,7 @@ export const UploadDocumentModal: React.FC<UploadDocumentModalProps> = ({
             ) : categoria === 'legislacao_normas' ? (
               <div>
                 <label className="block text-xs font-semibold text-slate-700 mb-1">
-                  Âmbito / Órgão Normativo ou SEI *
+                  Âmbito / Órgão Normativo *
                 </label>
                 <input
                   type="text"
@@ -443,7 +443,7 @@ export const UploadDocumentModal: React.FC<UploadDocumentModalProps> = ({
             ) : (
               <div>
                 <label className="block text-xs font-semibold text-slate-700 mb-1">
-                  Processo SEI / Protocolo TJPR
+                  Processo / Protocolo TJPR
                 </label>
                 <input
                   type="text"
@@ -550,7 +550,7 @@ export const UploadDocumentModal: React.FC<UploadDocumentModalProps> = ({
               rows={2}
               value={observacoes}
               onChange={(e) => setObservacoes(e.target.value)}
-              placeholder="Informações de cobertura, restrições ou termos vinculados ao processo SEI..."
+              placeholder="Informações de cobertura, restrições ou termos vinculados ao processo..."
               className="w-full text-xs rounded-lg border border-slate-300 p-2.5 focus:ring-2 focus:ring-[#002B49] focus:outline-none"
             />
           </div>

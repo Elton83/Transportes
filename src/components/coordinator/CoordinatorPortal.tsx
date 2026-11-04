@@ -214,15 +214,15 @@ export const CoordinatorPortal: React.FC<CoordinatorPortalProps> = ({
       conteudoPrevia: {
         camposPrincipais: [
           { rotulo: 'Ato de Autorização', valor: 'Portaria DiTrans nº 412/2025-TJPR' },
-          { rotulo: 'Processo SEI', valor: c.processoSei || '0018492-41.2025.8.16.6000' },
+          { rotulo: 'Processo', valor: c.processoSei || '0018492-41.2025.8.16.6000' },
           { rotulo: 'Condutor Autorizado', valor: `${c.solicitanteNome} (${c.solicitanteCargo})` },
           { rotulo: 'Matrícula Funcional', valor: c.solicitanteMatricula || 'TJPR-98.341-2' },
           { rotulo: 'CNH do Condutor', valor: '04829104820 (Cat. B) • Válida até 19/11/2028' },
           { rotulo: 'Base Legal', valor: 'Resolução TJPR nº 315/2021 - Art. 12' },
-          { rotulo: 'Situação Cadastral', valor: 'Regular e Homologada no SEI / DiTrans' },
+          { rotulo: 'Situação Cadastral', valor: 'Regular e Homologada na DiTrans' },
           { rotulo: 'Órgão Competente', valor: 'Divisão de Transportes e Frotas (DiTrans)' },
         ],
-        autenticidadeCodigo: 'SEI-TJPR-AUT-2025-0412-DITRANS',
+        autenticidadeCodigo: 'TJPR-AUT-2025-0412-DITRANS',
         qrcodeSimulado: true,
       },
     };
@@ -693,7 +693,7 @@ export const CoordinatorPortal: React.FC<CoordinatorPortalProps> = ({
                               title="Conferir e validar Autorização para Conduzir Veículos Oficiais"
                             >
                               <CheckCircle2 className="w-3.5 h-3.5 text-white" />
-                              <span>Validar Autorização SEI</span>
+                              <span>Validar Autorização</span>
                             </button>
                           )}
 
@@ -825,7 +825,7 @@ export const CoordinatorPortal: React.FC<CoordinatorPortalProps> = ({
                               type="button"
                               onClick={() => handleOpenDocPreview(chamado)}
                               className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl text-xs font-bold text-blue-700 bg-blue-50 hover:bg-blue-100 border border-blue-300 transition-all cursor-pointer shadow-2xs"
-                              title="Visualizar documento oficial da portaria no SEI"
+                              title="Visualizar documento oficial da portaria"
                             >
                               <Eye className="w-3.5 h-3.5" />
                               <span>Visualizar Documento</span>
@@ -869,7 +869,7 @@ export const CoordinatorPortal: React.FC<CoordinatorPortalProps> = ({
                             <div>
                               <strong className="text-slate-800 block text-xs">{chamado.solicitanteNome}</strong>
                               <span className={`text-[10px] font-bold ${chamado.autorizacaoConduzirValidada ? 'text-emerald-700' : 'text-amber-700'}`}>
-                                {chamado.autorizacaoConduzirValidada ? '✓ Condução Própria Validada' : 'Aguardando Validação SEI'}
+                                {chamado.autorizacaoConduzirValidada ? '✓ Condução Própria Validada' : 'Aguardando Validação'}
                               </span>
                             </div>
                           </div>
@@ -1205,7 +1205,7 @@ export const CoordinatorPortal: React.FC<CoordinatorPortalProps> = ({
                 <p className="text-slate-600 text-[11px]">{managingChamado.descricao}</p>
                 <div className="text-[10px] text-slate-500 pt-1 border-t border-slate-200 flex justify-between">
                   <span>Solicitante: <b>{managingChamado.solicitanteNome}</b></span>
-                  <span>SEI: <b>{managingChamado.processoSei || 'Integrado'}</b></span>
+                  <span>Processo: <b>{managingChamado.processoSei || 'Integrado'}</b></span>
                 </div>
               </div>
 
@@ -1243,7 +1243,7 @@ export const CoordinatorPortal: React.FC<CoordinatorPortalProps> = ({
                           )}
                         </div>
                         <p className="text-[11px] text-slate-500 mt-0.5 truncate">
-                          Portaria DiTrans nº 412/2025-TJPR • Processo SEI: {managingChamado.processoSei || '0018492-41.2025.8.16.6000'} • CNH Regular
+                          Portaria DiTrans nº 412/2025-TJPR • Processo: {managingChamado.processoSei || '0018492-41.2025.8.16.6000'} • CNH Regular
                         </p>
                       </div>
                     </div>
@@ -1488,7 +1488,7 @@ export const CoordinatorPortal: React.FC<CoordinatorPortalProps> = ({
                   rows={3}
                   value={closingJustificativa}
                   onChange={(e) => setClosingJustificativa(e.target.value)}
-                  placeholder="Insira o parecer final para encerramento e arquivamento no SEI..."
+                  placeholder="Insira o parecer final para encerramento e arquivamento..."
                   className="w-full p-2.5 rounded-xl border border-slate-200 focus:outline-hidden focus:ring-2 focus:ring-emerald-600 text-xs"
                   required
                 />
@@ -1550,7 +1550,7 @@ export const CoordinatorPortal: React.FC<CoordinatorPortalProps> = ({
                       {detailsChamado.codigo}
                     </span>
                     <span className="text-[11px] text-slate-300 font-mono">
-                      SEI: {detailsChamado.processoSei || 'Integrado'}
+                      Processo: {detailsChamado.processoSei || 'Integrado'}
                     </span>
                   </div>
                   <h3 className="font-bold text-base text-white mt-0.5">
@@ -1647,7 +1647,7 @@ export const CoordinatorPortal: React.FC<CoordinatorPortalProps> = ({
                         <div className="flex items-center justify-between gap-1">
                           <strong className="text-slate-800 text-xs">{detailsChamado.solicitanteNome}</strong>
                           <span className={`text-[10px] font-bold ${detailsChamado.autorizacaoConduzirValidada ? 'text-emerald-700' : 'text-amber-700'}`}>
-                            {detailsChamado.autorizacaoConduzirValidada ? '✓ Condução Validada' : 'Aguardando Validação SEI'}
+                            {detailsChamado.autorizacaoConduzirValidada ? '✓ Condução Validada' : 'Aguardando Validação'}
                           </span>
                         </div>
                       ) : detailsChamado.motoristaNome ? (
@@ -1725,7 +1725,7 @@ export const CoordinatorPortal: React.FC<CoordinatorPortalProps> = ({
                           )}
                         </div>
                         <p className="text-[11px] text-slate-500 mt-0.5 truncate">
-                          Portaria DiTrans nº 412/2025-TJPR • Processo SEI: {detailsChamado.processoSei || '0018492-41.2025.8.16.6000'} • CNH Regular (Validade: 19/11/2028)
+                          Portaria DiTrans nº 412/2025-TJPR • Processo: {detailsChamado.processoSei || '0018492-41.2025.8.16.6000'} • CNH Regular (Validade: 19/11/2028)
                         </p>
                         {detailsChamado.autorizacaoValidadaEm && (
                           <p className="text-[10px] text-emerald-700 font-mono mt-0.5">

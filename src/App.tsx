@@ -1278,7 +1278,7 @@ export default function App() {
       codigo: tripCodigo,
       status: 'solicitada',
       tipoServico: solicitation.tipoServico,
-      documentoAutorizacao: isReserva ? (solicitation.documentoAutorizacaoVinculado || 'Portaria DiTrans nº 412/2025-TJPR (Processo SEI: 0018492-41.2025.8.16.6000)') : undefined,
+      documentoAutorizacao: isReserva ? (solicitation.documentoAutorizacaoVinculado || 'Portaria DiTrans nº 412/2025-TJPR (Processo: 0018492-41.2025.8.16.6000)') : undefined,
       documentoIdVinculado: isReserva ? 'doc-aut-conduzir-oficial' : undefined,
       autorizacaoConduzirValidada: false,
       origem: solicitation.origem,
@@ -1304,7 +1304,7 @@ export default function App() {
       ],
       diarioBordo: [],
       dataCriacao: formattedDate,
-      observacoes: `Matrícula: ${solicitation.matriculaServidor || 'TJPR-98.341-2'} | WhatsApp: ${solicitation.telefone} | E-mail: ${solicitation.email} | Doc: ${solicitation.documentoOuCpf}${isReserva ? ' | Documento Vinculado: Autorização para Conduzir Veículos Oficiais (Portaria DiTrans nº 412/2025 • SEI 0018492-41.2025.8.16.6000)' : ''}${solicitation.demaisPassageiros && solicitation.demaisPassageiros.length > 0 ? ` | Demais Passageiros: ${solicitation.demaisPassageiros.join('; ')}` : ''}${solicitation.observacoes ? ` | Observações: ${solicitation.observacoes}` : ''}`,
+      observacoes: `Matrícula: ${solicitation.matriculaServidor || 'TJPR-98.341-2'} | WhatsApp: ${solicitation.telefone} | E-mail: ${solicitation.email} | Doc: ${solicitation.documentoOuCpf}${isReserva ? ' | Documento Vinculado: Autorização para Conduzir Veículos Oficiais (Portaria DiTrans nº 412/2025 • Processo 0018492-41.2025.8.16.6000)' : ''}${solicitation.demaisPassageiros && solicitation.demaisPassageiros.length > 0 ? ` | Demais Passageiros: ${solicitation.demaisPassageiros.join('; ')}` : ''}${solicitation.observacoes ? ` | Observações: ${solicitation.observacoes}` : ''}`,
       processoSei: `VIS-${solicitation.documentoOuCpf.replace(/\D/g, '').substring(0, 7) || '2026'}.8.16.6000`,
     };
 
@@ -1315,10 +1315,10 @@ export default function App() {
       titulo: isReserva
         ? `Reserva de Veículo sem Motorista (Condução Própria) - ${solicitation.destino}`
         : `Solicitação de Viagem c/ Motorista Oficial - ${solicitation.destino}`,
-      descricao: `DEMANDA PROTOCOLADA NO SISTEMA DE SOLICITAÇÃO DE VEÍCULOS TJPR:\n• Solicitante: ${solicitation.solicitanteNome} (${solicitation.orgaoOuVinculo})\n• Matrícula: ${solicitation.matriculaServidor || 'TJPR-98.341-2'} | CPF: ${solicitation.documentoOuCpf}\n• Contato: WhatsApp ${solicitation.telefone} | E-mail: ${solicitation.email}\n• Modalidade: ${isReserva ? 'Reserva de Carro Oficial (Condução Própria pelo Servidor - Sem Motorista)' : 'Viagem com Motorista Oficial Credenciado'}\n• Trajeto: Saída de "${solicitation.origem}" -> Destino: "${solicitation.destino}"\n• Partida: ${solicitation.dataSaida} às ${solicitation.horaSaida}\n• Retorno Previsto: ${solicitation.dataRetorno ? `${solicitation.dataRetorno} às ${solicitation.horaRetorno}` : 'Em aberto (preenchimento no diário de bordo pelo condutor)'}\n• Total de Passageiros: ${solicitation.passageirosQtd} pessoa(s)${solicitation.demaisPassageiros && solicitation.demaisPassageiros.length > 0 ? `\n• Demais Passageiros: ${solicitation.demaisPassageiros.join(', ')}` : ''}\n• Alocação do Veículo: A cargo da Gestão/Coordenação de Frotas TJPR${isReserva ? '\n• Documento Vinculado Obrigatório: Autorização para Conduzir Veículos Oficiais (Portaria DiTrans nº 412/2025 • SEI: 0018492-41.2025.8.16.6000)\n• Requisito Legal: O Supervisor de Rodízio precisa validar o documento "Autorização para Conduzir Veículos Oficiais" para liberar a chave e despachar o veículo oficial.' : ''}${solicitation.observacoes ? `\n• Observações: "${solicitation.observacoes}"` : ''}`,
+      descricao: `DEMANDA PROTOCOLADA NO SISTEMA DE SOLICITAÇÃO DE VEÍCULOS TJPR:\n• Solicitante: ${solicitation.solicitanteNome} (${solicitation.orgaoOuVinculo})\n• Matrícula: ${solicitation.matriculaServidor || 'TJPR-98.341-2'} | CPF: ${solicitation.documentoOuCpf}\n• Contato: WhatsApp ${solicitation.telefone} | E-mail: ${solicitation.email}\n• Modalidade: ${isReserva ? 'Reserva de Carro Oficial (Condução Própria pelo Servidor - Sem Motorista)' : 'Viagem com Motorista Oficial Credenciado'}\n• Trajeto: Saída de "${solicitation.origem}" -> Destino: "${solicitation.destino}"\n• Partida: ${solicitation.dataSaida} às ${solicitation.horaSaida}\n• Retorno Previsto: ${solicitation.dataRetorno ? `${solicitation.dataRetorno} às ${solicitation.horaRetorno}` : 'Em aberto (preenchimento no diário de bordo pelo condutor)'}\n• Total de Passageiros: ${solicitation.passageirosQtd} pessoa(s)${solicitation.demaisPassageiros && solicitation.demaisPassageiros.length > 0 ? `\n• Demais Passageiros: ${solicitation.demaisPassageiros.join(', ')}` : ''}\n• Alocação do Veículo: A cargo da Gestão/Coordenação de Frotas TJPR${isReserva ? '\n• Documento Vinculado Obrigatório: Autorização para Conduzir Veículos Oficiais (Portaria DiTrans nº 412/2025 • Processo: 0018492-41.2025.8.16.6000)\n• Requisito Legal: O Supervisor de Rodízio precisa validar o documento "Autorização para Conduzir Veículos Oficiais" para liberar a chave e despachar o veículo oficial.' : ''}${solicitation.observacoes ? `\n• Observações: "${solicitation.observacoes}"` : ''}`,
       tipo: 'solicitacao_veiculo',
       tipoServico: solicitation.tipoServico,
-      documentoAutorizacao: isReserva ? (solicitation.documentoAutorizacaoVinculado || 'Portaria DiTrans nº 412/2025-TJPR (Processo SEI: 0018492-41.2025.8.16.6000)') : undefined,
+      documentoAutorizacao: isReserva ? (solicitation.documentoAutorizacaoVinculado || 'Portaria DiTrans nº 412/2025-TJPR (Processo: 0018492-41.2025.8.16.6000)') : undefined,
       documentoIdVinculado: isReserva ? 'doc-aut-conduzir-oficial' : undefined,
       autorizacaoConduzirValidada: false,
       prioridade: 'alta',
@@ -1349,10 +1349,10 @@ export default function App() {
         {
           id: `resp-${Date.now()}`,
           autor: isReserva ? 'Sistema SIGPAT (Protocolo de Condução Própria)' : 'Sistema SIGPAT (Escala de Rodízio)',
-          cargo: isReserva ? 'Validador SEI / DiTrans' : 'Escala Automática TJPR',
+          cargo: isReserva ? 'Validador DiTrans' : 'Escala Automática TJPR',
           dataHora: formattedDate,
           mensagem: isReserva
-            ? `Demanda protocolada sob nº ${chamadoCodigo} na modalidade CONDUÇÃO PRÓPRIA (Sem Motorista). O documento "Autorização para Conduzir Veículos Oficiais" (Portaria DiTrans nº 412/2025 • SEI 0018492-41.2025.8.16.6000) foi anexado automaticamente e aguarda validação formal pelo Supervisor de Rodízio para liberação da chave do veículo oficial.`
+            ? `Demanda protocolada sob nº ${chamadoCodigo} na modalidade CONDUÇÃO PRÓPRIA (Sem Motorista). O documento "Autorização para Conduzir Veículos Oficiais" (Portaria DiTrans nº 412/2025 • Processo 0018492-41.2025.8.16.6000) foi anexado automaticamente e aguarda validação formal pelo Supervisor de Rodízio para liberação da chave do veículo oficial.`
             : scheduledDriver
               ? `Demanda protocolada sob nº ${chamadoCodigo}. Conforme escala oficial de rodízio da Comarca, o motorista escalado ${scheduledDriver.nome} (Matrícula: ${scheduledDriver.matricula} • Veículo ${scheduledVehicle?.prefixo}) foi pré-selecionado automaticamente. O chamado aguarda confirmação da escala ou alteração do condutor pelo Supervisor de Rodízio.`
               : `Demanda protocolada sob nº ${chamadoCodigo}. Entrada direta na fila de chamados em aberto do Supervisor de Rodízio de ${solicitation.comarca}. Aguardando direcionamento de motorista e veículo.`,
@@ -1412,7 +1412,7 @@ export default function App() {
                 cargo: 'Coordenação de Transportes (DiTrans)',
                 dataHora: formattedDate,
                 mensagem: willBeValid
-                  ? 'Autorização para Conduzir Veículos Oficiais (Portaria DiTrans nº 412/2025 • Processo SEI 0018492-41.2025.8.16.6000) conferida e VALIDADA pelo Supervisor de Rodízio. Requisito legal atendido para entrega da chave e liberação do veículo oficial TJPR.'
+                  ? 'Autorização para Conduzir Veículos Oficiais (Portaria DiTrans nº 412/2025 • Processo 0018492-41.2025.8.16.6000) conferida e VALIDADA pelo Supervisor de Rodízio. Requisito legal atendido para entrega da chave e liberação do veículo oficial TJPR.'
                   : 'Validação da autorização para condução própria revertida pelo Supervisor de Rodízio para reavaliação documental.',
                 isAdmin: true,
               },

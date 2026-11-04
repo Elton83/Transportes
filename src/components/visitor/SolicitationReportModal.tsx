@@ -109,7 +109,7 @@ export const SolicitationReportModal: React.FC<SolicitationReportModalProps> = (
             <div className="text-right border-l border-slate-200 pl-4 shrink-0">
               <span className="text-[10px] text-slate-400 font-bold uppercase block">Protocolo Oficial</span>
               <strong className="text-sm font-mono font-black text-[#05202B] block">{protocolo}</strong>
-              <span className="text-[10px] text-slate-500 font-mono block">SEI: {processoSei}</span>
+              <span className="text-[10px] text-slate-500 font-mono block">Proc: {processoSei}</span>
             </div>
           </div>
 
@@ -189,14 +189,14 @@ export const SolicitationReportModal: React.FC<SolicitationReportModalProps> = (
             </div>
           </div>
 
-          {/* Visto Digital e Homologação SEI */}
+          {/* Visto Digital e Homologação */}
           <div className="border border-slate-200 rounded-xl p-4 bg-slate-50/50 flex flex-col sm:flex-row items-center justify-between gap-4">
             <div className="space-y-1 text-center sm:text-left">
               <span className="text-[10px] font-bold uppercase tracking-wider text-slate-500 block">
                 Autenticação Eletrônica • Diário de Bordo TJPR
               </span>
               <p className="text-[11px] text-slate-600">
-                Documento integrante do processo administrativo SEI nº {processoSei}.
+                Documento integrante do processo administrativo nº {processoSei}.
               </p>
               <p className="text-[10px] text-slate-400 font-mono">
                 Hash de Validação: SHA256:{protocolo}-TJPR-SIGPAT-{Date.now().toString(16).toUpperCase()}
@@ -206,7 +206,7 @@ export const SolicitationReportModal: React.FC<SolicitationReportModalProps> = (
             <div className="border border-emerald-300 bg-emerald-50 text-emerald-900 rounded-lg p-2.5 text-center shrink-0">
               <CheckCircle2 className="w-5 h-5 text-emerald-600 mx-auto mb-0.5" />
               <span className="text-[10px] font-bold block uppercase tracking-wider">Visto Digital TJPR</span>
-              <span className="text-[9px] font-mono block text-emerald-700">Homologado no SEI</span>
+              <span className="text-[9px] font-mono block text-emerald-700">Homologado</span>
             </div>
           </div>
 

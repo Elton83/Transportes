@@ -614,7 +614,7 @@ export const OficinasView: React.FC<OficinasViewProps> = ({
                 Comprovantes Fiscais e Danfe de Serviços Automotivos
               </h4>
               <p className="text-xs text-slate-500 mt-0.5">
-                Todas as notas fiscais possuem vinculação contábil aos números de empenho e processo SEI do TJPR.
+                Todas as notas fiscais possuem vinculação contábil aos números de empenho e processo do TJPR.
               </p>
             </div>
             <button
@@ -633,7 +633,7 @@ export const OficinasView: React.FC<OficinasViewProps> = ({
                   <th className="py-3 px-4">Documento / NF-e</th>
                   <th className="py-3 px-4">Veículo</th>
                   <th className="py-3 px-4">Fornecedor Credenciado</th>
-                  <th className="py-3 px-4">Empenho SEI</th>
+                  <th className="py-3 px-4">Empenho / Protocolo</th>
                   <th className="py-3 px-4 text-right">Valor Total</th>
                   <th className="py-3 px-4 text-center">Status Contábil</th>
                   <th className="py-3 px-4 text-right">Ação</th>

@@ -220,7 +220,7 @@ export const DocumentPreviewModal: React.FC<DocumentPreviewModalProps> = ({
               {document.processoSei && (
                 <div className="bg-white p-3 rounded-lg border border-slate-200 text-xs">
                   <span className="text-slate-400 font-medium block text-[10px] uppercase">
-                    Processo SEI / TJPR
+                    Processo / Protocolo TJPR
                   </span>
                   <span className="font-bold font-mono text-slate-900 mt-0.5 block">
                     {document.processoSei}

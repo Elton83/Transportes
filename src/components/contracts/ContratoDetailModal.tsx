@@ -636,7 +636,7 @@ export const ContratoDetailModal: React.FC<ContratoDetailModalProps> = ({
                       <button
                         type="button"
                         onClick={() => {
-                          alert(`Visualizando ${anexo.titulo} (Assinado eletronicamente via SEI TJPR)`);
+                          alert(`Visualizando ${anexo.titulo} (Documento oficial digitalizado TJPR)`);
                         }}
                         className="p-1.5 rounded-lg bg-slate-100 hover:bg-slate-200 text-slate-700 transition-colors cursor-pointer shrink-0"
                         title="Baixar ou Visualizar PDF"
@@ -655,7 +655,7 @@ export const ContratoDetailModal: React.FC<ContratoDetailModalProps> = ({
         {/* FOOTER DO MODAL */}
         <div className="bg-slate-50 border-t border-slate-200 p-3 sm:p-4 px-6 flex items-center justify-between text-xs shrink-0">
           <span className="text-slate-500 font-mono text-[11px]">
-            SEI: {contrato.processoSei}
+            Processo: {contrato.processoSei}
           </span>
           <button
             type="button"

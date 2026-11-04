@@ -318,7 +318,7 @@ export const TripSignatureModal: React.FC<TripSignatureModalProps> = ({
             <div className="flex items-center justify-center gap-3 text-[11px] text-slate-500 mt-1">
               <span>Viagem: <strong className="font-mono text-slate-800">{trip.codigo}</strong></span>
               <span>•</span>
-              <span>SEI: <strong className="font-mono text-slate-800">{trip.processoSei}</strong></span>
+              <span>Processo: <strong className="font-mono text-slate-800">{trip.processoSei}</strong></span>
               <span>•</span>
               <span className="text-emerald-700 font-semibold flex items-center gap-1">
                 <CheckCircle2 className="w-3 h-3" /> Conclusão Homologada
@@ -787,7 +787,7 @@ export const TripSignatureModal: React.FC<TripSignatureModalProps> = ({
         <div className="bg-slate-50 border-t border-slate-200 px-6 py-4 flex flex-col sm:flex-row items-center justify-between gap-3 print:hidden">
           <div className="flex items-center gap-2 text-xs text-slate-500">
             <span className="w-2 h-2 rounded-full bg-emerald-500" />
-            <span>Assinaturas vinculadas ao processo SEI da viagem</span>
+            <span>Assinaturas vinculadas ao processo da viagem</span>
           </div>
 
           <div className="flex items-center gap-2 w-full sm:w-auto justify-end">

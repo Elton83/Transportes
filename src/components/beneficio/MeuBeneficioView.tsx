@@ -152,7 +152,7 @@ export const MeuBeneficioView: React.FC<MeuBeneficioViewProps> = ({
         return (
           <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-[10px] font-bold bg-sky-50 text-sky-700 border border-sky-200">
             <Clock className="w-3 h-3 text-sky-600" />
-            Em Auditoria SEI
+            Em Auditoria
           </span>
         );
       case 'divergencia':
@@ -249,12 +249,12 @@ export const MeuBeneficioView: React.FC<MeuBeneficioViewProps> = ({
 
               <button
                 onClick={() => {
-                  alert(`Relatório sintético de auditoria da API Meu Benefício gerado para instrução no Processo SEI.\nTotal apurado: R$ ${totalGasto.toFixed(2)}.`);
+                  alert(`Relatório sintético de auditoria da API Meu Benefício gerado.\nTotal apurado: R$ ${totalGasto.toFixed(2)}.`);
                 }}
                 className="h-9 sm:h-10 px-4 rounded-xl bg-[#002B49] hover:bg-[#003860] text-white font-semibold text-xs flex items-center gap-2 transition-all shadow-xs cursor-pointer hover:shadow-md"
               >
                 <Download className="w-4 h-4 text-amber-300" />
-                <span>Exportar SEI</span>
+                <span>Exportar Relatório</span>
               </button>
             </>
           )}
@@ -390,7 +390,7 @@ export const MeuBeneficioView: React.FC<MeuBeneficioViewProps> = ({
               {totalDivergencias} pendência(s)
             </p>
             <span className="text-[10px] text-rose-600 mt-1 block font-medium">
-              Exige justificativa SEI
+              Exige justificativa
             </span>
           </div>
         )}
@@ -498,7 +498,7 @@ export const MeuBeneficioView: React.FC<MeuBeneficioViewProps> = ({
           <Search className="w-4 h-4 text-slate-400 absolute left-3 top-1/2 -translate-y-1/2" />
           <input
             type="text"
-            placeholder="Buscar por NSU, estabelecimento, rodovia, motorista, placa ou processo SEI..."
+            placeholder="Buscar por NSU, estabelecimento, rodovia, motorista, placa ou processo..."
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
             className="w-full pl-9 pr-3 py-2 text-xs bg-slate-50 border border-slate-200 rounded-xl focus:outline-hidden focus:ring-2 focus:ring-[#002B49]"
@@ -528,7 +528,7 @@ export const MeuBeneficioView: React.FC<MeuBeneficioViewProps> = ({
           >
             <option value="todos">Todos os Status de Auditoria</option>
             <option value="auditado_aprovado">Auditado & Aprovado</option>
-            <option value="em_analise">Em Análise SEI</option>
+            <option value="em_analise">Em Análise</option>
             <option value="divergencia">Divergência de Trajeto</option>
             <option value="pendente_comprovante">Pendente Cupom Fiscal</option>
           </select>
@@ -549,7 +549,7 @@ export const MeuBeneficioView: React.FC<MeuBeneficioViewProps> = ({
             </h3>
           </div>
           <span className="text-[11px] text-slate-500 font-mono">
-            Sincronização em tempo real com SEI / SIGPAT
+            Sincronização em tempo real com SIGPAT
           </span>
         </div>
 
@@ -651,7 +651,7 @@ export const MeuBeneficioView: React.FC<MeuBeneficioViewProps> = ({
                       {getStatusBadge(t.statusAuditoria)}
                       {t.processoSei && (
                         <div className="text-[9px] font-mono text-slate-400 mt-1 truncate max-w-[140px]" title={t.processoSei}>
-                          SEI: {t.processoSei}
+                          Proc: {t.processoSei}
                         </div>
                       )}
                     </td>
@@ -713,7 +713,7 @@ export const MeuBeneficioView: React.FC<MeuBeneficioViewProps> = ({
                   <AlertTriangle className="w-4 h-4 text-rose-600 shrink-0 mt-0.5" />
                   <div>
                     <strong className="block font-bold">Divergência de Trajeto Detectada pelo Sistema</strong>
-                    <span>{selectedTransaction.observacaoAuditoria || 'A rota informada na autorização de viagem SEI não contempla a praça de pedágio registrada pela API.'}</span>
+                    <span>{selectedTransaction.observacaoAuditoria || 'A rota informada na autorização de viagem não contempla a praça de pedágio registrada pela API.'}</span>
                   </div>
                 </div>
               )}
@@ -745,7 +745,7 @@ export const MeuBeneficioView: React.FC<MeuBeneficioViewProps> = ({
                 </div>
               </div>
 
-              {/* Vinculação Veículo, Motorista e Processo SEI */}
+              {/* Vinculação Veículo, Motorista e Processo */}
               <div className="bg-slate-50 p-3.5 rounded-xl border border-slate-200 space-y-2 text-xs">
                 <span className="text-[10px] uppercase font-bold text-slate-400 block">
                   Dados de Vinculação Operacional TJPR
@@ -770,7 +770,7 @@ export const MeuBeneficioView: React.FC<MeuBeneficioViewProps> = ({
                   </div>
 
                   <div>
-                    <span className="text-slate-500 block text-[10px]">Processo SEI:</span>
+                    <span className="text-slate-500 block text-[10px]">Processo:</span>
                     <strong className="text-blue-700 font-mono text-[11px]">
                       {selectedTransaction.processoSei || 'Pendente Vinculação'}
                     </strong>
@@ -821,7 +821,7 @@ export const MeuBeneficioView: React.FC<MeuBeneficioViewProps> = ({
               {/* Parecer do Auditor */}
               <div>
                 <label className="text-[11px] font-bold text-slate-700 block mb-1">
-                  Parecer de Auditoria / Despacho SEI:
+                  Parecer de Auditoria / Despacho:
                 </label>
                 <textarea
                   value={auditNote}
@@ -862,9 +862,10 @@ export const MeuBeneficioView: React.FC<MeuBeneficioViewProps> = ({
                   className="px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl text-xs font-bold transition-all flex items-center gap-1.5"
                 >
                   <Check className="w-4 h-4" />
-                  <span>Homologar Custa no SEI</span>
+                  <span>Homologar Custa</span>
                 </button>
               </div>
+            </div>
             </div>
 
           </div>

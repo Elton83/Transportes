@@ -266,7 +266,7 @@ export const TechnicalReportModal: React.FC<TechnicalReportModalProps> = ({
                   </div>
                   <div>
                     <p className="text-xs font-bold text-[#002B49]">Certificação Digital de Conformidade Veicular</p>
-                    <p className="text-[11px] text-slate-600">Assinado com certificado ICP-Brasil / PJe / SEI Transportes</p>
+                    <p className="text-[11px] text-slate-600">Assinado com certificado ICP-Brasil / PJe / DiTrans Transportes</p>
                   </div>
                 </div>
                 <button

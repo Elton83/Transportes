@@ -162,7 +162,7 @@ export const SolicitationPortal: React.FC<SolicitationPortalProps> = ({
             
             <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
               <div>
-                <label className="block font-bold text-slate-700 mb-1">Processo Eletrônico SEI</label>
+                <label className="block font-bold text-slate-700 mb-1">Processo Eletrônico</label>
                 <input
                   type="text"
                   value={processoSei}
@@ -473,7 +473,7 @@ export const SolicitationPortal: React.FC<SolicitationPortalProps> = ({
                   )}
 
                   <span className="font-mono text-slate-500 text-[11px]">
-                    SEI: {trip.processoSei}
+                    Proc: {trip.processoSei}
                   </span>
 
                   <span className="inline-flex items-center gap-1 text-[10px] text-[#464EB8] font-bold bg-[#464EB8]/10 border border-[#464EB8]/20 px-2 py-0.5 rounded">

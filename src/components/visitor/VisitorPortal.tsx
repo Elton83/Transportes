@@ -239,12 +239,12 @@ export const VisitorPortal: React.FC<VisitorPortalProps> = ({
           ...existing.conteudoPrevia,
           camposPrincipais: [
             { rotulo: 'Ato de Autorização', valor: 'Portaria DiTrans nº 412/2025-TJPR' },
-            { rotulo: 'Processo SEI', valor: '0018492-41.2025.8.16.6000' },
+            { rotulo: 'Processo', valor: '0018492-41.2025.8.16.6000' },
             { rotulo: 'Condutor Autorizado', valor: `${solicitanteNome} (${cargoServidor || 'Servidor TJPR'})` },
             { rotulo: 'Matrícula Funcional', valor: matriculaInput || 'TJPR-98.341-2' },
             { rotulo: 'CNH do Condutor', valor: '04829104820 (Cat. B) • Válida até 19/11/2028' },
             { rotulo: 'Base Legal', valor: 'Resolução TJPR nº 315/2021 - Art. 12' },
-            { rotulo: 'Situação Cadastral', valor: 'Regular e Homologada no SEI / DiTrans' },
+            { rotulo: 'Situação Cadastral', valor: 'Regular e Homologada na DiTrans' },
             { rotulo: 'Órgão Competente', valor: 'Divisão de Transportes e Frotas (DiTrans)' },
           ],
         },
@@ -270,15 +270,15 @@ export const VisitorPortal: React.FC<VisitorPortalProps> = ({
       conteudoPrevia: {
         camposPrincipais: [
           { rotulo: 'Ato de Autorização', valor: 'Portaria DiTrans nº 412/2025-TJPR' },
-          { rotulo: 'Processo SEI', valor: '0018492-41.2025.8.16.6000' },
+          { rotulo: 'Processo', valor: '0018492-41.2025.8.16.6000' },
           { rotulo: 'Condutor Autorizado', valor: `${solicitanteNome} (${cargoServidor || 'Servidor TJPR'})` },
           { rotulo: 'Matrícula Funcional', valor: matriculaInput || 'TJPR-98.341-2' },
           { rotulo: 'CNH do Condutor', valor: '04829104820 (Cat. B) • Válida até 19/11/2028' },
           { rotulo: 'Base Legal', valor: 'Resolução TJPR nº 315/2021 - Art. 12' },
-          { rotulo: 'Situação Cadastral', valor: 'Regular e Homologada no SEI / DiTrans' },
+          { rotulo: 'Situação Cadastral', valor: 'Regular e Homologada na DiTrans' },
           { rotulo: 'Órgão Competente', valor: 'Divisão de Transportes e Frotas (DiTrans)' },
         ],
-        autenticidadeCodigo: 'SEI-TJPR-AUT-2025-0412-DITRANS',
+        autenticidadeCodigo: 'TJPR-AUT-2025-0412-DITRANS',
         qrcodeSimulado: true,
       },
     };
@@ -660,7 +660,7 @@ export const VisitorPortal: React.FC<VisitorPortalProps> = ({
       observacoes: observacoes.trim(),
       enviarWhatsApp: true,
       documentoAutorizacaoVinculado: tipoServico === 'reserva_veiculo'
-        ? `${autorizacaoDocumento.numeroDocumento} (SEI ${autorizacaoDocumento.processoSei})`
+        ? `${autorizacaoDocumento.numeroDocumento} (Processo ${autorizacaoDocumento.processoSei})`
         : undefined,
     };
 
@@ -776,12 +776,12 @@ export const VisitorPortal: React.FC<VisitorPortalProps> = ({
         if (!hasSignature) {
           statusGeral = 'pendente_assinatura';
           statusLabel = 'Falta de Assinatura';
-          motivoStatus = 'Viagem concluída pelo condutor. Pendente visto/assinatura digital do solicitante para fechamento do diário de bordo e homologação no SEI.';
+          motivoStatus = 'Viagem concluída pelo condutor. Pendente visto/assinatura digital do solicitante para fechamento do diário de bordo e homologação.';
           requerAssinatura = true;
         } else {
           statusGeral = 'concluido';
           statusLabel = 'Concluído & Homologado';
-          motivoStatus = 'Viagem finalizada com êxito e devidamente vistada digitalmente no processo SEI.';
+          motivoStatus = 'Viagem finalizada com êxito e devidamente vistada digitalmente no processo oficial.';
         }
       } else if (t.status === 'solicitada') {
         statusGeral = 'nao_concluido';
@@ -1005,11 +1005,11 @@ export const VisitorPortal: React.FC<VisitorPortalProps> = ({
                     </span>
                     <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold bg-emerald-50 text-emerald-700 border border-emerald-200">
                       <CheckCircle2 className="w-3 h-3 text-emerald-600" />
-                      <span>Regular no SEI / DiTrans</span>
+                      <span>Regular na DiTrans</span>
                     </span>
                   </div>
                   <p className="text-[11px] text-slate-600 mt-0.5 truncate">
-                    {autorizacaoDocumento.numeroDocumento} • Processo SEI: {autorizacaoDocumento.processoSei} • Condutor Autorizado: {submissionResult.solicitacao.solicitanteNome}
+                    {autorizacaoDocumento.numeroDocumento} • Processo: {autorizacaoDocumento.processoSei} • Condutor Autorizado: {submissionResult.solicitacao.solicitanteNome}
                   </p>
                 </div>
               </div>
@@ -1185,7 +1185,7 @@ export const VisitorPortal: React.FC<VisitorPortalProps> = ({
                             </span>
                           </div>
                           <p className="text-[11px] text-slate-500 mt-0.5 truncate">
-                            {autorizacaoDocumento.numeroDocumento} • Processo SEI: {autorizacaoDocumento.processoSei} • CNH Regular (Validade: 19/11/2028)
+                            {autorizacaoDocumento.numeroDocumento} • Processo: {autorizacaoDocumento.processoSei} • CNH Regular (Validade: 19/11/2028)
                           </p>
                         </div>
                       </div>
@@ -1384,7 +1384,7 @@ export const VisitorPortal: React.FC<VisitorPortalProps> = ({
                             </span>
                           </div>
                           <p className="text-[11px] text-slate-500 mt-0.5 truncate">
-                            {autorizacaoDocumento.numeroDocumento} • Processo SEI: {autorizacaoDocumento.processoSei} • Condutor: {solicitanteNome}
+                            {autorizacaoDocumento.numeroDocumento} • Processo: {autorizacaoDocumento.processoSei} • Condutor: {solicitanteNome}
                           </p>
                         </div>
                       </div>
@@ -2581,7 +2581,7 @@ export const VisitorPortal: React.FC<VisitorPortalProps> = ({
                       </span>
                       {req.processoSei && (
                         <span className="text-[10px] font-mono text-slate-500 bg-white px-1.5 py-0.2 rounded border border-slate-200">
-                          SEI: {req.processoSei}
+                          Proc: {req.processoSei}
                         </span>
                       )}
                       <span className="text-xs text-slate-500 font-medium">
@@ -2892,7 +2892,7 @@ export const VisitorPortal: React.FC<VisitorPortalProps> = ({
             <span className="text-xs text-emerald-700 font-medium">homologados</span>
           </div>
           <p className="text-[10px] text-slate-500 mt-0.5 truncate flex items-center justify-between">
-            <span>Processo SEI finalizado</span>
+            <span>Processo finalizado</span>
             <span className="text-[9px] font-bold text-emerald-700 ml-1">
               {filtroItensAberto === 'concluidos' ? '▲ fechar' : '▼ abrir'}
             </span>
@@ -2927,7 +2927,7 @@ export const VisitorPortal: React.FC<VisitorPortalProps> = ({
                 {filtroItensAberto === 'concluidos' && (
                   <>
                     <CheckCircle2 className="w-4 h-4 text-emerald-600" />
-                    <span>Viagens Concluídas e Homologadas no SEI</span>
+                    <span>Viagens Concluídas e Homologadas</span>
                   </>
                 )}
               </span>
@@ -2964,7 +2964,7 @@ export const VisitorPortal: React.FC<VisitorPortalProps> = ({
                       </span>
                       {item.processoSei && (
                         <span className="text-[10px] font-mono text-slate-600 bg-slate-100 px-1.5 py-0.5 rounded border border-slate-200">
-                          SEI: {item.processoSei}
+                          Proc: {item.processoSei}
                         </span>
                       )}
                       <span className="text-xs text-slate-500 font-medium">

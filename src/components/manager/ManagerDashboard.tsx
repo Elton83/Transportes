@@ -449,7 +449,7 @@ export const ManagerDashboard: React.FC<ManagerDashboardProps> = ({
           <div className="flex items-center justify-between">
             <div>
               <h3 className="text-sm font-bold text-[#002B49] uppercase tracking-wide">
-                Fila de Solicitações de Transporte Oficial (Processos SEI)
+                Fila de Solicitações de Transporte Oficial
               </h3>
               <p className="text-[11px] text-slate-500">
                 Aprovação, designação de veículos e escalonamento de condutores oficiais
@@ -489,7 +489,7 @@ export const ManagerDashboard: React.FC<ManagerDashboardProps> = ({
                     )}
 
                     <span className="font-mono text-slate-500 text-[11px]">
-                      SEI: {trip.processoSei}
+                      Processo: {trip.processoSei}
                     </span>
                   </div>
 

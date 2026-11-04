@@ -289,7 +289,7 @@ export const SigaSolicitationModal: React.FC<SigaSolicitationModalProps> = ({
 
               <div>
                 <label className="block text-xs font-semibold text-slate-700 mb-1">
-                  Processo SEI Vinculado:
+                  Processo Vinculado:
                 </label>
                 <input
                   type="text"

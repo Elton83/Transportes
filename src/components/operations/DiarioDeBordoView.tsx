@@ -213,7 +213,7 @@ export const DiarioDeBordoView: React.FC<DiarioDeBordoViewProps> = ({
       'KM Percorrido',
       'Nível Tanque (%)',
       'Finalidade',
-      'Processo SEI',
+      'Processo / Protocolo',
       'Status',
       'Visto Digital'
     ];
@@ -443,7 +443,7 @@ export const DiarioDeBordoView: React.FC<DiarioDeBordoViewProps> = ({
               {totalLinhas > 0 ? Math.round((viagensComVisto / totalLinhas) * 100) : 0}% atestados eletronicamente
             </div>
             <p className="text-[10px] text-slate-400 mt-1 pt-1 border-t border-slate-100">
-              Em conformidade com resolução SEI
+              Em conformidade com resolução normativa
             </p>
           </div>
 
@@ -490,7 +490,7 @@ export const DiarioDeBordoView: React.FC<DiarioDeBordoViewProps> = ({
             <Search className="w-4 h-4 text-slate-400 absolute left-3 top-1/2 -translate-y-1/2" />
             <input
               type="text"
-              placeholder="Buscar por placa, condutor, solicitante, destino ou SEI..."
+              placeholder="Buscar por placa, condutor, solicitante, destino ou processo..."
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
               className="w-full pl-9 pr-3 py-1.5 bg-slate-50 border border-slate-200 rounded-lg text-xs text-slate-900 focus:outline-none focus:bg-white focus:border-[#05202B] transition-colors"
@@ -703,7 +703,7 @@ export const DiarioDeBordoView: React.FC<DiarioDeBordoViewProps> = ({
                           <span className="text-red-700 font-semibold truncate max-w-[110px]">{trip.destino.split(' - ')[0]}</span>
                         </div>
                         <span className="text-[10px] text-slate-400 font-mono block">
-                          SEI: {trip.processoSei}
+                          Proc: {trip.processoSei}
                         </span>
                       </td>
 
@@ -1046,7 +1046,7 @@ export const DiarioDeBordoView: React.FC<DiarioDeBordoViewProps> = ({
               {/* Linha 5: Processo SEI, Status e Finalidade */}
               <div className="grid grid-cols-1 sm:grid-cols-3 gap-3.5 text-xs">
                 <div>
-                  <label className="block font-semibold text-slate-700 mb-1">Processo SEI</label>
+                  <label className="block font-semibold text-slate-700 mb-1">Processo / Protocolo</label>
                   <input
                     type="text"
                     value={novoProcessoSei}

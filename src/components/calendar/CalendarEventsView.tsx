@@ -1296,7 +1296,7 @@ export const CalendarEventsView: React.FC<CalendarEventsViewProps> = ({
                   </span>
                   {selectedEvent.processoSei && (
                     <span className="text-[10px] font-mono text-slate-500 bg-slate-100 px-2 py-0.5 rounded">
-                      SEI {selectedEvent.processoSei}
+                      Proc: {selectedEvent.processoSei}
                     </span>
                   )}
                 </div>
@@ -1651,7 +1651,7 @@ export const CalendarEventsView: React.FC<CalendarEventsViewProps> = ({
                 </label>
                 <textarea
                   rows={2}
-                  placeholder="Informações adicionais sobre percurso, horário de apresentação ou autorizações SEI..."
+                  placeholder="Informações adicionais sobre percurso, horário de apresentação ou autorizações oficiais..."
                   value={newEvtDescricao}
                   onChange={(e) => setNewEvtDescricao(e.target.value)}
                   className="w-full px-3 py-2 text-xs bg-slate-50 border border-slate-300 rounded-xl resize-none"

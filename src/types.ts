@@ -184,6 +184,12 @@ export interface LogEntry {
   descricao: string;
   localizacao: string;
   valor?: number;
+  documentoAnexo?: {
+    nome: string;
+    tamanho?: string;
+    tipo?: string;
+    url?: string;
+  };
 }
 
 export interface FuelLog {

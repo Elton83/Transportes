@@ -284,7 +284,7 @@ export const DocumentosView: React.FC<DocumentosViewProps> = ({
             type="text"
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
-            placeholder="Buscar por placa, CNH, SEI, lei, manual..."
+            placeholder="Buscar por placa, CNH, processo, lei, manual..."
             className="w-full text-xs rounded-lg border border-slate-200 pl-9 pr-3 py-2 bg-white focus:ring-2 focus:ring-[#002B49] focus:outline-none"
           />
         </div>
@@ -455,7 +455,7 @@ export const DocumentosView: React.FC<DocumentosViewProps> = ({
 
                     {doc.processoSei && (
                       <div className="flex items-center gap-1.5 text-slate-700 font-mono text-[11px]">
-                        <span className="text-slate-400 font-sans">SEI:</span>
+                        <span className="text-slate-400 font-sans">Processo:</span>
                         <span>{doc.processoSei}</span>
                       </div>
                     )}

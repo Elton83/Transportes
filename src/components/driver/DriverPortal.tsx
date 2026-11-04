@@ -866,7 +866,7 @@ export const DriverPortal: React.FC<DriverPortalProps> = ({
                       )}
 
                       <span className="text-slate-500 font-mono text-[11px]">
-                        SEI: {trip.processoSei.split('.')[0]}
+                        Proc: {trip.processoSei.split('.')[0]}
                       </span>
                     </div>
 
@@ -1031,7 +1031,7 @@ export const DriverPortal: React.FC<DriverPortalProps> = ({
 
                 <div className="pt-2 border-t border-slate-100 flex items-center justify-between text-xs">
                   <span className="text-[10px] text-slate-400 font-mono">
-                    SEI: {doc.processoSei || 'Integrado'}
+                    Processo: {doc.processoSei || 'Integrado'}
                   </span>
                   <button
                     type="button"

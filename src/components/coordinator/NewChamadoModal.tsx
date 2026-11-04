@@ -159,7 +159,7 @@ export const NewChamadoModal: React.FC<NewChamadoModalProps> = ({
             </div>
 
             <div>
-              <label className="block font-bold text-slate-800 mb-1">Processo SEI / TJPR (Opcional)</label>
+              <label className="block font-bold text-slate-800 mb-1">Processo / Protocolo TJPR (Opcional)</label>
               <input
                 type="text"
                 placeholder="Ex: 0049281-77.2026.8.16.6000"

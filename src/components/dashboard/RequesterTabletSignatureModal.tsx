@@ -371,7 +371,7 @@ export const RequesterTabletSignatureModal: React.FC<RequesterTabletSignatureMod
                   Ordem: <strong className="text-white font-mono">{trip.codigo}</strong>
                 </span>
                 <span className="text-[10px] font-mono text-amber-300 bg-amber-400/10 px-2 py-0.5 rounded">
-                  SEI: {trip.processoSei}
+                  Proc: {trip.processoSei}
                 </span>
               </div>
               <h2 className="text-base sm:text-lg font-bold text-white mt-1 flex items-center gap-2">
