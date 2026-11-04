@@ -1272,23 +1272,28 @@ export default function App() {
     }
 
     // 2. Criar a Trip correspondente
+    const isReserva = solicitation.tipoServico === 'reserva_veiculo';
     const newTrip: Trip = {
       id: tripId,
       codigo: tripCodigo,
       status: 'solicitada',
+      tipoServico: solicitation.tipoServico,
+      documentoAutorizacao: isReserva ? (solicitation.documentoAutorizacaoVinculado || 'Portaria DiTrans nº 412/2025-TJPR (Processo SEI: 0018492-41.2025.8.16.6000)') : undefined,
+      documentoIdVinculado: isReserva ? 'doc-aut-conduzir-oficial' : undefined,
+      autorizacaoConduzirValidada: false,
       origem: solicitation.origem,
       destino: solicitation.destino,
       dataSaida: solicitation.dataSaida,
       horaSaida: solicitation.horaSaida,
       dataRetornoPrevista: solicitation.dataRetorno || 'A definir no retorno',
-      horaRetornoPrevista: solicitation.horaRetorno || 'A preencher pelo motorista',
+      horaRetornoPrevista: solicitation.horaRetorno || 'A preencher pelo condutor',
       solicitanteNome: solicitation.solicitanteNome,
       solicitanteCargo: `Servidor / ${solicitation.orgaoOuVinculo}`,
       solicitanteVara: `Solicitação de Veículo TJPR • ${solicitation.orgaoOuVinculo}`,
       comarca: solicitation.comarca,
-      finalidade: `${solicitation.tipoServico === 'com_motorista' ? '[Viagem c/ Motorista Oficial]' : '[Reserva de Carro - Direção Própria]'} ${solicitation.finalidade || 'Deslocamento Institucional TJPR'}`,
-      motoristaId: scheduledDriver?.id,
-      motoristaNome: scheduledDriver?.nome,
+      finalidade: `${isReserva ? '[Reserva de Carro - Condução Própria]' : '[Viagem c/ Motorista Oficial]'} ${solicitation.finalidade || 'Deslocamento Institucional TJPR'}`,
+      motoristaId: isReserva ? undefined : scheduledDriver?.id,
+      motoristaNome: isReserva ? `${solicitation.solicitanteNome} (Condutor Autorizado)` : scheduledDriver?.nome,
       veiculoId: scheduledVehicle?.id,
       veiculoPrefixo: scheduledVehicle?.prefixo,
       passageiros: [
@@ -1299,7 +1304,7 @@ export default function App() {
       ],
       diarioBordo: [],
       dataCriacao: formattedDate,
-      observacoes: `Matrícula: ${solicitation.matriculaServidor || 'TJPR-98.341-2'} | WhatsApp: ${solicitation.telefone} | E-mail: ${solicitation.email} | Doc: ${solicitation.documentoOuCpf}${solicitation.demaisPassageiros && solicitation.demaisPassageiros.length > 0 ? ` | Demais Passageiros: ${solicitation.demaisPassageiros.join('; ')}` : ''}${solicitation.observacoes ? ` | Observações: ${solicitation.observacoes}` : ''}`,
+      observacoes: `Matrícula: ${solicitation.matriculaServidor || 'TJPR-98.341-2'} | WhatsApp: ${solicitation.telefone} | E-mail: ${solicitation.email} | Doc: ${solicitation.documentoOuCpf}${isReserva ? ' | Documento Vinculado: Autorização para Conduzir Veículos Oficiais (Portaria DiTrans nº 412/2025 • SEI 0018492-41.2025.8.16.6000)' : ''}${solicitation.demaisPassageiros && solicitation.demaisPassageiros.length > 0 ? ` | Demais Passageiros: ${solicitation.demaisPassageiros.join('; ')}` : ''}${solicitation.observacoes ? ` | Observações: ${solicitation.observacoes}` : ''}`,
       processoSei: `VIS-${solicitation.documentoOuCpf.replace(/\D/g, '').substring(0, 7) || '2026'}.8.16.6000`,
     };
 
@@ -1307,11 +1312,15 @@ export default function App() {
     const newChamado: Chamado = {
       id: chamadoId,
       codigo: chamadoCodigo,
-      titulo: solicitation.tipoServico === 'com_motorista'
-        ? `Solicitação de Viagem c/ Motorista Oficial - ${solicitation.destino}`
-        : `Reserva de Veículo (Direção Própria) - ${solicitation.destino}`,
-      descricao: `DEMANDA PROTOCOLADA NO SISTEMA DE SOLICITAÇÃO DE VEÍCULOS TJPR:\n• Solicitante: ${solicitation.solicitanteNome} (${solicitation.orgaoOuVinculo})\n• Matrícula Hércules: ${solicitation.matriculaServidor || 'TJPR-98.341-2'} | CPF: ${solicitation.documentoOuCpf}\n• Contato: WhatsApp ${solicitation.telefone} | E-mail: ${solicitation.email}\n• Modalidade: ${solicitation.tipoServico === 'com_motorista' ? 'Viagem com Motorista Oficial Credenciado' : 'Reserva de Carro Oficial (Direção Própria pelo Servidor)'}\n• Trajeto: Saída de "${solicitation.origem}" -> Destino: "${solicitation.destino}"\n• Partida: ${solicitation.dataSaida} às ${solicitation.horaSaida}\n• Retorno Previsto: ${solicitation.dataRetorno ? `${solicitation.dataRetorno} às ${solicitation.horaRetorno}` : 'Em aberto (preenchimento no diário de bordo pelo condutor)'}\n• Total de Passageiros: ${solicitation.passageirosQtd} pessoa(s)${solicitation.demaisPassageiros && solicitation.demaisPassageiros.length > 0 ? `\n• Demais Passageiros Identificados: ${solicitation.demaisPassageiros.join(', ')}` : ''}\n• Alocação do Veículo: A cargo da Gestão/Coordenação de Frotas TJPR${solicitation.observacoes ? `\n• Observações: "${solicitation.observacoes}"` : ''}`,
+      titulo: isReserva
+        ? `Reserva de Veículo sem Motorista (Condução Própria) - ${solicitation.destino}`
+        : `Solicitação de Viagem c/ Motorista Oficial - ${solicitation.destino}`,
+      descricao: `DEMANDA PROTOCOLADA NO SISTEMA DE SOLICITAÇÃO DE VEÍCULOS TJPR:\n• Solicitante: ${solicitation.solicitanteNome} (${solicitation.orgaoOuVinculo})\n• Matrícula: ${solicitation.matriculaServidor || 'TJPR-98.341-2'} | CPF: ${solicitation.documentoOuCpf}\n• Contato: WhatsApp ${solicitation.telefone} | E-mail: ${solicitation.email}\n• Modalidade: ${isReserva ? 'Reserva de Carro Oficial (Condução Própria pelo Servidor - Sem Motorista)' : 'Viagem com Motorista Oficial Credenciado'}\n• Trajeto: Saída de "${solicitation.origem}" -> Destino: "${solicitation.destino}"\n• Partida: ${solicitation.dataSaida} às ${solicitation.horaSaida}\n• Retorno Previsto: ${solicitation.dataRetorno ? `${solicitation.dataRetorno} às ${solicitation.horaRetorno}` : 'Em aberto (preenchimento no diário de bordo pelo condutor)'}\n• Total de Passageiros: ${solicitation.passageirosQtd} pessoa(s)${solicitation.demaisPassageiros && solicitation.demaisPassageiros.length > 0 ? `\n• Demais Passageiros: ${solicitation.demaisPassageiros.join(', ')}` : ''}\n• Alocação do Veículo: A cargo da Gestão/Coordenação de Frotas TJPR${isReserva ? '\n• Documento Vinculado Obrigatório: Autorização para Conduzir Veículos Oficiais (Portaria DiTrans nº 412/2025 • SEI: 0018492-41.2025.8.16.6000)\n• Requisito Legal: O Supervisor de Rodízio precisa validar o documento "Autorização para Conduzir Veículos Oficiais" para liberar a chave e despachar o veículo oficial.' : ''}${solicitation.observacoes ? `\n• Observações: "${solicitation.observacoes}"` : ''}`,
       tipo: 'solicitacao_veiculo',
+      tipoServico: solicitation.tipoServico,
+      documentoAutorizacao: isReserva ? (solicitation.documentoAutorizacaoVinculado || 'Portaria DiTrans nº 412/2025-TJPR (Processo SEI: 0018492-41.2025.8.16.6000)') : undefined,
+      documentoIdVinculado: isReserva ? 'doc-aut-conduzir-oficial' : undefined,
+      autorizacaoConduzirValidada: false,
       prioridade: 'alta',
       status: 'aberto',
       dataAbertura: formattedDate,
@@ -1322,16 +1331,16 @@ export default function App() {
       prazoSugerido: `${solicitation.dataSaida} ${solicitation.horaSaida}`,
       tripIdVinculada: tripId,
       processoSei: newTrip.processoSei,
-      escalaPreSelecionada: !!scheduledDriver,
+      escalaPreSelecionada: !isReserva && !!scheduledDriver,
       escalaConfirmada: false,
       slaRodizioMinutos: 30,
       slaMinutosRestantes: 30,
       slaStatus: 'dentro_prazo',
       slaAberturaTimestamp: Date.now(),
-      motoristaId: scheduledDriver?.id,
-      motoristaNome: scheduledDriver?.nome,
-      motoristaMatricula: scheduledDriver?.matricula,
-      motoristaTelefone: scheduledDriver?.telefone,
+      motoristaId: isReserva ? undefined : scheduledDriver?.id,
+      motoristaNome: isReserva ? undefined : scheduledDriver?.nome,
+      motoristaMatricula: isReserva ? undefined : scheduledDriver?.matricula,
+      motoristaTelefone: isReserva ? undefined : scheduledDriver?.telefone,
       veiculoId: scheduledVehicle?.id,
       veiculoPrefixo: scheduledVehicle?.prefixo,
       veiculoModelo: scheduledVehicle?.modelo,
@@ -1339,12 +1348,14 @@ export default function App() {
       respostas: [
         {
           id: `resp-${Date.now()}`,
-          autor: 'Sistema SIGPAT (Escala de Rodízio)',
-          cargo: 'Escala Automática TJPR',
+          autor: isReserva ? 'Sistema SIGPAT (Protocolo de Condução Própria)' : 'Sistema SIGPAT (Escala de Rodízio)',
+          cargo: isReserva ? 'Validador SEI / DiTrans' : 'Escala Automática TJPR',
           dataHora: formattedDate,
-          mensagem: scheduledDriver
-            ? `Demanda protocolada sob nº ${chamadoCodigo}. Conforme escala oficial de rodízio da Comarca, o motorista escalado ${scheduledDriver.nome} (Matrícula: ${scheduledDriver.matricula} • Veículo ${scheduledVehicle?.prefixo}) foi pré-selecionado automaticamente. O chamado aguarda confirmação da escala ou alteração do condutor pelo Supervisor de Rodízio.`
-            : `Demanda protocolada sob nº ${chamadoCodigo}. Entrada direta na fila de chamados em aberto do Supervisor de Rodízio de ${solicitation.comarca}. Aguardando direcionamento de motorista e veículo.`,
+          mensagem: isReserva
+            ? `Demanda protocolada sob nº ${chamadoCodigo} na modalidade CONDUÇÃO PRÓPRIA (Sem Motorista). O documento "Autorização para Conduzir Veículos Oficiais" (Portaria DiTrans nº 412/2025 • SEI 0018492-41.2025.8.16.6000) foi anexado automaticamente e aguarda validação formal pelo Supervisor de Rodízio para liberação da chave do veículo oficial.`
+            : scheduledDriver
+              ? `Demanda protocolada sob nº ${chamadoCodigo}. Conforme escala oficial de rodízio da Comarca, o motorista escalado ${scheduledDriver.nome} (Matrícula: ${scheduledDriver.matricula} • Veículo ${scheduledVehicle?.prefixo}) foi pré-selecionado automaticamente. O chamado aguarda confirmação da escala ou alteração do condutor pelo Supervisor de Rodízio.`
+              : `Demanda protocolada sob nº ${chamadoCodigo}. Entrada direta na fila de chamados em aberto do Supervisor de Rodízio de ${solicitation.comarca}. Aguardando direcionamento de motorista e veículo.`,
           isAdmin: false,
         },
       ],
@@ -1356,8 +1367,12 @@ export default function App() {
     // 4. Notificação no sistema para o Supervisor de Rodízio
     const coordNotif: NotificationItem = {
       id: `notif-vis-${Date.now()}`,
-      titulo: `Novo Chamado: ${chamadoCodigo} • Escala Pré-Selecionada`,
-      mensagem: `${solicitation.solicitanteNome} (${solicitation.orgaoOuVinculo}) solicitou transporte para "${solicitation.destino}". Motorista escalado no rodízio: ${scheduledDriver ? `${scheduledDriver.nome} (${scheduledVehicle?.prefixo})` : 'Aguardando alocação'}. Pendente de confirmação pelo Supervisor de Rodízio.`,
+      titulo: isReserva
+        ? `Novo Chamado: ${chamadoCodigo} • Condução Própria (Validar Autorização)`
+        : `Novo Chamado: ${chamadoCodigo} • Escala Pré-Selecionada`,
+      mensagem: isReserva
+        ? `${solicitation.solicitanteNome} solicitou reserva de veículo sem motorista (condução própria). Documento "Autorização para Conduzir Veículos Oficiais" anexado, aguardando validação pelo Supervisor de Rodízio.`
+        : `${solicitation.solicitanteNome} (${solicitation.orgaoOuVinculo}) solicitou transporte para "${solicitation.destino}". Motorista escalado no rodízio: ${scheduledDriver ? `${scheduledDriver.nome} (${scheduledVehicle?.prefixo})` : 'Aguardando alocação'}. Pendente de confirmação pelo Supervisor de Rodízio.`,
       dataHora: `Hoje às ${now.toTimeString().split(' ')[0].substring(0, 5)}`,
       lida: false,
       tipo: 'viagem',
@@ -1366,11 +1381,65 @@ export default function App() {
     setNotifications((prev) => [coordNotif, ...prev]);
 
     showToast(
-      scheduledDriver
-        ? `Solicitação ${chamadoCodigo} protocolada! Motorista escalado (${scheduledDriver.nome}) pré-selecionado no rodízio.`
-        : `Solicitação ${chamadoCodigo} protocolada com sucesso!`
+      isReserva
+        ? `Demanda ${chamadoCodigo} protocolada! Documento "Autorização para Conduzir" enviado ao Supervisor de Rodízio para validação.`
+        : scheduledDriver
+          ? `Solicitação ${chamadoCodigo} protocolada! Motorista escalado (${scheduledDriver.nome}) pré-selecionado no rodízio.`
+          : `Solicitação ${chamadoCodigo} protocolada com sucesso!`
     );
     return { chamadoCodigo, tripCodigo };
+  };
+
+  // Validação da "Autorização para Conduzir Veículos Oficiais" pelo Supervisor de Rodízio
+  const handleValidateAutorizacao = (chamadoId: string) => {
+    const now = new Date();
+    const formattedDate = `${now.toISOString().split('T')[0]} ${now.toTimeString().split(' ')[0].substring(0, 5)}`;
+    
+    setChamados((prev) =>
+      prev.map((c) => {
+        if (c.id === chamadoId) {
+          const willBeValid = !c.autorizacaoConduzirValidada;
+          return {
+            ...c,
+            autorizacaoConduzirValidada: willBeValid,
+            autorizacaoValidadaPor: willBeValid ? 'Supervisor de Rodízio (Matrícula TJPR-77.419-3)' : undefined,
+            autorizacaoValidadaEm: willBeValid ? formattedDate : undefined,
+            respostas: [
+              ...c.respostas,
+              {
+                id: `resp-val-${Date.now()}`,
+                autor: 'Supervisor de Rodízio',
+                cargo: 'Coordenação de Transportes (DiTrans)',
+                dataHora: formattedDate,
+                mensagem: willBeValid
+                  ? 'Autorização para Conduzir Veículos Oficiais (Portaria DiTrans nº 412/2025 • Processo SEI 0018492-41.2025.8.16.6000) conferida e VALIDADA pelo Supervisor de Rodízio. Requisito legal atendido para entrega da chave e liberação do veículo oficial TJPR.'
+                  : 'Validação da autorização para condução própria revertida pelo Supervisor de Rodízio para reavaliação documental.',
+                isAdmin: true,
+              },
+            ],
+          };
+        }
+        return c;
+      })
+    );
+
+    setTrips((prev) =>
+      prev.map((t) => {
+        const matched = chamados.find((c) => c.id === chamadoId);
+        if (matched && (t.id === matched.tripIdVinculada || (matched.processoSei && t.processoSei === matched.processoSei))) {
+          const willBeValid = !matched.autorizacaoConduzirValidada;
+          return {
+            ...t,
+            autorizacaoConduzirValidada: willBeValid,
+            autorizacaoValidadaPor: willBeValid ? 'Supervisor de Rodízio' : undefined,
+            autorizacaoValidadaEm: willBeValid ? formattedDate : undefined,
+          };
+        }
+        return t;
+      })
+    );
+
+    showToast('Autorização para Conduzir Veículos Oficiais validada pelo Supervisor de Rodízio!');
   };
 
   // Salvar Novo Veículo na Frota
@@ -1607,36 +1676,7 @@ export default function App() {
           }}
         />
 
-      {/* 2. Barra de Contexto e Status Institucional TJPR (Leve, Moderna e Sem Peso Visual) */}
-      <div className="bg-slate-50/90 border-b border-slate-200/80 py-2 px-4 sm:px-6 lg:px-8 text-xs text-slate-500">
-        <div className="max-w-7xl mx-auto flex items-center justify-between gap-2">
-          <div className="flex items-center gap-2 flex-wrap">
-            <span className="font-semibold text-[#002B49] flex items-center gap-1">
-              <Shield className="w-3.5 h-3.5 text-[#C4A052]" />
-              Poder Judiciário do Estado do Paraná
-            </span>
-            <span className="text-slate-300">/</span>
-            <span className="text-slate-700 font-medium font-mono text-[11px]">
-              Frota: {vehicles.length} Veículos Oficiais
-            </span>
-            <span className="text-slate-300">/</span>
-            <span className="text-slate-600">
-              {currentRole === 'motorista' || currentRole === 'operador' ? (
-                <span className="text-amber-800 font-semibold bg-amber-100/60 px-1.5 py-0.5 rounded border border-amber-300/40">
-                  Portal do Condutor • Agenda de Serviços Oficial
-                </span>
-              ) : (
-                <span>SIGPAT Transportes • Monitoramento em Tempo Real</span>
-              )}
-            </span>
-          </div>
 
-          <div className="hidden sm:flex items-center gap-2 text-slate-500 font-mono text-[11px]">
-            <span className="w-2 h-2 rounded-full bg-emerald-500" />
-            <span>SEI • PROJUDI • Ticket Log Conectados</span>
-          </div>
-        </div>
-      </div>
 
       {/* Banner de Aviso no Sistema: Viagem Finalizada pelo Motorista aguardando Encerramento e Avaliação pelo Solicitante */}
       {pendingEvaluationNotice && (
@@ -1822,6 +1862,7 @@ export default function App() {
                         vehicles={vehicles}
                         drivers={drivers}
                         chamados={chamados}
+                        documents={documents}
                         notifications={notifications}
                         onOpenNewChamadoModal={() => setNewChamadoModalOpen(true)}
                         onUpdateChamadoStatus={handleUpdateChamadoStatus}
@@ -1829,6 +1870,7 @@ export default function App() {
                         onConfirmEscala={handleConfirmEscala}
                         onCloseChamadoByCoordinator={handleCloseChamadoByCoordinator}
                         onAddChamadoResposta={handleAddChamadoResposta}
+                        onValidateAutorizacao={handleValidateAutorizacao}
                         onNavigateToRelatorios={() => setActiveNavTab('relatorios')}
                         onOpenTripDetails={(trip) => setTripLogTrip(trip)}
                         onOpenTripSignature={(trip) => setSignatureModalTrip(trip)}
@@ -1909,6 +1951,7 @@ export default function App() {
                 vehicles={vehicles}
                 drivers={drivers}
                 chamados={chamados}
+                documents={documents}
                 notifications={notifications}
                 onOpenNewChamadoModal={() => setNewChamadoModalOpen(true)}
                 onUpdateChamadoStatus={handleUpdateChamadoStatus}
@@ -1916,6 +1959,7 @@ export default function App() {
                 onConfirmEscala={handleConfirmEscala}
                 onCloseChamadoByCoordinator={handleCloseChamadoByCoordinator}
                 onAddChamadoResposta={handleAddChamadoResposta}
+                onValidateAutorizacao={handleValidateAutorizacao}
                 onNavigateToRelatorios={() => setActiveNavTab('relatorios')}
                 onOpenTripDetails={(trip) => setTripLogTrip(trip)}
                 onOpenTripSignature={(trip) => setSignatureModalTrip(trip)}

@@ -86,6 +86,13 @@ export interface Chamado {
   avaliacaoTags?: string[];
   dataAvaliacao?: string;
   finalizadoPorSolicitante?: boolean;
+  // Condução Própria (Sem Motorista) & Autorização para Conduzir Veículos Oficiais
+  tipoServico?: 'com_motorista' | 'reserva_veiculo';
+  documentoAutorizacao?: string;
+  documentoIdVinculado?: string;
+  autorizacaoConduzirValidada?: boolean;
+  autorizacaoValidadaPor?: string;
+  autorizacaoValidadaEm?: string;
 }
 
 export type VehicleStatus = 'disponivel' | 'em_viagem' | 'manutencao' | 'reservado';
@@ -429,6 +436,13 @@ export interface Trip {
   sigaProtocolo?: string; // Ex: SIGA-2026-004821/TJPR
   sigaStatus?: 'integrado' | 'pendente_sinc' | 'homologado';
   sigaTipoDemanda?: string;
+  // Condução Própria (Sem Motorista) & Autorização Vinculada
+  tipoServico?: 'com_motorista' | 'reserva_veiculo';
+  documentoAutorizacao?: string;
+  documentoIdVinculado?: string;
+  autorizacaoConduzirValidada?: boolean;
+  autorizacaoValidadaPor?: string;
+  autorizacaoValidadaEm?: string;
 }
 
 export interface WhatsAppReservationLog {

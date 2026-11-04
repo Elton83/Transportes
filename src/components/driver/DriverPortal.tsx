@@ -26,9 +26,15 @@ import {
   ChevronRight,
   Sparkles,
   Building2,
-  CalendarCheck
+  CalendarCheck,
+  BookOpen,
+  Eye,
+  Plus,
+  Minus
 } from 'lucide-react';
-import { Driver, FuelLog, Trip, Vehicle } from '../../types';
+import { Driver, FuelLog, Trip, Vehicle, OfficialDocument } from '../../types';
+import { INITIAL_DOCUMENTS } from '../../data/workshopAndDocsData';
+import { DocumentPreviewModal } from '../documents/DocumentPreviewModal';
 
 interface DriverPortalProps {
   currentDriver: Driver;
@@ -128,8 +134,28 @@ export const DriverPortal: React.FC<DriverPortalProps> = ({
   onOpenOfficialOrder,
   onOpenQuickFuel,
 }) => {
-  // Abas do Condutor
-  const [activeTab, setActiveTab] = useState<'agenda' | 'abastecimentos' | 'suporte'>('agenda');
+  // Abas do Condutor: 'agenda', 'manuais' (Manuais e Portarias) e 'telefones' (Telefones Úteis)
+  const [activeTab, setActiveTab] = useState<'agenda' | 'manuais' | 'telefones'>('agenda');
+  
+  // Controle de visibilidade da parte inferior (conteúdo das abas):
+  // Por padrão, a parte inferior fica ocultada, mostrando apenas as 3 abas superiores;
+  // ao clicar no sinal de "+", o conteúdo é exibido.
+  const [conteudoAberto, setConteudoAberto] = useState<boolean>(false);
+
+  // Modal para pré-visualização de documentos e portarias
+  const [previewDoc, setPreviewDoc] = useState<OfficialDocument | null>(null);
+
+  // Documentos normativos e manuais pertinentes ao condutor oficial TJPR
+  const driverDocs = useMemo(() => {
+    return INITIAL_DOCUMENTS.filter(
+      (d) =>
+        d.categoria === 'legislacao_normas' ||
+        d.titulo.toLowerCase().includes('manual') ||
+        d.titulo.toLowerCase().includes('portaria') ||
+        d.titulo.toLowerCase().includes('resolução') ||
+        d.titulo.toLowerCase().includes('condutor')
+    );
+  }, []);
   
   // Modo de visualização da agenda integrada: 'lista' (Padrão simples) ou 'calendario' (Grid mensal)
   const [viewMode, setViewMode] = useState<'lista' | 'calendario'>('lista');
@@ -334,9 +360,6 @@ export const DriverPortal: React.FC<DriverPortalProps> = ({
                   ? 'Viagem Oficial em Andamento'
                   : 'Próxima Viagem Designada'}
               </span>
-              <span className="bg-white/20 text-white text-[10px] px-2 py-0.5 rounded font-mono font-bold">
-                {currentFeaturedTrip.codigo}
-              </span>
             </div>
 
             <div className="flex items-center gap-2">
@@ -480,58 +503,96 @@ export const DriverPortal: React.FC<DriverPortalProps> = ({
         </div>
       ) : null}
 
-      {/* 3. Navegação de Abas da Agenda de Serviços do Condutor */}
-      <div className="border-b border-slate-200 bg-white rounded-t-2xl px-5 pt-3 shadow-2xs">
-        <div className="flex space-x-6 text-xs font-bold">
-          <button
-            onClick={() => setActiveTab('agenda')}
-            className={`pb-3 border-b-2 flex items-center gap-2 transition-colors cursor-pointer ${
-              activeTab === 'agenda'
-                ? 'border-[#002B49] text-[#002B49]'
-                : 'border-transparent text-slate-500 hover:text-slate-800'
-            }`}
-          >
-            <CalendarDays className="w-4 h-4 text-amber-600" />
-            <span>Agenda de Serviços & Viagens ({totalAgendaItems})</span>
-          </button>
+      {/* 3. Container Unificado: 3 Abas Superiores Visíveis + Conteúdo Inferior Ocultado por Padrão */}
+      <div className="bg-white rounded-2xl shadow-xs border border-slate-200 overflow-hidden">
+        {/* Barra Superior Integrada: As 3 abas superiores sempre visíveis + Botão com sinal de + para ver o conteúdo */}
+        <div className={`bg-white px-5 py-2.5 flex items-center justify-between flex-wrap gap-3 ${
+          conteudoAberto ? 'border-b border-slate-200' : ''
+        }`}>
+          {/* As 3 abas superiores sempre visíveis */}
+          <div className="flex items-center space-x-4 sm:space-x-6 text-xs font-bold overflow-x-auto no-scrollbar">
+            {/* Item 1: Agenda de Serviços & Viagens */}
+            <button
+              type="button"
+              onClick={() => setActiveTab('agenda')}
+              className={`pb-2 pt-1 border-b-2 flex items-center gap-2 transition-colors cursor-pointer shrink-0 ${
+                activeTab === 'agenda'
+                  ? 'border-[#002B49] text-[#002B49]'
+                  : 'border-transparent text-slate-500 hover:text-slate-800'
+              }`}
+            >
+              <CalendarDays className="w-4 h-4 text-amber-600" />
+              <span>Agenda de Serviços & Viagens ({totalAgendaItems})</span>
+            </button>
 
-          <button
-            onClick={() => setActiveTab('abastecimentos')}
-            className={`pb-3 border-b-2 flex items-center gap-2 transition-colors cursor-pointer ${
-              activeTab === 'abastecimentos'
-                ? 'border-[#002B49] text-[#002B49]'
-                : 'border-transparent text-slate-500 hover:text-slate-800'
-            }`}
-          >
-            <Fuel className="w-4 h-4 text-blue-600" />
-            <span>Comprovantes de Abastecimento ({fuelLogs.length})</span>
-          </button>
+            {/* Item 2: Manuais e Portarias */}
+            <button
+              type="button"
+              onClick={() => setActiveTab('manuais')}
+              className={`pb-2 pt-1 border-b-2 flex items-center gap-2 transition-colors cursor-pointer shrink-0 ${
+                activeTab === 'manuais'
+                  ? 'border-[#002B49] text-[#002B49]'
+                  : 'border-transparent text-slate-500 hover:text-slate-800'
+              }`}
+            >
+              <BookOpen className="w-4 h-4 text-blue-600" />
+              <span>Manuais e Portarias</span>
+            </button>
 
+            {/* Item 3: Telefones Úteis */}
+            <button
+              type="button"
+              onClick={() => setActiveTab('telefones')}
+              className={`pb-2 pt-1 border-b-2 flex items-center gap-2 transition-colors cursor-pointer shrink-0 ${
+                activeTab === 'telefones'
+                  ? 'border-[#002B49] text-[#002B49]'
+                  : 'border-transparent text-slate-500 hover:text-slate-800'
+              }`}
+            >
+              <Phone className="w-4 h-4 text-emerald-600" />
+              <span>Telefones Úteis</span>
+            </button>
+          </div>
+
+          {/* Botão com sinal de + para ver/ocultar o conteúdo inferior */}
           <button
-            onClick={() => setActiveTab('suporte')}
-            className={`pb-3 border-b-2 flex items-center gap-2 transition-colors cursor-pointer ${
-              activeTab === 'suporte'
-                ? 'border-[#002B49] text-[#002B49]'
-                : 'border-transparent text-slate-500 hover:text-slate-800'
+            type="button"
+            onClick={() => setConteudoAberto(!conteudoAberto)}
+            className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl border text-xs font-bold transition-all cursor-pointer shadow-2xs hover:shadow-xs ml-auto shrink-0 ${
+              conteudoAberto
+                ? 'bg-slate-100 hover:bg-slate-200 border-slate-300 text-slate-700'
+                : 'bg-white hover:bg-blue-50/50 border-blue-300 text-[#002B49]'
             }`}
+            title={conteudoAberto ? 'Clique para ocultar o conteúdo' : 'Clique no sinal de + para ver o conteúdo'}
           >
-            <HelpCircle className="w-4 h-4 text-emerald-600" />
-            <span>Manual & Plantão 24h</span>
+            {conteudoAberto ? (
+              <>
+                <Minus className="w-3.5 h-3.5 text-slate-600" />
+                <span>Ocultar Conteúdo (-)</span>
+              </>
+            ) : (
+              <>
+                <Plus className="w-3.5 h-3.5 text-blue-700" />
+                <span>Ver Conteúdo (+)</span>
+              </>
+            )}
           </button>
         </div>
-      </div>
 
-      {/* ABA 1: AGENDA DE SERVIÇOS & VIAGENS (MESCLA TOTAL E SIMPLES) */}
-      {activeTab === 'agenda' && (
-        <div className="bg-white rounded-b-2xl shadow-xs border border-slate-200 border-t-0 p-5 sm:p-6 space-y-5">
-          
-          {/* Barra de Ferramentas: Alternador de Visualização (Lista vs Calendário) e Filtros Rápidos */}
-          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-3 border-b border-slate-100">
-            <div>
-              <h3 className="text-xs font-bold text-[#002B49] uppercase tracking-wide flex items-center gap-2">
-                <Calendar className="w-4 h-4 text-[#C4A052]" />
-                <span>Escala e Cronograma Oficial de Deslocamentos</span>
-              </h3>
+        {/* PARTE INFERIOR: Ocultada por padrão; exibida caso queira ver o conteúdo clicando no sinal de + */}
+        {conteudoAberto && (
+          <div className="animate-in fade-in duration-200">
+            {/* ABA 1: AGENDA DE SERVIÇOS & VIAGENS (A ESCALA FICA DIRETAMENTE DENTRO DESTA ABA) */}
+            {activeTab === 'agenda' && (
+              <div className="p-5 sm:p-6 space-y-5">
+            
+            {/* Barra de Ferramentas: Alternador de Visualização (Lista vs Calendário) e Filtros Rápidos */}
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-3 border-b border-slate-100">
+              <div>
+                <h3 className="text-xs font-bold text-[#002B49] uppercase tracking-wide flex items-center gap-2">
+                  <Calendar className="w-4 h-4 text-[#C4A052]" />
+                  <span>Escala e Cronograma Oficial de Deslocamentos</span>
+                </h3>
               <p className="text-[11px] text-slate-500 mt-0.5">
                 Suas viagens, plantões judiciários e atividades atribuídas no TJPR
               </p>
@@ -918,99 +979,158 @@ export const DriverPortal: React.FC<DriverPortalProps> = ({
         </div>
       )}
 
-      {/* ABA 2: COMPROVANTES DE ABASTECIMENTO */}
-      {activeTab === 'abastecimentos' && (
-        <div className="bg-white rounded-b-2xl shadow-xs border border-slate-200 border-t-0 p-5 sm:p-6 space-y-4">
-          <div className="flex items-center justify-between flex-wrap gap-2">
+      {/* ABA 2: MANUAIS E PORTARIAS */}
+      {activeTab === 'manuais' && (
+        <div className="p-5 sm:p-6 space-y-4">
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-3 border-b border-slate-100">
             <div>
-              <h3 className="text-xs font-bold text-[#002B49] uppercase tracking-wide">
-                Registros de Abastecimento com Cartão TJPR
+              <h3 className="text-xs font-bold text-[#002B49] uppercase tracking-wide flex items-center gap-2">
+                <BookOpen className="w-4 h-4 text-[#C4A052]" />
+                <span>Manuais Operacionais, Resoluções & Portarias TJPR</span>
               </h3>
-              <p className="text-[11px] text-slate-500">
-                Auditoria e conciliação automática com o Ticket Log e o Diário de Bordo
+              <p className="text-[11px] text-slate-500 mt-0.5">
+                Regulamentos normativos, código de conduta, diretrizes de trânsito e condução de veículos oficiais
               </p>
+            </div>
+
+            <div className="text-xs text-slate-500">
+              <span className="font-semibold text-emerald-700 bg-emerald-50 px-2.5 py-1 rounded-lg border border-emerald-200">
+                ✓ Legislação Vigente DiTrans
+              </span>
             </div>
           </div>
 
-          <div className="overflow-x-auto border border-slate-200 rounded-xl">
-            <table className="w-full text-left text-xs">
-              <thead className="bg-slate-50 text-slate-600 font-semibold border-b border-slate-200">
-                <tr>
-                  <th className="p-3">Data / Hora</th>
-                  <th className="p-3">Veículo</th>
-                  <th className="p-3">Posto Credenciado</th>
-                  <th className="p-3">Combustível</th>
-                  <th className="p-3">Litros</th>
-                  <th className="p-3">Preço/L</th>
-                  <th className="p-3">Total (R$)</th>
-                  <th className="p-3">KM</th>
-                  <th className="p-3">Cupom</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-slate-100">
-                {fuelLogs.map((log) => (
-                  <tr key={log.id} className="hover:bg-slate-50/80">
-                    <td className="p-3 font-mono text-slate-500">{log.dataHora}</td>
-                    <td className="p-3 font-bold text-[#002B49] font-mono">{log.veiculoPrefixo}</td>
-                    <td className="p-3 text-slate-800 font-medium max-w-xs truncate">{log.postoNome}</td>
-                    <td className="p-3 text-slate-600">{log.tipoCombustivel}</td>
-                    <td className="p-3 font-mono font-bold text-slate-800">{log.litros.toFixed(1)} L</td>
-                    <td className="p-3 font-mono text-slate-600">R$ {log.valorLitro.toFixed(2)}</td>
-                    <td className="p-3 font-mono font-bold text-emerald-700">R$ {log.valorTotal.toFixed(2)}</td>
-                    <td className="p-3 font-mono text-slate-700">{log.odometro.toLocaleString('pt-BR')}</td>
-                    <td className="p-3 font-mono text-[11px] text-slate-500">{log.comprovanteNumero}</td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-3.5">
+            {driverDocs.map((doc) => (
+              <div 
+                key={doc.id}
+                className="p-4 rounded-xl border border-slate-200 hover:border-blue-300 bg-white hover:bg-slate-50/50 shadow-2xs transition-all space-y-3"
+              >
+                <div className="flex items-start justify-between gap-2">
+                  <div className="flex items-center gap-2.5">
+                    <div className="w-8 h-8 rounded-lg bg-blue-50 border border-blue-200 flex items-center justify-center text-blue-700 shrink-0">
+                      <FileText className="w-4 h-4" />
+                    </div>
+                    <div>
+                      <span className="text-[10px] font-bold font-mono text-slate-500 block">
+                        {doc.numeroDocumento}
+                      </span>
+                      <h4 className="text-xs font-bold text-[#002B49] leading-snug">
+                        {doc.titulo}
+                      </h4>
+                    </div>
+                  </div>
+                  <span className="text-[9px] font-extrabold uppercase px-1.5 py-0.5 rounded bg-emerald-100 text-emerald-800 border border-emerald-200 shrink-0">
+                    Vigente
+                  </span>
+                </div>
+
+                <p className="text-[11px] text-slate-600 leading-relaxed line-clamp-2">
+                  {doc.observacoes || doc.ementa || 'Regulamentação oficial para a frota institucional do Poder Judiciário do Estado do Paraná.'}
+                </p>
+
+                <div className="pt-2 border-t border-slate-100 flex items-center justify-between text-xs">
+                  <span className="text-[10px] text-slate-400 font-mono">
+                    SEI: {doc.processoSei || 'Integrado'}
+                  </span>
+                  <button
+                    type="button"
+                    onClick={() => setPreviewDoc(doc)}
+                    className="px-3 py-1 bg-blue-50 hover:bg-blue-100 text-blue-700 rounded-lg text-xs font-bold flex items-center gap-1.5 transition-colors cursor-pointer"
+                  >
+                    <Eye className="w-3.5 h-3.5" />
+                    <span>Visualizar Documento</span>
+                  </button>
+                </div>
+              </div>
+            ))}
           </div>
         </div>
       )}
 
-      {/* ABA 3: SUPORTE & PLANTÃO 24H TJPR */}
-      {activeTab === 'suporte' && (
-        <div className="bg-white rounded-b-2xl shadow-xs border border-slate-200 border-t-0 p-6 space-y-5 text-xs">
+      {/* ABA 3: TELEFONES ÚTEIS */}
+      {activeTab === 'telefones' && (
+        <div className="p-6 space-y-5 text-xs">
           <div>
-            <h3 className="text-sm font-bold text-[#002B49] uppercase tracking-wide">
-              Central de Atendimento e Procedimentos de Emergência
+            <h3 className="text-sm font-bold text-[#002B49] uppercase tracking-wide flex items-center gap-2">
+              <Phone className="w-4 h-4 text-[#C4A052]" />
+              <span>Telefones Úteis e Plantão de Emergência TJPR</span>
             </h3>
             <p className="text-slate-500 text-[11px] mt-0.5">
-              Contatos oficiais da Divisão de Transportes do Tribunal de Justiça do Estado do Paraná
+              Contatos oficiais, emergências e centrais de apoio ao condutor em deslocamento
             </p>
           </div>
 
-          <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-            <div className="p-4 bg-slate-50 border border-slate-200 rounded-xl space-y-2">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3.5">
+            {/* 1. Plantão de Frotas */}
+            <div className="p-4 bg-slate-50 border border-slate-200 rounded-xl space-y-2 hover:bg-slate-100/60 transition-colors">
               <div className="flex items-center gap-2 text-[#002B49] font-bold">
-                <Phone className="w-4 h-4" />
+                <Phone className="w-4 h-4 text-blue-700" />
                 <span>Plantão de Frotas 24h</span>
               </div>
               <p className="text-base font-bold text-slate-900 font-mono">(41) 3200-2800</p>
               <p className="text-[11px] text-slate-500">
-                Acione para panes mecânicas na estrada, acidentes ou envio imediato de veículo reserva.
+                Panes na estrada, acidentes e substituição imediata de viatura oficial.
               </p>
             </div>
 
-            <div className="p-4 bg-slate-50 border border-slate-200 rounded-xl space-y-2">
+            {/* 2. Seguradora Oficial */}
+            <div className="p-4 bg-slate-50 border border-slate-200 rounded-xl space-y-2 hover:bg-slate-100/60 transition-colors">
               <div className="flex items-center gap-2 text-blue-700 font-bold">
-                <Shield className="w-4 h-4" />
-                <span>Seguradora Oficial TJPR</span>
+                <Shield className="w-4 h-4 text-blue-700" />
+                <span>Seguradora Porto Seguro</span>
               </div>
               <p className="text-base font-bold text-slate-900 font-mono">0800 702 4444</p>
               <p className="text-[11px] text-slate-500">
-                Apólice Coletiva Porto Seguro / TJPR. Guincho 24 horas sem limite de quilometragem.
+                Guincho 24h em todo o Brasil sem limite de km. Apólice Coletiva TJPR.
               </p>
             </div>
 
-            <div className="p-4 bg-slate-50 border border-slate-200 rounded-xl space-y-2">
+            {/* 3. Ticket Log */}
+            <div className="p-4 bg-slate-50 border border-slate-200 rounded-xl space-y-2 hover:bg-slate-100/60 transition-colors">
               <div className="flex items-center gap-2 text-emerald-700 font-bold">
-                <HelpCircle className="w-4 h-4" />
-                <span>Central Ticket Log (Combustível)</span>
+                <Fuel className="w-4 h-4 text-emerald-700" />
+                <span>Central Ticket Log</span>
               </div>
               <p className="text-base font-bold text-slate-900 font-mono">0800 725 2020</p>
               <p className="text-[11px] text-slate-500">
-                Desbloqueio de senha, alteração temporária de cota e consulta de postos credenciados.
+                Cartão combustível, liberação de limite emergencial e rede credenciada.
               </p>
+            </div>
+
+            {/* 4. Central TJPR */}
+            <div className="p-4 bg-slate-50 border border-slate-200 rounded-xl space-y-2 hover:bg-slate-100/60 transition-colors">
+              <div className="flex items-center gap-2 text-amber-700 font-bold">
+                <Building2 className="w-4 h-4 text-amber-700" />
+                <span>Central Geral TJPR</span>
+              </div>
+              <p className="text-base font-bold text-slate-900 font-mono">(41) 3200-2000</p>
+              <p className="text-[11px] text-slate-500">
+                PABX Palácio da Justiça e atendimento aos gabinetes e comarcas.
+              </p>
+            </div>
+          </div>
+
+          {/* Telefones de Emergência e Segurança Pública */}
+          <div className="p-4 bg-slate-50/70 border border-slate-200 rounded-xl space-y-2">
+            <h4 className="font-bold text-slate-800 text-xs">Emergências e Forças Policiais:</h4>
+            <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 text-xs">
+              <div className="p-2 bg-white rounded-lg border border-slate-200 flex items-center justify-between">
+                <span className="text-slate-600">Polícia Militar:</span>
+                <strong className="font-mono text-slate-900">190</strong>
+              </div>
+              <div className="p-2 bg-white rounded-lg border border-slate-200 flex items-center justify-between">
+                <span className="text-slate-600">Polícia Rodoviária Estadual:</span>
+                <strong className="font-mono text-slate-900">198</strong>
+              </div>
+              <div className="p-2 bg-white rounded-lg border border-slate-200 flex items-center justify-between">
+                <span className="text-slate-600">Polícia Rodoviária Federal:</span>
+                <strong className="font-mono text-slate-900">191</strong>
+              </div>
+              <div className="p-2 bg-white rounded-lg border border-slate-200 flex items-center justify-between">
+                <span className="text-slate-600">SAMU / Resgate:</span>
+                <strong className="font-mono text-slate-900">192 / 193</strong>
+              </div>
             </div>
           </div>
 
@@ -1028,6 +1148,20 @@ export const DriverPortal: React.FC<DriverPortalProps> = ({
             </ol>
           </div>
         </div>
+      )}
+
+          </div>
+        )}
+
+      </div>
+
+      {/* Modal para Visualização de Manuais e Portarias */}
+      {previewDoc && (
+        <DocumentPreviewModal
+          isOpen={!!previewDoc}
+          onClose={() => setPreviewDoc(null)}
+          document={previewDoc}
+        />
       )}
 
     </div>

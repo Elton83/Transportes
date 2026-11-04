@@ -2756,9 +2756,12 @@ export const VisitorPortal: React.FC<VisitorPortalProps> = ({
       )}
 
       {/* ------------------------------------------------------------- */}
-      {/* WIDGETS RESUMO DE DEMANDAS / PEDIDOS (PARTE INFERIOR)         */}
+      {/* WIDGETS RESUMO DE DEMANDAS / PEDIDOS                          */}
+      {/* EXIBIDO APENAS QUANDO A ABERTURA DO CHAMADO FOR FINALIZADA    */}
       {/* ------------------------------------------------------------- */}
-      <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 pt-4 border-t border-slate-200/80">
+      {submissionResult && (
+        <>
+          <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 pt-4 border-t border-slate-200/80">
         {/* Widget 1: Total de Pedidos Solicitados */}
         <button 
           type="button"
@@ -3051,6 +3054,8 @@ export const VisitorPortal: React.FC<VisitorPortalProps> = ({
           )}
         </div>
       )}
+    </>
+  )}
 
       {/* Modal de Espelho de Viagem e Relatório Funcional */}
       {reportModalItem && (

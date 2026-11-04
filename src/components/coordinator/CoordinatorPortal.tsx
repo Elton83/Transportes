@@ -49,9 +49,12 @@ import {
   NotificationItem, 
   Role, 
   Trip, 
-  Vehicle 
+  Vehicle,
+  OfficialDocument 
 } from '../../types';
 import { TripSignatureModal } from '../dashboard/TripSignatureModal';
+import { DocumentPreviewModal } from '../documents/DocumentPreviewModal';
+import { INITIAL_DOCUMENTS } from '../../data/workshopAndDocsData';
 
 interface CoordinatorPortalProps {
   currentRole: Role;
@@ -60,6 +63,7 @@ interface CoordinatorPortalProps {
   vehicles: Vehicle[];
   drivers: Driver[];
   chamados: Chamado[];
+  documents?: OfficialDocument[];
   notifications?: NotificationItem[];
   onOpenNewChamadoModal: () => void;
   onUpdateChamadoStatus?: (chamadoId: string, novoStatus: ChamadoStatus) => void;
@@ -67,6 +71,7 @@ interface CoordinatorPortalProps {
   onConfirmEscala?: (chamadoId: string) => void;
   onCloseChamadoByCoordinator?: (chamadoId: string, justificativa: string) => void;
   onAddChamadoResposta?: (chamadoId: string, mensagem: string) => void;
+  onValidateAutorizacao?: (chamadoId: string) => void;
   onNavigateToRelatorios: () => void;
   onOpenTripDetails?: (trip: Trip) => void;
   onOpenTripSignature?: (trip: Trip) => void;
@@ -84,6 +89,7 @@ export const CoordinatorPortal: React.FC<CoordinatorPortalProps> = ({
   vehicles,
   drivers,
   chamados,
+  documents = INITIAL_DOCUMENTS,
   notifications = [],
   onOpenNewChamadoModal,
   onUpdateChamadoStatus,
@@ -91,6 +97,7 @@ export const CoordinatorPortal: React.FC<CoordinatorPortalProps> = ({
   onConfirmEscala,
   onCloseChamadoByCoordinator,
   onAddChamadoResposta,
+  onValidateAutorizacao,
   onNavigateToRelatorios,
   onOpenTripDetails,
   onOpenTripSignature,
@@ -107,6 +114,10 @@ export const CoordinatorPortal: React.FC<CoordinatorPortalProps> = ({
   const [chamadoSearch, setChamadoSearch] = useState<string>('');
   const [selectedChamado, setSelectedChamado] = useState<Chamado | null>(null);
   const [respostaText, setRespostaText] = useState<string>('');
+
+  // 1.1 Modal de Prévia do Documento Oficial ("Autorização para Conduzir Veículos Oficiais")
+  const [previewDoc, setPreviewDoc] = useState<OfficialDocument | null>(null);
+  const [previewDocModalOpen, setPreviewDocModalOpen] = useState<boolean>(false);
 
   // 2. Modais de Gestão (Direcionar Motorista/Veículo) e Encerramento Exclusivo da Coordenação
   const [managingChamado, setManagingChamado] = useState<Chamado | null>(null);
@@ -158,6 +169,76 @@ export const CoordinatorPortal: React.FC<CoordinatorPortalProps> = ({
     c.titulo?.toLowerCase().includes('portal do visitante') ||
     c.codigo?.includes('VIS') ||
     c.titulo?.toLowerCase().includes('(portal do visitante)');
+
+  // Helper para identificar se a demanda é de condução própria (sem motorista)
+  const isConducaoPropria = (c: Chamado) => 
+    c.tipoServico === 'reserva_veiculo' ||
+    c.titulo?.toLowerCase().includes('reserva') ||
+    c.titulo?.toLowerCase().includes('sem motorista') ||
+    c.titulo?.toLowerCase().includes('condução própria') ||
+    c.descricao?.toLowerCase().includes('direção própria') ||
+    c.descricao?.toLowerCase().includes('sem motorista');
+
+  // Obter o documento oficial vinculado de Autorização para Conduzir Veículos Oficiais
+  const getAutorizacaoDocumentForChamado = (c: Chamado): OfficialDocument => {
+    const docList = documents && documents.length > 0 ? documents : INITIAL_DOCUMENTS;
+    if (c.documentoIdVinculado) {
+      const found = docList.find(d => d.id === c.documentoIdVinculado);
+      if (found) return found;
+    }
+    const matched = docList.find(d => 
+      d.id === 'doc-aut-conduzir-oficial' ||
+      d.subtipo === 'autorizacao_trafego_especial' ||
+      (c.processoSei && d.processoSei === c.processoSei) ||
+      d.titulo.toLowerCase().includes('autorização para conduzir')
+    );
+    if (matched) return matched;
+
+    return {
+      id: `doc-aut-${c.id}`,
+      titulo: 'Autorização para Conduzir Veículos Oficiais',
+      categoria: 'demais_situacoes',
+      subtipo: 'autorizacao_trafego_especial',
+      numeroDocumento: 'Portaria DiTrans nº 412/2025-TJPR',
+      orgaoEmissor: 'Tribunal de Justiça do Estado do Paraná - Divisão de Transportes (DiTrans)',
+      dataEmissao: '2025-02-10',
+      dataValidade: '2028-11-19',
+      statusValidade: 'valido',
+      motoristaNome: c.solicitanteNome,
+      processoSei: c.processoSei || '0018492-41.2025.8.16.6000',
+      arquivoNome: 'Autorizacao_Conduzir_Veiculos_Oficiais_TJPR_412_2025.pdf',
+      arquivoTamanho: '1.2 MB',
+      formato: 'PDF',
+      observacoes: 'Autorização individual formal para condução própria de veículos oficiais da frota institucional do TJPR em deslocamentos de serviço e atos jurisdicionais, nos termos da Resolução TJPR nº 315/2021.',
+      dataUpload: '2025-02-12 14:30',
+      conteudoPrevia: {
+        camposPrincipais: [
+          { rotulo: 'Ato de Autorização', valor: 'Portaria DiTrans nº 412/2025-TJPR' },
+          { rotulo: 'Processo SEI', valor: c.processoSei || '0018492-41.2025.8.16.6000' },
+          { rotulo: 'Condutor Autorizado', valor: `${c.solicitanteNome} (${c.solicitanteCargo})` },
+          { rotulo: 'Matrícula Funcional', valor: c.solicitanteMatricula || 'TJPR-98.341-2' },
+          { rotulo: 'CNH do Condutor', valor: '04829104820 (Cat. B) • Válida até 19/11/2028' },
+          { rotulo: 'Base Legal', valor: 'Resolução TJPR nº 315/2021 - Art. 12' },
+          { rotulo: 'Situação Cadastral', valor: 'Regular e Homologada no SEI / DiTrans' },
+          { rotulo: 'Órgão Competente', valor: 'Divisão de Transportes e Frotas (DiTrans)' },
+        ],
+        autenticidadeCodigo: 'SEI-TJPR-AUT-2025-0412-DITRANS',
+        qrcodeSimulado: true,
+      },
+    };
+  };
+
+  const handleOpenDocPreview = (c: Chamado) => {
+    const doc = getAutorizacaoDocumentForChamado(c);
+    setPreviewDoc(doc);
+    setPreviewDocModalOpen(true);
+  };
+
+  const handleToggleValidate = (chamadoId: string) => {
+    if (onValidateAutorizacao) {
+      onValidateAutorizacao(chamadoId);
+    }
+  };
 
   const canClose = currentRole === 'coordenador' || currentRole === 'supervisor_operacional' || currentRole === 'administrador';
 
@@ -239,6 +320,7 @@ export const CoordinatorPortal: React.FC<CoordinatorPortalProps> = ({
     setManagingChamado(chamado);
     
     // Identificar par vinculado 1-para-1 automaticamente
+    const isSelfDriving = isConducaoPropria(chamado);
     let initialDrv = chamado.motoristaId 
       ? drivers.find(d => d.id === chamado.motoristaId) 
       : (chamado.veiculoPrefixo ? drivers.find(d => d.veiculoPrefixoAtual === chamado.veiculoPrefixo) : null);
@@ -256,28 +338,39 @@ export const CoordinatorPortal: React.FC<CoordinatorPortalProps> = ({
       initialVeh = vehicles.find(v => v.prefixo === initialDrv?.veiculoPrefixoAtual) || vehicles[0];
     }
 
-    setSelectedDriverId(initialDrv?.id || '');
+    setSelectedDriverId(initialDrv?.id || drivers[0]?.id || '');
     setSelectedVehicleId(initialVeh?.id || '');
     setDispatchInstructions(
-      `Atendimento prioritário de transporte oficial na Comarca de ${chamado.comarca}. Favor entrar em contato prévio com o solicitante ${chamado.solicitanteNome}.`
+      isSelfDriving
+        ? `Veículo oficial liberado para condução própria pelo solicitante (${chamado.solicitanteNome}). "Autorização para Conduzir Veículos Oficiais" (Portaria DiTrans nº 412/2025) conferida pelo Supervisor de Rodízio nos termos da Resolução TJPR nº 315/2021.`
+        : `Atendimento prioritário de transporte oficial na Comarca de ${chamado.comarca}. Favor entrar em contato prévio com o solicitante ${chamado.solicitanteNome}.`
     );
   };
 
   const handleConfirmAssignment = (e: React.FormEvent) => {
     e.preventDefault();
-    if (!managingChamado || !selectedDriverId || !selectedVehicleId) return;
+    if (!managingChamado || !selectedVehicleId) return;
+
+    const isSelfDriving = isConducaoPropria(managingChamado);
+    const effectiveDriverId = isSelfDriving ? (selectedDriverId || drivers[0]?.id || 'condutor-proprio') : selectedDriverId;
+    if (!effectiveDriverId) return;
 
     if (onAssignDriverAndVehicle) {
       onAssignDriverAndVehicle(
         managingChamado.id,
-        selectedDriverId,
+        effectiveDriverId,
         selectedVehicleId,
         dispatchInstructions
       );
     }
 
+    // Se for condução própria e ainda não estava validada, valida automaticamente no despacho
+    if (isSelfDriving && !managingChamado.autorizacaoConduzirValidada && onValidateAutorizacao) {
+      onValidateAutorizacao(managingChamado.id);
+    }
+
     if (notifyWhatsAppOnAssign && onOpenWhatsAppReservation) {
-      const selectedDriver = drivers.find((d) => d.id === selectedDriverId);
+      const selectedDriver = drivers.find((d) => d.id === effectiveDriverId);
       const selectedVehicle = vehicles.find((v) => v.id === selectedVehicleId);
       const linkedTrip = trips.find((t) => t.id === managingChamado.tripIdVinculada) || {
         id: `trip-cham-${managingChamado.id}`,
@@ -336,60 +429,7 @@ export const CoordinatorPortal: React.FC<CoordinatorPortalProps> = ({
   return (
     <div className="space-y-6">
       
-      {/* 1. Barra de Navegação & Ações da Coordenação */}
-      <div className="bg-white rounded-2xl p-2.5 sm:p-3 border border-slate-200/90 shadow-2xs flex flex-col sm:flex-row sm:items-center justify-between gap-3">
-        {/* Abas Principais em Formato de Segmented Control */}
-        <div className="flex items-center gap-1.5 p-1 bg-slate-100/90 rounded-xl border border-slate-200/70 overflow-x-auto no-scrollbar">
-          <button
-            onClick={() => setActiveTab('chamados')}
-            className={`flex items-center gap-2 px-3.5 sm:px-4 py-2 rounded-lg text-xs font-bold transition-all cursor-pointer ${
-              activeTab === 'chamados'
-                ? 'bg-[#002B49] text-white shadow-sm ring-1 ring-[#002B49]/30'
-                : 'text-slate-600 hover:text-slate-900 hover:bg-white/80'
-            }`}
-          >
-            <LifeBuoy className={`w-4 h-4 shrink-0 ${activeTab === 'chamados' ? 'text-amber-300' : 'text-slate-500'}`} />
-            <span>Gestão de Chamados</span>
-            {countAbertos > 0 && (
-              <span className={`px-2 py-0.5 rounded-full text-[11px] font-extrabold shadow-2xs ${
-                activeTab === 'chamados' ? 'bg-red-500 text-white' : 'bg-red-100 text-red-700'
-              }`}>
-                {countAbertos}
-              </span>
-            )}
-          </button>
 
-          <button
-            onClick={() => setActiveTab('dia_a_dia')}
-            className={`flex items-center gap-2 px-3.5 sm:px-4 py-2 rounded-lg text-xs font-bold transition-all cursor-pointer ${
-              activeTab === 'dia_a_dia'
-                ? 'bg-[#002B49] text-white shadow-sm ring-1 ring-[#002B49]/30'
-                : 'text-slate-600 hover:text-slate-900 hover:bg-white/80'
-            }`}
-          >
-            <Calendar className={`w-4 h-4 shrink-0 ${activeTab === 'dia_a_dia' ? 'text-amber-300' : 'text-slate-500'}`} />
-            <span>Operação do Dia a Dia</span>
-          </button>
-        </div>
-
-        {/* Ações & Comarca */}
-        <div className="flex items-center justify-end gap-2.5 shrink-0">
-          {selectedComarca && (
-            <span className="hidden md:inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg text-[11px] font-semibold bg-slate-50 text-slate-600 border border-slate-200">
-              <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
-              {selectedComarca}
-            </span>
-          )}
-          <button
-            id="coord-btn-novo-chamado"
-            onClick={onOpenNewChamadoModal}
-            className="h-10 px-4 rounded-xl bg-[#002B49] hover:bg-[#003860] active:scale-[0.98] text-white font-semibold text-xs flex items-center gap-2 transition-all shadow-xs cursor-pointer hover:shadow-md"
-          >
-            <Plus className="w-4 h-4 text-amber-300" />
-            <span>Novo Chamado</span>
-          </button>
-        </div>
-      </div>
 
 
 
@@ -570,23 +610,7 @@ export const CoordinatorPortal: React.FC<CoordinatorPortalProps> = ({
                             </span>
                           )}
 
-                          {/* Prioridades */}
-                          {chamado.prioridade === 'urgente' && (
-                            <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-red-100 text-red-700 border border-red-300 flex items-center gap-1">
-                              <AlertCircle className="w-3 h-3 text-red-600" />
-                              Prioridade Urgente
-                            </span>
-                          )}
-                          {chamado.prioridade === 'alta' && (
-                            <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-amber-100 text-amber-800 border border-amber-300">
-                              Prioridade Alta
-                            </span>
-                          )}
-                          {chamado.prioridade === 'media' && (
-                            <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-blue-100 text-blue-800 border border-blue-200">
-                              Prioridade Média
-                            </span>
-                          )}
+
 
                           {/* Badge de Atividade Concluída com Assinatura do Solicitante (Requisito 4) */}
                           {chamado.atividadeConcluida && (
@@ -604,7 +628,7 @@ export const CoordinatorPortal: React.FC<CoordinatorPortalProps> = ({
                           {chamado.titulo}
                         </h3>
 
-                        {/* Linha única com: Detalhes, Confirmar Escala e Alterar Motorista */}
+                        {/* Linha única com: Detalhes, Confirmar Escala, Alterar Motorista / Alocar Veículo e Validar */}
                         <div className="mt-2.5 flex items-center gap-2 flex-wrap">
                           {/* 1. Detalhes */}
                           <button
@@ -617,8 +641,8 @@ export const CoordinatorPortal: React.FC<CoordinatorPortalProps> = ({
                             <span>Detalhes</span>
                           </button>
 
-                          {/* 2. Confirmar Escala (se escala pré-selecionada e ainda não confirmada) */}
-                          {chamado.escalaPreSelecionada && !chamado.escalaConfirmada && (
+                          {/* 2. Confirmar Escala (se viagem com motorista pré-selecionada) */}
+                          {!isConducaoPropria(chamado) && chamado.escalaPreSelecionada && !chamado.escalaConfirmada && (
                             <button
                               type="button"
                               onClick={() => onConfirmEscala && onConfirmEscala(chamado.id)}
@@ -631,23 +655,45 @@ export const CoordinatorPortal: React.FC<CoordinatorPortalProps> = ({
                           )}
 
                           {/* Indicador se a escala já estiver confirmada */}
-                          {chamado.escalaConfirmada && (
+                          {!isConducaoPropria(chamado) && chamado.escalaConfirmada && (
                             <span className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-emerald-50 text-emerald-800 border border-emerald-300 text-xs font-bold">
                               <Check className="w-3.5 h-3.5 text-emerald-600" />
                               <span>Escala Confirmada</span>
                             </span>
                           )}
 
-                          {/* 3. Alterar Motorista */}
+                          {/* 3. Alterar Motorista ou Alocar Veículo */}
                           {!isConcluido && (
                             <button
                               type="button"
                               onClick={() => handleOpenManageChamado(chamado)}
                               className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-white hover:bg-slate-50 text-slate-800 font-bold text-xs border border-slate-300 hover:border-slate-400 transition-all cursor-pointer shadow-2xs"
-                              title="Alterar condutor oficial ou veículo"
+                              title={isConducaoPropria(chamado) ? "Alocar ou alterar veículo oficial" : "Alterar condutor oficial ou veículo"}
                             >
-                              <User className="w-3.5 h-3.5 text-slate-600" />
-                              <span>Alterar Motorista</span>
+                              {isConducaoPropria(chamado) ? (
+                                <>
+                                  <Car className="w-3.5 h-3.5 text-blue-700" />
+                                  <span>{chamado.veiculoPrefixo ? 'Alterar Veículo' : 'Alocar Veículo'}</span>
+                                </>
+                              ) : (
+                                <>
+                                  <User className="w-3.5 h-3.5 text-slate-600" />
+                                  <span>Alterar Motorista</span>
+                                </>
+                              )}
+                            </button>
+                          )}
+
+                          {/* 3.1 Botão Rápido de Validar Autorização para Condução Própria */}
+                          {isConducaoPropria(chamado) && !isConcluido && !chamado.autorizacaoConduzirValidada && (
+                            <button
+                              type="button"
+                              onClick={() => handleToggleValidate(chamado.id)}
+                              className="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs shadow-xs transition-all cursor-pointer"
+                              title="Conferir e validar Autorização para Conduzir Veículos Oficiais"
+                            >
+                              <CheckCircle2 className="w-3.5 h-3.5 text-white" />
+                              <span>Validar Autorização SEI</span>
                             </button>
                           )}
 
@@ -722,24 +768,112 @@ export const CoordinatorPortal: React.FC<CoordinatorPortalProps> = ({
                           </span>
                         )}
 
-                        <div className="text-[10px] text-slate-500 font-mono">
-                          SEI: <strong>{chamado.processoSei || 'Integrado'}</strong>
-                          {chamado.prazoSugerido && <span> • Prazo: {chamado.prazoSugerido}</span>}
-                        </div>
+
                       </div>
                     </div>
+
+                    {/* BLOCO DE VALIDAÇÃO: AUTORIZAÇÃO PARA CONDUZIR VEÍCULOS OFICIAIS */}
+                    {isConducaoPropria(chamado) && (
+                      <div className={`mt-3.5 p-3.5 rounded-2xl border transition-all ${
+                        chamado.autorizacaoConduzirValidada
+                          ? 'bg-emerald-50/70 border-emerald-300 ring-1 ring-emerald-400/20'
+                          : 'bg-amber-50/80 border-amber-300 ring-1 ring-amber-400/20'
+                      }`}>
+                        {/* Alerta de Requisito Obrigatório */}
+                        <div className="flex items-start gap-2 mb-2.5 text-xs text-amber-900 bg-amber-100/80 p-2.5 rounded-xl border border-amber-200">
+                          <AlertCircle className="w-4 h-4 text-amber-700 shrink-0 mt-0.5" />
+                          <p className="leading-snug">
+                            <strong>Requisito Obrigatório:</strong> Para conduzir veículo oficial desacompanhado de motorista, é necessária a prévia <strong>"Autorização para Conduzir Veículos Oficiais"</strong> nos termos da Resolução TJPR nº 315/2021 e regulamentação da DiTrans.
+                          </p>
+                        </div>
+
+                        {/* Card do Documento com Visualizar Documento e Botão de Validação */}
+                        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 bg-white p-3.5 rounded-xl border border-slate-200 shadow-2xs">
+                          <div className="flex items-center gap-3 min-w-0">
+                            <div className="w-10 h-10 rounded-xl bg-blue-50 border border-blue-200 flex items-center justify-center text-blue-700 shrink-0">
+                              <FileCheck2 className="w-5 h-5" />
+                            </div>
+                            <div className="min-w-0">
+                              <div className="flex items-center gap-2 flex-wrap">
+                                <strong className="text-xs text-[#002B49] truncate">
+                                  Autorização para Conduzir Veículos Oficiais
+                                </strong>
+                                {chamado.autorizacaoConduzirValidada ? (
+                                  <span className="px-2 py-0.5 rounded-full text-[10px] font-extrabold bg-emerald-100 text-emerald-800 border border-emerald-300 flex items-center gap-1 shadow-2xs">
+                                    <CheckCircle2 className="w-3 h-3 text-emerald-600" />
+                                    <span>Validada pelo Supervisor de Rodízio</span>
+                                  </span>
+                                ) : (
+                                  <span className="px-2 py-0.5 rounded-full text-[10px] font-extrabold bg-amber-100 text-amber-900 border border-amber-300 flex items-center gap-1 shadow-2xs">
+                                    <Clock className="w-3 h-3 text-amber-600 animate-pulse" />
+                                    <span>Documento Recebido • Aguarda Validação</span>
+                                  </span>
+                                )}
+                              </div>
+
+                              {chamado.autorizacaoValidadaEm && (
+                                <p className="text-[10px] text-emerald-700 font-mono mt-0.5">
+                                  Validada por: {chamado.autorizacaoValidadaPor || 'Supervisor de Rodízio'} em {chamado.autorizacaoValidadaEm}
+                                </p>
+                              )}
+                            </div>
+                          </div>
+
+                          {/* Botões: Visualizar Documento e Validar */}
+                          <div className="flex items-center gap-2 shrink-0">
+                            <button
+                              type="button"
+                              onClick={() => handleOpenDocPreview(chamado)}
+                              className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl text-xs font-bold text-blue-700 bg-blue-50 hover:bg-blue-100 border border-blue-300 transition-all cursor-pointer shadow-2xs"
+                              title="Visualizar documento oficial da portaria no SEI"
+                            >
+                              <Eye className="w-3.5 h-3.5" />
+                              <span>Visualizar Documento</span>
+                            </button>
+
+                            {!isConcluido && (
+                              <button
+                                type="button"
+                                onClick={() => handleToggleValidate(chamado.id)}
+                                className={`inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl text-xs font-bold transition-all cursor-pointer shadow-2xs ${
+                                  chamado.autorizacaoConduzirValidada
+                                    ? 'bg-emerald-50 text-emerald-800 border border-emerald-300 hover:bg-emerald-100'
+                                    : 'bg-emerald-600 text-white hover:bg-emerald-700 shadow-xs'
+                                }`}
+                                title={chamado.autorizacaoConduzirValidada ? "Clique para reverter validação se necessário" : "Validar a autorização para liberar o veículo"}
+                              >
+                                <Check className="w-3.5 h-3.5" />
+                                <span>{chamado.autorizacaoConduzirValidada ? 'Autorização Validada ✓' : 'Validar Autorização'}</span>
+                              </button>
+                            )}
+                          </div>
+                        </div>
+                      </div>
+                    )}
 
                     {/* ========================================================= */}
                     {/* REQUISITO 2: DIRECIONAR MOTORISTA (2.1) E VEÍCULO (2.2)   */}
                     {/* ========================================================= */}
                     <div className="mt-4 pt-3 border-t border-slate-100 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 bg-slate-50/70 p-3 rounded-xl text-xs">
                       
-                      {/* Motorista Designado */}
+                      {/* Motorista / Condutor Designado */}
                       <div>
                         <span className="text-[10px] text-slate-400 font-bold uppercase tracking-wider block mb-1">
-                          2.1 Motorista Designado
+                          {isConducaoPropria(chamado) ? '2.1 Condutor Autorizado' : '2.1 Motorista Designado'}
                         </span>
-                        {chamado.motoristaNome ? (
+                        {isConducaoPropria(chamado) ? (
+                          <div className="flex items-center gap-2">
+                            <div className="w-7 h-7 rounded-lg bg-[#002B49] text-white flex items-center justify-center font-bold text-[10px] shrink-0">
+                              <Key className="w-3.5 h-3.5 text-amber-300" />
+                            </div>
+                            <div>
+                              <strong className="text-slate-800 block text-xs">{chamado.solicitanteNome}</strong>
+                              <span className={`text-[10px] font-bold ${chamado.autorizacaoConduzirValidada ? 'text-emerald-700' : 'text-amber-700'}`}>
+                                {chamado.autorizacaoConduzirValidada ? '✓ Condução Própria Validada' : 'Aguardando Validação SEI'}
+                              </span>
+                            </div>
+                          </div>
+                        ) : chamado.motoristaNome ? (
                           <div className="flex items-center gap-2">
                             <div className="w-7 h-7 rounded-lg bg-[#002B49] text-white flex items-center justify-center font-bold text-[10px] shrink-0">
                               {chamado.motoristaNome.split(' ').map(n => n[0]).slice(0, 2).join('')}
@@ -959,12 +1093,25 @@ export const CoordinatorPortal: React.FC<CoordinatorPortalProps> = ({
                       </td>
                     </tr>
                   ) : (
-                    activeTripsToday.map((trip) => (
+                    activeTripsToday.map((trip) => {
+                      const isTripSelfDriving = trip.tipoServico === 'reserva_veiculo' || trip.finalidade?.includes('Direção Própria') || trip.finalidade?.includes('Condução Própria');
+                      return (
                       <tr key={trip.id} className="hover:bg-slate-50 transition-colors">
                         <td className="px-4 py-3 font-mono font-bold text-[#002B49]">{trip.codigo}</td>
                         <td className="px-4 py-3 font-semibold text-slate-800">{trip.solicitanteNome}</td>
                         <td className="px-4 py-3 font-mono text-slate-700">{trip.veiculoPrefixo || 'TJ-101'}</td>
-                        <td className="px-4 py-3 text-slate-700">{trip.motoristaNome || 'Motorista Oficial'}</td>
+                        <td className="px-4 py-3 text-slate-700">
+                          {isTripSelfDriving ? (
+                            <div className="flex items-center gap-1.5 flex-wrap">
+                              <span className="font-semibold text-slate-800">{trip.solicitanteNome}</span>
+                              <span className="px-1.5 py-0.5 rounded text-[9px] font-bold bg-blue-100 text-[#002B49] border border-blue-200">
+                                Condução Própria
+                              </span>
+                            </div>
+                          ) : (
+                            trip.motoristaNome || 'Motorista Oficial'
+                          )}
+                        </td>
                         <td className="px-4 py-3 text-slate-600 truncate max-w-xs">{trip.origem} ➔ {trip.destino}</td>
                         <td className="px-4 py-3">
                           {trip.assinaturaRealizacao ? (
@@ -977,17 +1124,34 @@ export const CoordinatorPortal: React.FC<CoordinatorPortalProps> = ({
                           )}
                         </td>
                         <td className="px-4 py-3 text-right">
-                          <button
-                            type="button"
-                            onClick={() => onOpenTripDetails && onOpenTripDetails(trip)}
-                            className="p-1.5 rounded-lg text-slate-600 hover:text-[#002B49] hover:bg-slate-100 transition-colors cursor-pointer"
-                            title="Ver Diário de Bordo"
-                          >
-                            <Eye className="w-4 h-4" />
-                          </button>
+                          <div className="flex items-center justify-end gap-1">
+                            {isTripSelfDriving && (
+                              <button
+                                type="button"
+                                onClick={() => {
+                                  const docList = documents && documents.length > 0 ? documents : INITIAL_DOCUMENTS;
+                                  const doc = docList.find(d => d.id === 'doc-aut-conduzir-oficial') || docList[0];
+                                  setPreviewDoc(doc);
+                                  setPreviewDocModalOpen(true);
+                                }}
+                                className="p-1.5 rounded-lg text-blue-600 hover:text-blue-800 hover:bg-blue-50 transition-colors cursor-pointer"
+                                title="Visualizar Autorização para Conduzir Veículos Oficiais"
+                              >
+                                <FileCheck2 className="w-4 h-4" />
+                              </button>
+                            )}
+                            <button
+                              type="button"
+                              onClick={() => onOpenTripDetails && onOpenTripDetails(trip)}
+                              className="p-1.5 rounded-lg text-slate-600 hover:text-[#002B49] hover:bg-slate-100 transition-colors cursor-pointer"
+                              title="Ver Diário de Bordo"
+                            >
+                              <Eye className="w-4 h-4" />
+                            </button>
+                          </div>
                         </td>
                       </tr>
-                    ))
+                    );})
                   )}
                 </tbody>
               </table>
@@ -1045,29 +1209,121 @@ export const CoordinatorPortal: React.FC<CoordinatorPortalProps> = ({
                 </div>
               </div>
 
-              {/* 2.1 Direcionar Motorista */}
-              <div className="space-y-1.5">
-                <label className="font-bold text-slate-800 flex items-center gap-1.5">
-                  <User className="w-3.5 h-3.5 text-[#002B49]" />
-                  <span>2.1 Direcionar Motorista Oficial TJPR (Vínculo 1:1 Automático):</span>
-                </label>
-                <select
-                  value={selectedDriverId}
-                  onChange={(e) => handleAssignDriverChange(e.target.value)}
-                  className="w-full p-3 rounded-xl border border-slate-200 bg-white text-slate-800 font-medium focus:outline-hidden focus:ring-2 focus:ring-[#002B49]"
-                  required
-                >
-                  <option value="">Selecione o motorista para a diligência...</option>
-                  {drivers.map((drv) => (
-                    <option key={drv.id} value={drv.id}>
-                      {drv.nome} • Virtus {drv.veiculoPrefixoAtual} • {drv.telefone} • Status: {drv.status === 'disponivel' ? 'Disponível' : 'Em Deslocamento'}
-                    </option>
-                  ))}
-                </select>
-                <p className="text-[10px] text-slate-500">
-                  Ao escolher o motorista, seu veículo Virtus exclusivo ({drivers.find(d => d.id === selectedDriverId)?.veiculoPrefixoAtual || 'TJ-10X'}) é preenchido automaticamente.
-                </p>
-              </div>
+              {/* BLOCO DE VALIDAÇÃO: AUTORIZAÇÃO PARA CONDUZIR VEÍCULOS OFICIAIS NO MODAL DE GESTÃO */}
+              {isConducaoPropria(managingChamado) && (
+                <div className={`p-3.5 rounded-2xl border transition-all ${
+                  managingChamado.autorizacaoConduzirValidada
+                    ? 'bg-emerald-50/70 border-emerald-300 ring-1 ring-emerald-400/20'
+                    : 'bg-amber-50/80 border-amber-300 ring-1 ring-amber-400/20'
+                }`}>
+                  <div className="flex items-start gap-2 mb-2 text-xs text-amber-900 bg-amber-100/80 p-2.5 rounded-xl border border-amber-200">
+                    <AlertCircle className="w-4 h-4 text-amber-700 shrink-0 mt-0.5" />
+                    <p className="leading-snug">
+                      <strong>Requisito Obrigatório:</strong> Para conduzir veículo oficial desacompanhado de motorista, é necessária a prévia <strong>"Autorização para Conduzir Veículos Oficiais"</strong> nos termos da Resolução TJPR nº 315/2021 e regulamentação da DiTrans.
+                    </p>
+                  </div>
+                  <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 bg-white p-3 rounded-xl border border-slate-200">
+                    <div className="flex items-center gap-3 min-w-0">
+                      <div className="w-10 h-10 rounded-xl bg-blue-50 border border-blue-200 flex items-center justify-center text-blue-700 shrink-0">
+                        <FileCheck2 className="w-5 h-5" />
+                      </div>
+                      <div className="min-w-0">
+                        <div className="flex items-center gap-2 flex-wrap">
+                          <strong className="text-xs text-[#002B49] truncate">Autorização para Conduzir Veículos Oficiais</strong>
+                          {managingChamado.autorizacaoConduzirValidada ? (
+                            <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-emerald-100 text-emerald-800 border border-emerald-300 flex items-center gap-1">
+                              <CheckCircle2 className="w-3 h-3 text-emerald-600" />
+                              <span>Validada pelo Supervisor</span>
+                            </span>
+                          ) : (
+                            <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-amber-100 text-amber-900 border border-amber-300 flex items-center gap-1">
+                              <Clock className="w-3 h-3 text-amber-600 animate-pulse" />
+                              <span>Pendente de Validação</span>
+                            </span>
+                          )}
+                        </div>
+                        <p className="text-[11px] text-slate-500 mt-0.5 truncate">
+                          Portaria DiTrans nº 412/2025-TJPR • Processo SEI: {managingChamado.processoSei || '0018492-41.2025.8.16.6000'} • CNH Regular
+                        </p>
+                      </div>
+                    </div>
+                    <div className="flex items-center gap-2 shrink-0">
+                      <button
+                        type="button"
+                        onClick={() => handleOpenDocPreview(managingChamado)}
+                        className="px-3 py-1.5 rounded-xl text-xs font-bold text-blue-700 bg-blue-50 hover:bg-blue-100 border border-blue-300 transition-all cursor-pointer flex items-center gap-1.5 shadow-2xs"
+                      >
+                        <Eye className="w-3.5 h-3.5" />
+                        <span>Visualizar Documento</span>
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => {
+                          handleToggleValidate(managingChamado.id);
+                          setManagingChamado({
+                            ...managingChamado,
+                            autorizacaoConduzirValidada: !managingChamado.autorizacaoConduzirValidada,
+                            autorizacaoValidadaPor: !managingChamado.autorizacaoConduzirValidada ? 'Supervisor de Rodízio' : undefined,
+                            autorizacaoValidadaEm: !managingChamado.autorizacaoConduzirValidada ? 'Hoje' : undefined,
+                          });
+                        }}
+                        className={`px-3 py-1.5 rounded-xl text-xs font-bold transition-all cursor-pointer flex items-center gap-1.5 shadow-2xs ${
+                          managingChamado.autorizacaoConduzirValidada
+                            ? 'bg-emerald-50 text-emerald-800 border border-emerald-300'
+                            : 'bg-emerald-600 text-white hover:bg-emerald-700'
+                        }`}
+                      >
+                        <Check className="w-3.5 h-3.5" />
+                        <span>{managingChamado.autorizacaoConduzirValidada ? 'Autorização Validada ✓' : 'Validar Agora'}</span>
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              )}
+
+              {/* 2.1 Direcionar Motorista ou Condutor Autorizado */}
+              {isConducaoPropria(managingChamado) ? (
+                <div className="p-3.5 bg-blue-50/80 border border-blue-200 rounded-2xl space-y-1">
+                  <div className="flex items-center justify-between">
+                    <span className="text-[10px] text-blue-900 font-bold uppercase tracking-wider flex items-center gap-1.5">
+                      <Key className="w-3.5 h-3.5 text-blue-700" />
+                      2.1 Condutor Autorizado (Condução Própria):
+                    </span>
+                    <span className="px-2.5 py-0.5 rounded text-[10px] font-bold bg-blue-100 text-[#002B49] border border-blue-300">
+                      Dispensado Motorista Oficial
+                    </span>
+                  </div>
+                  <strong className="text-slate-800 text-xs block">
+                    {managingChamado.solicitanteNome} ({managingChamado.solicitanteCargo})
+                  </strong>
+                  <p className="text-[11px] text-slate-600">
+                    O próprio solicitante conduzirá o veículo mediante a "Autorização para Conduzir Veículos Oficiais" (Portaria DiTrans nº 412/2025).
+                  </p>
+                </div>
+              ) : (
+                <div className="space-y-1.5">
+                  <label className="font-bold text-slate-800 flex items-center gap-1.5">
+                    <User className="w-3.5 h-3.5 text-[#002B49]" />
+                    <span>2.1 Direcionar Motorista Oficial TJPR (Vínculo 1:1 Automático):</span>
+                  </label>
+                  <select
+                    value={selectedDriverId}
+                    onChange={(e) => handleAssignDriverChange(e.target.value)}
+                    className="w-full p-3 rounded-xl border border-slate-200 bg-white text-slate-800 font-medium focus:outline-hidden focus:ring-2 focus:ring-[#002B49]"
+                    required
+                  >
+                    <option value="">Selecione o motorista para a diligência...</option>
+                    {drivers.map((drv) => (
+                      <option key={drv.id} value={drv.id}>
+                        {drv.nome} • Virtus {drv.veiculoPrefixoAtual} • {drv.telefone} • Status: {drv.status === 'disponivel' ? 'Disponível' : 'Em Deslocamento'}
+                      </option>
+                    ))}
+                  </select>
+                  <p className="text-[10px] text-slate-500">
+                    Ao escolher o motorista, seu veículo Virtus exclusivo ({drivers.find(d => d.id === selectedDriverId)?.veiculoPrefixoAtual || 'TJ-10X'}) é preenchido automaticamente.
+                  </p>
+                </div>
+              )}
 
               {/* 2.2 Direcionar Veículo */}
               <div className="space-y-1.5">
@@ -1384,8 +1640,17 @@ export const CoordinatorPortal: React.FC<CoordinatorPortalProps> = ({
                   </div>
                   <div className="space-y-1.5">
                     <div>
-                      <span className="text-[10px] text-slate-400 font-bold uppercase tracking-wider block">Motorista</span>
-                      {detailsChamado.motoristaNome ? (
+                      <span className="text-[10px] text-slate-400 font-bold uppercase tracking-wider block">
+                        {isConducaoPropria(detailsChamado) ? 'Condutor Autorizado (Condução Própria)' : 'Motorista Oficial'}
+                      </span>
+                      {isConducaoPropria(detailsChamado) ? (
+                        <div className="flex items-center justify-between gap-1">
+                          <strong className="text-slate-800 text-xs">{detailsChamado.solicitanteNome}</strong>
+                          <span className={`text-[10px] font-bold ${detailsChamado.autorizacaoConduzirValidada ? 'text-emerald-700' : 'text-amber-700'}`}>
+                            {detailsChamado.autorizacaoConduzirValidada ? '✓ Condução Validada' : 'Aguardando Validação SEI'}
+                          </span>
+                        </div>
+                      ) : detailsChamado.motoristaNome ? (
                         <div className="flex items-center justify-between gap-1">
                           <strong className="text-slate-800 text-xs">{detailsChamado.motoristaNome}</strong>
                           <span className="text-[10px] text-slate-500 font-mono">{detailsChamado.motoristaTelefone || '(41) 98722-5566'}</span>
@@ -1410,12 +1675,12 @@ export const CoordinatorPortal: React.FC<CoordinatorPortalProps> = ({
                       <div className="pt-1">
                         {detailsChamado.escalaConfirmada ? (
                           <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded text-[10px] font-bold bg-emerald-100 text-emerald-800 border border-emerald-200">
-                            <Check className="w-3 h-3 text-emerald-600" />
+                            <Check className="w-3.5 h-3.5 text-emerald-600" />
                             Escala Confirmada pelo Supervisor
                           </span>
                         ) : (
                           <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded text-[10px] font-bold bg-amber-100 text-amber-800 border border-amber-300">
-                            <Calendar className="w-3 h-3 text-amber-600" />
+                            <Calendar className="w-3.5 h-3.5 text-amber-600" />
                             Escala Pré-Selecionada (Aguardando Confirmação)
                           </span>
                         )}
@@ -1425,6 +1690,83 @@ export const CoordinatorPortal: React.FC<CoordinatorPortalProps> = ({
                 </div>
 
               </div>
+
+              {/* BLOCO DE VALIDAÇÃO: AUTORIZAÇÃO PARA CONDUZIR VEÍCULOS OFICIAIS NO MODAL DE DETALHES */}
+              {isConducaoPropria(detailsChamado) && (
+                <div className={`p-4 rounded-xl border ${
+                  detailsChamado.autorizacaoConduzirValidada
+                    ? 'bg-emerald-50/70 border-emerald-300 ring-1 ring-emerald-400/20'
+                    : 'bg-amber-50/80 border-amber-300 ring-1 ring-amber-400/20'
+                }`}>
+                  <div className="flex items-start gap-2 mb-2 text-xs text-amber-900 bg-amber-100/80 p-2.5 rounded-lg border border-amber-200">
+                    <AlertCircle className="w-4 h-4 text-amber-700 shrink-0 mt-0.5" />
+                    <p className="leading-snug">
+                      <strong>Requisito Obrigatório:</strong> Para conduzir veículo oficial desacompanhado de motorista, é necessária a prévia <strong>"Autorização para Conduzir Veículos Oficiais"</strong> nos termos da Resolução TJPR nº 315/2021 e regulamentação da DiTrans.
+                    </p>
+                  </div>
+                  <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 bg-white p-3.5 rounded-xl border border-slate-200 shadow-2xs">
+                    <div className="flex items-center gap-3 min-w-0">
+                      <div className="w-10 h-10 rounded-xl bg-blue-50 border border-blue-200 flex items-center justify-center text-blue-700 shrink-0">
+                        <FileCheck2 className="w-5 h-5" />
+                      </div>
+                      <div className="min-w-0">
+                        <div className="flex items-center gap-2 flex-wrap">
+                          <strong className="text-xs text-[#002B49] truncate">Autorização para Conduzir Veículos Oficiais</strong>
+                          {detailsChamado.autorizacaoConduzirValidada ? (
+                            <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-emerald-100 text-emerald-800 border border-emerald-300 flex items-center gap-1 shadow-2xs">
+                              <CheckCircle2 className="w-3 h-3 text-emerald-600" />
+                              <span>Validada pelo Supervisor</span>
+                            </span>
+                          ) : (
+                            <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-amber-100 text-amber-900 border border-amber-300 flex items-center gap-1 shadow-2xs">
+                              <Clock className="w-3 h-3 text-amber-600 animate-pulse" />
+                              <span>Pendente de Validação</span>
+                            </span>
+                          )}
+                        </div>
+                        <p className="text-[11px] text-slate-500 mt-0.5 truncate">
+                          Portaria DiTrans nº 412/2025-TJPR • Processo SEI: {detailsChamado.processoSei || '0018492-41.2025.8.16.6000'} • CNH Regular (Validade: 19/11/2028)
+                        </p>
+                        {detailsChamado.autorizacaoValidadaEm && (
+                          <p className="text-[10px] text-emerald-700 font-mono mt-0.5">
+                            Validada por: {detailsChamado.autorizacaoValidadaPor || 'Supervisor de Rodízio'} em {detailsChamado.autorizacaoValidadaEm}
+                          </p>
+                        )}
+                      </div>
+                    </div>
+                    <div className="flex items-center gap-2 shrink-0">
+                      <button
+                        type="button"
+                        onClick={() => handleOpenDocPreview(detailsChamado)}
+                        className="px-3.5 py-2 rounded-xl text-xs font-bold text-blue-700 bg-blue-50 hover:bg-blue-100 border border-blue-300 transition-all cursor-pointer flex items-center gap-1.5 shadow-2xs"
+                      >
+                        <Eye className="w-3.5 h-3.5" />
+                        <span>Visualizar Documento</span>
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => {
+                          handleToggleValidate(detailsChamado.id);
+                          setDetailsChamado({
+                            ...detailsChamado,
+                            autorizacaoConduzirValidada: !detailsChamado.autorizacaoConduzirValidada,
+                            autorizacaoValidadaPor: !detailsChamado.autorizacaoConduzirValidada ? 'Supervisor de Rodízio (Matrícula TJPR-77.419-3)' : undefined,
+                            autorizacaoValidadaEm: !detailsChamado.autorizacaoConduzirValidada ? 'Hoje' : undefined,
+                          });
+                        }}
+                        className={`px-3.5 py-2 rounded-xl text-xs font-bold transition-all cursor-pointer flex items-center gap-1.5 shadow-2xs ${
+                          detailsChamado.autorizacaoConduzirValidada
+                            ? 'bg-emerald-50 text-emerald-800 border border-emerald-300 hover:bg-emerald-100'
+                            : 'bg-emerald-600 text-white hover:bg-emerald-700 shadow-xs'
+                        }`}
+                      >
+                        <Check className="w-3.5 h-3.5" />
+                        <span>{detailsChamado.autorizacaoConduzirValidada ? 'Autorização Validada ✓' : 'Validar Autorização'}</span>
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              )}
 
               {/* BLOCO DE SLA DE 30 MINUTOS PARA HOMOLOGAÇÃO DA ESCALA */}
               {detailsChamado.escalaPreSelecionada && (
@@ -1676,6 +2018,13 @@ export const CoordinatorPortal: React.FC<CoordinatorPortalProps> = ({
           </div>
         </div>
       )}
+
+      {/* Modal de Prévia do Documento Oficial (Portaria DiTrans nº 412/2025 SEI) */}
+      <DocumentPreviewModal
+        isOpen={previewDocModalOpen}
+        onClose={() => setPreviewDocModalOpen(false)}
+        document={previewDoc}
+      />
 
     </div>
   );
