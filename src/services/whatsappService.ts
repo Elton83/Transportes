@@ -25,7 +25,7 @@ Prezado(a) *${solicitante}*,
 Sua solicitação de veículo oficial foi confirmada e os recursos já estão alocados para sua missão judicial.
 
 📋 *Código da Reserva:* ${trip.codigo}
-⚖️ *Protocolo SIGA/SEI:* ${protocolo}
+⚖️ *Protocolo SIGA/TJPR:* ${protocolo}
 
 🚘 *Veículo Designado:* ${veicModelo}
 🏷️ *Prefixo / Placa:* *${veicPrefixo}* • ${veicPlaca} (${comarca})

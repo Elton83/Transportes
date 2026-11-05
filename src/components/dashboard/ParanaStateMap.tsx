@@ -278,6 +278,7 @@ interface ParanaStateMapProps {
   activeSessionId: string | null;
   onSelectSession: (prefixo: string) => void;
   className?: string;
+  fullHeight?: boolean;
 }
 
 export const ParanaStateMap: React.FC<ParanaStateMapProps> = ({
@@ -285,6 +286,7 @@ export const ParanaStateMap: React.FC<ParanaStateMapProps> = ({
   activeSessionId,
   onSelectSession,
   className = '',
+  fullHeight = false,
 }) => {
   const [showComarcas, setShowComarcas] = useState(true);
   const [showRodovias, setShowRodovias] = useState(true);
@@ -511,7 +513,7 @@ export const ParanaStateMap: React.FC<ParanaStateMapProps> = ({
 
   return (
     <div 
-      className={`relative bg-gradient-to-b from-[#031522] via-[#05202B] to-[#021018] rounded-2xl overflow-hidden border border-slate-700/80 shadow-2xl select-none ${className}`}
+      className={`relative bg-gradient-to-b from-[#031522] via-[#05202B] to-[#021018] rounded-2xl overflow-hidden border border-slate-700/80 shadow-2xl select-none ${fullHeight ? 'h-full flex flex-col' : ''} ${className}`}
       onMouseUp={handleMouseUp}
       onMouseLeave={handleMouseUp}
     >
@@ -734,7 +736,11 @@ export const ParanaStateMap: React.FC<ParanaStateMapProps> = ({
         onWheel={handleWheel}
         onMouseDown={handleMouseDown}
         onMouseMove={handleMouseMove}
-        className={`w-full ${isExpanded ? 'h-[580px]' : 'h-80 sm:h-96 md:h-[440px]'} relative ${
+        className={`w-full relative ${
+          fullHeight 
+            ? 'flex-1 min-h-0 h-full' 
+            : isExpanded ? 'h-[580px]' : 'h-80 sm:h-96 md:h-[440px]'
+        } ${
           zoom > 1.05 ? (isDragging ? 'cursor-grabbing' : 'cursor-grab') : 'cursor-default'
         }`}
       >

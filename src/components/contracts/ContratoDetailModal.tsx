@@ -142,12 +142,12 @@ export const ContratoDetailModal: React.FC<ContratoDetailModalProps> = ({
                 <span>CNPJ: <strong className="font-mono text-white">{contrato.fornecedorCnpj}</strong></span>
                 <span>•</span>
                 <span className="flex items-center gap-1">
-                  SEI: <strong className="font-mono text-white">{contrato.processoSei}</strong>
+                  Processo: <strong className="font-mono text-white">{contrato.processoSei}</strong>
                   <button 
                     type="button" 
                     onClick={handleCopySei} 
                     className="p-0.5 hover:text-white transition-colors cursor-pointer"
-                    title="Copiar Processo SEI"
+                    title="Copiar Processo"
                   >
                     {copiedSei ? <Check className="w-3 h-3 text-emerald-400" /> : <Copy className="w-3 h-3" />}
                   </button>
@@ -428,7 +428,7 @@ export const ContratoDetailModal: React.FC<ContratoDetailModalProps> = ({
                     <label className="block text-[11px] text-slate-600 mb-1 font-semibold">Observações do Fiscal</label>
                     <input 
                       type="text" 
-                      placeholder="Ex: Atestado conforme despacho no processo SEI." 
+                      placeholder="Ex: Atestado conforme despacho no processo oficial." 
                       value={novoObs} 
                       onChange={(e) => setNovoObs(e.target.value)} 
                       className="w-full px-2.5 py-1.5 bg-white border border-slate-200 rounded-lg text-xs text-slate-800"
@@ -551,7 +551,7 @@ export const ContratoDetailModal: React.FC<ContratoDetailModalProps> = ({
                       type="submit" 
                       className="px-4 py-2 bg-amber-700 hover:bg-amber-800 text-white rounded-lg text-xs font-bold cursor-pointer"
                     >
-                      Protocolar no SEI
+                      Protocolar Processo
                     </button>
                   </div>
                 </form>
@@ -606,7 +606,7 @@ export const ContratoDetailModal: React.FC<ContratoDetailModalProps> = ({
             <div className="space-y-4">
               <div>
                 <h3 className="text-xs sm:text-sm font-bold text-slate-900">
-                  Documentação Oficial & Peças Digitalizadas no SEI
+                  Documentação Oficial & Peças Digitalizadas
                 </h3>
                 <p className="text-[11px] text-slate-500">
                   Arquivos em formato PDF assinados eletronicamente pelos representantes e gestores do TJPR.

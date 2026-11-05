@@ -44,7 +44,7 @@ export const INITIAL_CONTRATOS: Contrato[] = [
         dataPagamento: '2026-08-15',
         notaFiscal: 'NF-e 89410',
         status: 'pago',
-        observacoes: 'Parcela 15/24 homologada no SEI.',
+        observacoes: 'Parcela 15/24 homologada.',
       },
       {
         id: 'pg-seg-3',

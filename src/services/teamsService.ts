@@ -103,7 +103,7 @@ export function generateTeamsAdaptiveCard(
                       value: config.coordenadorEmail,
                     },
                     {
-                      title: 'Processo SEI:',
+                      title: 'Processo:',
                       value: trip.processoSei,
                     },
                     {
@@ -194,8 +194,8 @@ export function generateTeamsAdaptiveCard(
             },
             {
               type: 'Action.OpenUrl',
-              title: '📑 Consultar Processo no SEI',
-              url: 'https://sei.tjpr.jus.br',
+              title: '📑 Consultar Processo Oficial',
+              url: 'https://tjpr.jus.br',
             },
           ],
         },

@@ -839,7 +839,7 @@ export default function App() {
       return t;
     }));
     showToast(novoStatus === 'auditado_aprovado' 
-      ? 'Custa auditada e homologada com sucesso no SEI/TJPR.' 
+      ? 'Custa auditada e homologada com sucesso na DiTrans/TJPR.' 
       : 'Divergência de itinerário/despesa registrada para apuração.');
   };
 
@@ -1518,7 +1518,7 @@ export default function App() {
   // Gestão de Contratos, Fornecedores e Seguros TJPR
   const handleAddContrato = (novoContrato: Contrato) => {
     setContratos((prev) => [novoContrato, ...prev]);
-    showToast(`Contrato ${novoContrato.numeroContrato} cadastrado com sucesso no SEI!`);
+    showToast(`Contrato ${novoContrato.numeroContrato} cadastrado com sucesso!`);
   };
 
   const handleUpdateContrato = (contratoAtualizado: Contrato) => {
@@ -1755,41 +1755,10 @@ export default function App() {
           />
         ) : (
           <>
-            {/* ABA UNIFICADA: Diário de Bordo & Rotina Operacional (Com Painel Geral da Frota, Planilha Oficial e Portal Operacional) */}
+            {/* ABA UNIFICADA: Diário de Bordo & Rotina Operacional (Com Painel Geral da Frota e Portal Operacional) */}
             {(activeNavTab === 'operacoes' || activeNavTab === 'dashboard') && (
               <div className="space-y-4">
-                {/* Seletor Integrado no Rodízio (Oculto para Motorista e Supervisor Operacional) */}
-                {!isDriverRole(currentRole) && currentRole !== 'supervisor_operacional' && currentRole !== 'coordenador' && (
-                  <div className="bg-white px-4 py-3 rounded-xl border border-slate-200/90 shadow-2xs flex flex-col md:flex-row md:items-center justify-between gap-3">
-                    <div className="flex flex-wrap items-center gap-2">
-                      <span className="text-xs font-bold text-slate-800 uppercase tracking-wide flex items-center gap-1.5 mr-1">
-                        <LayoutDashboard className="w-4 h-4 text-[#05202B]" />
-                        Painel Executivo da Frota
-                      </span>
-                      <button
-                        type="button"
-                        id="diario-tab-relatorios"
-                        onClick={() => setActiveNavTab('relatorios')}
-                        className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-bold text-[#002B49] bg-emerald-50 hover:bg-emerald-100 border border-emerald-200 transition-all cursor-pointer shadow-2xs"
-                        title="Acessar a Planilha Oficial no menu Relatórios"
-                      >
-                        <FileSpreadsheet className="w-3.5 h-3.5 text-emerald-700" />
-                        <span>Planilha Oficial em Relatórios ➔</span>
-                      </button>
-                    </div>
 
-                    <div className="flex items-center gap-3 text-xs text-slate-500 font-mono">
-                      <span className="flex items-center gap-1.5">
-                        <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
-                        <span>{vehicles.length} veículos</span>
-                      </span>
-                      <span className="text-slate-300">|</span>
-                      <span className="text-amber-700 font-semibold">
-                        {trips.filter(t => t.status === 'em_andamento').length} em trânsito
-                      </span>
-                    </div>
-                  </div>
-                )}
 
                 {/* 1. SE FOR MOTORISTA: Exibe exclusivamente o Portal do Motorista */}
                 {isDriverRole(currentRole) ? (
@@ -2281,7 +2250,7 @@ export default function App() {
       </footer>
 
       {/* Botão Flutuante Clássico do Telefone / WhatsApp na parte inferior */}
-      <div className="fixed bottom-5 right-5 sm:bottom-6 sm:right-6 z-50 flex items-center gap-2 group">
+      <div className="fixed bottom-5 right-5 sm:bottom-6 sm:right-6 z-30 flex items-center gap-2 group">
         {/* Tooltip explicativo ao passar o mouse */}
         <div className="hidden sm:flex opacity-0 group-hover:opacity-100 transition-opacity duration-200 bg-slate-900 text-white text-xs py-1.5 px-3 rounded-xl shadow-xl border border-slate-700 whitespace-nowrap pointer-events-none items-center gap-1.5">
           <span className="w-2 h-2 rounded-full bg-[#25D366] animate-pulse" />

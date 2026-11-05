@@ -1239,7 +1239,7 @@ export const INITIAL_TRIPS: Trip[] = [
     kmFinal: 24340,
     diarioBordo: [],
     dataCriacao: '2026-09-16 10:20',
-    observacoes: 'Viagem operacional concluída pelo condutor. Pendente visto/assinatura digital do solicitante Dr. Elton Rabelo para homologação no SIGPAT/SEI.',
+    observacoes: 'Viagem operacional concluída pelo condutor. Pendente visto/assinatura digital do solicitante Dr. Elton Rabelo para homologação no SIGPAT.',
   },
   {
     id: 'trip-elton-2',

@@ -282,7 +282,7 @@ export function getTabLabelForRole(tab: MainNavTab, role: Role): { label: string
     case 'documentos':
       return {
         label: isDriver ? 'Documentos Oficiais' : 'Documentos Oficiais',
-        description: isDriver ? 'CRLV-e, CNH Digital e autorizações' : 'CRLV, CNH, SEI e apólices',
+        description: isDriver ? 'CRLV-e, CNH Digital e autorizações' : 'CRLV, CNH, portarias e apólices',
       };
     case 'relatorios':
       return {

@@ -303,7 +303,7 @@ export const TeamsConfigModal: React.FC<TeamsConfigModalProps> = ({
                               {log.status === 'enviado' ? 'Entregue no Teams' : log.status}
                             </span>
                             <span className="text-slate-500 text-[11px] font-mono">
-                              SEI: {log.processoSei}
+                              Proc: {log.processoSei}
                             </span>
                           </div>
 

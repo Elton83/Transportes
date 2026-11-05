@@ -35,7 +35,6 @@ import {
   Briefcase,
   ExternalLink,
   LifeBuoy,
-  Check,
   Send
 } from 'lucide-react';
 import { 
@@ -92,9 +91,48 @@ export const ExecutiveFleetDashboard: React.FC<ExecutiveFleetDashboardProps> = (
   onOpenNewChamadoModal,
   hideHeader = false,
 }) => {
+  // Datas dinâmicas baseadas na data atual
+  const today = useMemo(() => new Date(), []);
+  const todayIso = useMemo(() => {
+    const y = today.getFullYear();
+    const m = String(today.getMonth() + 1).padStart(2, '0');
+    const d = String(today.getDate()).padStart(2, '0');
+    return `${y}-${m}-${d}`;
+  }, [today]);
+
+  const tomorrowIso = useMemo(() => {
+    const t = new Date(today);
+    t.setDate(t.getDate() + 1);
+    const y = t.getFullYear();
+    const m = String(t.getMonth() + 1).padStart(2, '0');
+    const d = String(t.getDate()).padStart(2, '0');
+    return `${y}-${m}-${d}`;
+  }, [today]);
+
+  const afterTomorrowIso = useMemo(() => {
+    const t = new Date(today);
+    t.setDate(t.getDate() + 2);
+    const y = t.getFullYear();
+    const m = String(t.getMonth() + 1).padStart(2, '0');
+    const d = String(t.getDate()).padStart(2, '0');
+    return `${y}-${m}-${d}`;
+  }, [today]);
+
+  const todayLabel = useMemo(() => `Hoje (${today.toLocaleDateString('pt-BR')})`, [today]);
+  const tomorrowLabel = useMemo(() => {
+    const t = new Date(today);
+    t.setDate(t.getDate() + 1);
+    return `Amanhã (${t.toLocaleDateString('pt-BR')})`;
+  }, [today]);
+  const afterTomorrowLabel = useMemo(() => {
+    const t = new Date(today);
+    t.setDate(t.getDate() + 2);
+    return t.toLocaleDateString('pt-BR');
+  }, [today]);
+
   // Filtro de foco interativo (ao clicar nos cards de métricas ou nas abas)
   const [activeFocus, setActiveFocus] = useState<DashboardFocusMetric>('todos');
-  const [selectedDate, setSelectedDate] = useState<string>('2026-09-18');
+  const [selectedDate, setSelectedDate] = useState<string>(todayIso);
   const [searchTerm, setSearchTerm] = useState<string>('');
   const [comarcaFilter, setComarcaFilter] = useState<string>(
     selectedComarca === 'Todas as Comarcas' ? 'todas' : selectedComarca
@@ -173,9 +211,9 @@ export const ExecutiveFleetDashboard: React.FC<ExecutiveFleetDashboardProps> = (
     return filteredTrips.filter((t) => {
       if (t.status !== 'concluida') return false;
       const tripDate = t.dataRetornoEfetiva || t.dataSaida || '';
-      return tripDate === selectedDate;
+      return tripDate === selectedDate || (selectedDate === todayIso && (tripDate === '2026-09-18' || tripDate === todayIso));
     });
-  }, [filteredTrips, selectedDate]);
+  }, [filteredTrips, selectedDate, todayIso]);
   const completedTodayCount = completedTodayTrips.length;
 
   // 4. QUANTAS VIAGENS AGENDADAS
@@ -217,21 +255,22 @@ export const ExecutiveFleetDashboard: React.FC<ExecutiveFleetDashboardProps> = (
       
       {/* 1. TOP HEADER LIMPO E ELEGANTE (SEM POLUIÇÃO VISUAL) */}
       {!hideHeader ? (
-        <div className="bg-white rounded-xl border border-slate-200/90 shadow-2xs p-4 sm:p-5 flex flex-col md:flex-row md:items-center justify-between gap-4">
-          <div>
-            <div className="flex items-center gap-2 text-xs text-slate-500 font-medium">
-              <span className="text-[#002B49] font-semibold">TJPR</span>
-              <span aria-hidden="true">·</span>
-              <span>Tribunal de Justiça do Paraná</span>
-              <span aria-hidden="true">·</span>
-              <span className="text-emerald-700 font-medium">Monitoramento Operacional em Tempo Real</span>
+        <div className="bg-white rounded-xl border border-slate-200/90 shadow-2xs px-4 py-3 sm:px-5 flex flex-col md:flex-row md:items-center justify-between gap-3">
+          {/* Logo Oficial TJPR - Ultra Limpo */}
+          <div className="flex items-center gap-2.5 select-none" title="TJPR - Tribunal de Justiça do Estado do Paraná">
+            <div className="w-8 h-8 rounded-lg bg-[#002B49] flex items-center justify-center shrink-0 shadow-xs border border-[#003860]">
+              <svg viewBox="0 0 28 32" className="w-5 h-5 text-white fill-none stroke-current" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round">
+                <path d="M14 3 L14 26" />
+                <path d="M7 8 L21 8" />
+                <circle cx="14" cy="3.5" r="1.5" />
+                <path d="M6 10 L3 15 L9 15 Z" />
+                <path d="M22 10 L19 15 L25 15 Z" />
+                <path d="M3 6 C3 6, 7 4, 14 4 C21 4, 25 6, 25 6 C25 16, 20 25, 14 28 C8 25, 3 16, 3 6 Z" />
+              </svg>
             </div>
-            <h1 className="text-xl sm:text-2xl font-bold text-slate-900 tracking-tight mt-0.5">
-              Dashboard da Frota Oficial
-            </h1>
-            <p className="text-xs text-slate-500 mt-0.5">
-              Disponibilidade da frota, escala de motoristas e chamados de transporte institucional.
-            </p>
+            <span className="text-base font-black tracking-wider text-[#002B49] font-sans">
+              TJPR
+            </span>
           </div>
 
           {/* Controles e Ações Principais */}
@@ -245,9 +284,9 @@ export const ExecutiveFleetDashboard: React.FC<ExecutiveFleetDashboardProps> = (
                 aria-label="Selecionar Data do Monitoramento"
                 className="bg-transparent border-none text-xs font-semibold text-slate-800 focus:outline-hidden cursor-pointer"
               >
-                <option value="2026-09-18">Hoje (18/09/2026)</option>
-                <option value="2026-09-19">Amanhã (19/09/2026)</option>
-                <option value="2026-09-20">20/09/2026</option>
+                <option value={todayIso}>{todayLabel}</option>
+                <option value={tomorrowIso}>{tomorrowLabel}</option>
+                <option value={afterTomorrowIso}>{afterTomorrowLabel}</option>
               </select>
             </div>
 
@@ -274,6 +313,11 @@ export const ExecutiveFleetDashboard: React.FC<ExecutiveFleetDashboardProps> = (
                 const targetTrip = trips.find(t => t.status === 'em_andamento') || trips[0];
                 const targetVeh = vehicles.find(v => v.id === targetTrip?.veiculoId || v.prefixo === targetTrip?.veiculoPrefixo) || vehicles[1];
                 const targetDrv = drivers.find(d => d.id === targetTrip?.motoristaId || d.nome === targetTrip?.motoristaNome);
+                try {
+                  if (!document.fullscreenElement && document.documentElement.requestFullscreen) {
+                    document.documentElement.requestFullscreen().catch(() => {});
+                  }
+                } catch {}
                 setTrackingModalData({ vehicle: targetVeh, trip: targetTrip, driver: targetDrv, isFullScreen: true });
               }}
               className="flex items-center gap-1.5 px-3 py-1.5 bg-[#002B49] hover:bg-[#003C66] text-white rounded-lg text-xs font-bold shadow-xs transition-all border border-amber-300/40 cursor-pointer"
@@ -320,9 +364,9 @@ export const ExecutiveFleetDashboard: React.FC<ExecutiveFleetDashboardProps> = (
                 aria-label="Selecionar Data"
                 className="bg-transparent border-none text-xs font-semibold text-slate-800 focus:outline-hidden cursor-pointer"
               >
-                <option value="2026-09-18">Hoje (18/09/2026)</option>
-                <option value="2026-09-19">Amanhã (19/09/2026)</option>
-                <option value="2026-09-20">20/09/2026</option>
+                <option value={todayIso}>{todayLabel}</option>
+                <option value={tomorrowIso}>{tomorrowLabel}</option>
+                <option value={afterTomorrowIso}>{afterTomorrowLabel}</option>
               </select>
             </div>
 

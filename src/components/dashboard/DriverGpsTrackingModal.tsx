@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, useCallback } from 'react';
 import {
   Smartphone,
   Navigation,
@@ -293,13 +293,67 @@ export const DriverGpsTrackingModal: React.FC<DriverGpsTrackingModalProps> = ({
 }) => {
   if (!isOpen) return null;
 
-  // Estado Full Screen: por padrão ativado (ocupa 100% da tela) quando o botão é acionado
+  const modalContainerRef = useRef<HTMLDivElement>(null);
   const [isFullScreen, setIsFullScreen] = useState(initialFullScreen);
+  const [mosaicoLayout, setMosaicoLayout] = useState<'radar_full' | 'grid'>('radar_full');
 
-  // Fechar com tecla ESC
+  // Alternar tela cheia nativa do navegador (HTML5 Fullscreen API) + CSS Fullscreen
+  const toggleFullScreen = useCallback(async () => {
+    try {
+      const isCurrentlyFs = !!(document.fullscreenElement || (document as any).webkitFullscreenElement);
+      if (!isCurrentlyFs) {
+        const elem = modalContainerRef.current || document.documentElement;
+        if (elem.requestFullscreen) {
+          await elem.requestFullscreen();
+        } else if ((elem as any).webkitRequestFullscreen) {
+          await (elem as any).webkitRequestFullscreen();
+        }
+        setIsFullScreen(true);
+      } else {
+        if (document.exitFullscreen) {
+          await document.exitFullscreen();
+        } else if ((document as any).webkitExitFullscreen) {
+          await (document as any).webkitExitFullscreen();
+        }
+        setIsFullScreen(false);
+      }
+    } catch {
+      // Fallback para iframes sem permissão de fullscreen nativo
+      setIsFullScreen((prev) => !prev);
+    }
+  }, []);
+
+  // Sincroniza estado caso o usuário saia via tecla ESC nativa do navegador ou F11
+  useEffect(() => {
+    const handleFsChange = () => {
+      const isFs = !!(document.fullscreenElement || (document as any).webkitFullscreenElement);
+      setIsFullScreen(isFs);
+    };
+    document.addEventListener('fullscreenchange', handleFsChange);
+    document.addEventListener('webkitfullscreenchange', handleFsChange);
+    return () => {
+      document.removeEventListener('fullscreenchange', handleFsChange);
+      document.removeEventListener('webkitfullscreenchange', handleFsChange);
+    };
+  }, []);
+
+  // Se inicializado com initialFullScreen, tenta ativar fullscreen nativo no primeiro gesto
+  useEffect(() => {
+    if (initialFullScreen) {
+      setIsFullScreen(true);
+      try {
+        const elem = modalContainerRef.current || document.documentElement;
+        if (elem && !document.fullscreenElement && elem.requestFullscreen) {
+          elem.requestFullscreen().catch(() => {});
+        }
+      } catch {}
+    }
+  }, [initialFullScreen]);
+
+  // Fechar com tecla ESC quando não estiver em fullscreen nativo
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
-      if (e.key === 'Escape') {
+      if (e.key === 'Escape' && !document.fullscreenElement) {
         onClose();
       }
     };
@@ -577,78 +631,108 @@ export const DriverGpsTrackingModal: React.FC<DriverGpsTrackingModalProps> = ({
   const availableToAdd = allVehicles.filter(v => !sessions.some(s => s.vehicle.prefixo === v.prefixo));
 
   return (
-    <div className={`fixed inset-0 z-50 transition-all duration-150 ${
-      isFullScreen 
-        ? 'w-screen h-screen bg-[#001726] p-0 m-0 overflow-hidden flex flex-col' 
-        : 'bg-slate-950/80 backdrop-blur-md flex items-center justify-center p-2 sm:p-4 overflow-y-auto'
-    }`}>
-      <div className={`bg-white w-full flex flex-col overflow-hidden transition-all duration-150 ${
+    <div 
+      ref={modalContainerRef}
+      className={`fixed inset-0 z-[99999] transition-all duration-150 ${
+        isFullScreen 
+          ? 'w-full h-full bg-[#001726] p-0 m-0 overflow-hidden flex flex-col select-none' 
+          : 'bg-slate-950/80 backdrop-blur-md flex items-center justify-center p-2 sm:p-4 overflow-y-auto'
+      }`}
+    >
+      <div className={`w-full flex flex-col overflow-hidden transition-all duration-150 ${
         isFullScreen
-          ? 'h-screen w-screen max-w-none max-h-none rounded-none border-none shadow-none m-0'
-          : 'max-w-7xl rounded-2xl shadow-2xl border border-slate-300 max-h-[96vh] my-auto'
+          ? 'h-full w-full max-w-none max-h-none rounded-none border-none shadow-none m-0 flex-1 bg-[#001726]'
+          : 'max-w-7xl bg-white rounded-2xl shadow-2xl border border-slate-300 max-h-[96vh] my-auto'
       }`}>
         
         {/* ========================================================= */}
         {/* 1. CABEÇALHO DO MODAL: TÍTULO, MULTI-TELAS & CONTROLES    */}
         {/* ========================================================= */}
-        <div className="bg-[#002B49] text-white p-4 sm:p-5 flex flex-col lg:flex-row lg:items-center justify-between gap-4 border-b-2 border-[#C4A052] shrink-0">
-          <div className="flex items-start sm:items-center gap-3">
-            <div className="w-12 h-12 rounded-xl bg-white/10 border border-white/20 flex items-center justify-center shrink-0 text-emerald-400 shadow-inner">
-              <Smartphone className="w-7 h-7 animate-pulse" />
+        <div className={`bg-[#002B49] text-white border-b-2 border-[#C4A052] shrink-0 transition-all ${
+          isFullScreen 
+            ? 'px-4 py-2 flex items-center justify-between gap-3' 
+            : 'p-4 sm:p-5 flex flex-col lg:flex-row lg:items-center justify-between gap-4'
+        }`}>
+          <div className="flex items-center gap-2.5 min-w-0">
+            <div className={`rounded-xl bg-white/10 border border-white/20 flex items-center justify-center shrink-0 text-emerald-400 shadow-inner ${
+              isFullScreen ? 'w-8 h-8' : 'w-12 h-12'
+            }`}>
+              <Smartphone className={`${isFullScreen ? 'w-4 h-4' : 'w-7 h-7'} animate-pulse`} />
             </div>
-            <div>
-              <div className="flex flex-wrap items-center gap-2">
-                <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-extrabold bg-emerald-500/20 text-emerald-300 border border-emerald-400/40">
-                  <Radio className="w-3.5 h-3.5 animate-ping" />
-                  Rastreamento GPS Ativo em Tempo Real
+            <div className="min-w-0">
+              <div className="flex flex-wrap items-center gap-1.5 sm:gap-2">
+                <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] sm:text-xs font-extrabold bg-emerald-500/20 text-emerald-300 border border-emerald-400/40">
+                  <Radio className="w-3 h-3 animate-ping" />
+                  GPS Ao Vivo
                 </span>
-                <span className="text-xs bg-amber-400/20 text-amber-300 px-2.5 py-0.5 rounded font-mono font-bold border border-amber-300/30">
-                  {sessions.length} {sessions.length === 1 ? 'Veículo Monitorado' : 'Acompanhamentos Simultâneos'}
+                <span className="text-[10px] sm:text-xs bg-amber-400/20 text-amber-300 px-2 py-0.5 rounded font-mono font-bold border border-amber-300/30">
+                  {sessions.length} {sessions.length === 1 ? 'Veículo' : 'Veículos em Trânsito'}
                 </span>
                 {isFullScreen && (
-                  <span className="hidden xl:inline-flex items-center gap-1 px-2.5 py-0.5 rounded text-xs font-mono font-bold bg-white/15 text-white border border-white/25">
+                  <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded text-[10px] sm:text-xs font-mono font-bold bg-white/15 text-white border border-white/25">
                     <Maximize2 className="w-3 h-3 text-amber-300" />
-                    Tela Cheia (Full Screen)
+                    Sala de Situação / TV Wall
                   </span>
                 )}
               </div>
-              <h2 className="text-xl sm:text-2xl font-black text-white tracking-tight mt-1">
-                Acompanhamento por GPS via Celular dos Motoristas
+              <h2 className={`${isFullScreen ? 'text-sm sm:text-base' : 'text-xl sm:text-2xl'} font-black text-white tracking-tight truncate mt-0.5`}>
+                Acompanhamento por GPS via Celular dos Motoristas · Frota TJPR
               </h2>
-              <p className="text-xs sm:text-sm text-blue-100 font-medium">
-                Transmissão contínua de telemetria, velocidade e localização dos smartphones corporativos vinculados à frota oficial do TJPR.
-              </p>
+              {!isFullScreen && (
+                <p className="text-xs sm:text-sm text-blue-100 font-medium">
+                  Transmissão contínua de telemetria, velocidade e localização dos smartphones corporativos vinculados à frota oficial do TJPR.
+                </p>
+              )}
             </div>
           </div>
 
           {/* Ações do Topo */}
-          <div className="flex flex-wrap items-center gap-2.5">
+          <div className="flex flex-wrap items-center gap-2 shrink-0">
             {/* Alternador de Modo de Visualização */}
-            <div className="bg-white/10 p-1 rounded-xl flex items-center border border-white/15">
+            <div className="bg-white/10 p-0.5 rounded-xl flex items-center border border-white/15">
               <button
                 type="button"
-                onClick={() => setViewMode('mosaico')}
-                className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-bold transition-all cursor-pointer ${
-                  viewMode === 'mosaico'
+                onClick={() => {
+                  setViewMode('mosaico');
+                  setMosaicoLayout('radar_full');
+                }}
+                className={`flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg text-xs font-bold transition-all cursor-pointer ${
+                  viewMode === 'mosaico' && mosaicoLayout === 'radar_full'
                     ? 'bg-[#C4A052] text-[#002B49] shadow-sm'
                     : 'text-slate-200 hover:text-white'
                 }`}
-                title="Ver todos os veículos simultaneamente em tela dividida / mosaico"
+                title="Visão Sala de Situação: Mapa Panorâmico ocupando 100% da tela para projeção e acompanhamento de equipe"
               >
-                <LayoutGrid className="w-4 h-4" />
-                <span>Mosaico Simultâneo ({sessions.length})</span>
+                <Map className="w-3.5 h-3.5" />
+                <span>Mapa Panorâmico</span>
+              </button>
+              <button
+                type="button"
+                onClick={() => {
+                  setViewMode('mosaico');
+                  setMosaicoLayout('grid');
+                }}
+                className={`flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg text-xs font-bold transition-all cursor-pointer ${
+                  viewMode === 'mosaico' && mosaicoLayout === 'grid'
+                    ? 'bg-[#C4A052] text-[#002B49] shadow-sm'
+                    : 'text-slate-200 hover:text-white'
+                }`}
+                title="Ver todos os cockpits detalhados em grade lado a lado"
+              >
+                <LayoutGrid className="w-3.5 h-3.5" />
+                <span>Cockpits ({sessions.length})</span>
               </button>
               <button
                 type="button"
                 onClick={() => setViewMode('individual')}
-                className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-bold transition-all cursor-pointer ${
+                className={`flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg text-xs font-bold transition-all cursor-pointer ${
                   viewMode === 'individual'
                     ? 'bg-[#C4A052] text-[#002B49] shadow-sm'
                     : 'text-slate-200 hover:text-white'
                 }`}
-                title="Focar em um veículo com mapa detalhado e alternar por abas"
+                title="Focar em um veículo com detalhes completos e odômetro interativo"
               >
-                <Maximize2 className="w-4 h-4" />
+                <Crosshair className="w-3.5 h-3.5" />
                 <span>Foco Individual</span>
               </button>
             </div>
@@ -657,18 +741,18 @@ export const DriverGpsTrackingModal: React.FC<DriverGpsTrackingModalProps> = ({
             <button
               type="button"
               onClick={handleTogglePlayAll}
-              className="flex items-center gap-1.5 px-3 py-2 bg-white/10 hover:bg-white/20 text-white rounded-xl text-xs font-bold transition-colors cursor-pointer border border-white/15"
+              className="flex items-center gap-1.5 px-2.5 py-1.5 bg-white/10 hover:bg-white/20 text-white rounded-xl text-xs font-bold transition-colors cursor-pointer border border-white/15"
               title={allPlaying ? 'Pausar transmissão de todos' : 'Retomar transmissão de todos'}
             >
               {allPlaying ? (
                 <>
-                  <Pause className="w-4 h-4 text-amber-300" />
-                  <span>Pausar Todos</span>
+                  <Pause className="w-3.5 h-3.5 text-amber-300" />
+                  <span className="hidden md:inline">Pausar</span>
                 </>
               ) : (
                 <>
-                  <Play className="w-4 h-4 text-emerald-300" />
-                  <span>Retomar Todos</span>
+                  <Play className="w-3.5 h-3.5 text-emerald-300" />
+                  <span className="hidden md:inline">Retomar</span>
                 </>
               )}
             </button>
@@ -676,19 +760,19 @@ export const DriverGpsTrackingModal: React.FC<DriverGpsTrackingModalProps> = ({
             {/* Botão Alternar Tela Cheia (Full Screen) */}
             <button
               type="button"
-              onClick={() => setIsFullScreen(!isFullScreen)}
-              className="flex items-center gap-1.5 px-3 py-2 bg-white/10 hover:bg-white/20 text-white rounded-xl text-xs font-bold transition-colors cursor-pointer border border-white/15"
-              title={isFullScreen ? "Restaurar para janela normal" : "Expandir para Tela Cheia total (Full Screen)"}
+              onClick={toggleFullScreen}
+              className="flex items-center gap-1.5 px-3 py-1.5 bg-[#C4A052]/20 hover:bg-[#C4A052]/30 text-amber-200 hover:text-white rounded-xl text-xs font-bold transition-colors cursor-pointer border border-amber-400/40"
+              title={isFullScreen ? "Restaurar para janela normal (ESC)" : "Expandir para Tela Cheia total (Full Screen para Sala de Monitoramento)"}
             >
               {isFullScreen ? (
                 <>
-                  <Minimize2 className="w-4 h-4 text-amber-300" />
-                  <span className="hidden sm:inline">Restaurar Janela</span>
+                  <Minimize2 className="w-3.5 h-3.5 text-amber-300" />
+                  <span>Restaurar Janela</span>
                 </>
               ) : (
                 <>
-                  <Maximize2 className="w-4 h-4 text-emerald-300" />
-                  <span className="hidden sm:inline">Tela Cheia</span>
+                  <Maximize2 className="w-3.5 h-3.5 text-emerald-300" />
+                  <span>Tela Cheia</span>
                 </>
               )}
             </button>
@@ -696,11 +780,11 @@ export const DriverGpsTrackingModal: React.FC<DriverGpsTrackingModalProps> = ({
             {/* Botão Fechar Modal */}
             <button
               onClick={onClose}
-              className="p-2 rounded-xl text-slate-300 hover:text-white hover:bg-white/15 transition-colors cursor-pointer"
+              className="p-1.5 rounded-xl text-slate-300 hover:text-white hover:bg-white/15 transition-colors cursor-pointer"
               aria-label="Fechar"
               title="Fechar (ESC)"
             >
-              <X className="w-6 h-6" />
+              <X className="w-5 h-5" />
             </button>
           </div>
         </div>
@@ -836,40 +920,125 @@ export const DriverGpsTrackingModal: React.FC<DriverGpsTrackingModalProps> = ({
         {/* ========================================================= */}
         {/* 3. CORPO DO MODAL: MODO MOSAICO SIMULTÂNEO OU INDIVIDUAL  */}
         {/* ========================================================= */}
-        <div className="p-4 sm:p-6 overflow-y-auto space-y-6 flex-1 bg-slate-50">
+        <div className={`flex-1 min-h-0 ${
+          isFullScreen && viewMode === 'mosaico' && mosaicoLayout === 'radar_full'
+            ? 'p-2 bg-[#001726] flex flex-col overflow-hidden'
+            : 'p-4 sm:p-6 overflow-y-auto space-y-6 bg-slate-50'
+        }`}>
           
-          {/* MODO 1: MOSAICO SIMULTÂNEO (Cockpits em Paralelo lado a lado) */}
+          {/* MODO 1: MOSAICO SIMULTÂNEO (Cockpits em Paralelo lado a lado ou Mapa Panorâmico Full) */}
           {viewMode === 'mosaico' ? (
-            <div className="space-y-6">
-              
-              {/* RADAR PANORÂMICO CONSOLIDADO: MOSTRA TODOS OS VEÍCULOS NA MESMA TELA */}
-              <div className="bg-white border-2 border-slate-300 rounded-2xl overflow-hidden shadow-sm">
-                <div className="bg-[#002B49] text-white px-5 py-3 flex items-center justify-between">
-                  <div className="flex items-center gap-2.5">
-                    <Map className="w-5 h-5 text-[#C4A052]" />
-                    <h3 className="font-black text-sm sm:text-base tracking-tight text-white flex items-center gap-2">
-                      <span>Radar Integrado da Frota no Paraná • Visão Multi-Veicular</span>
-                      <span className="text-[10px] bg-emerald-500/20 text-emerald-300 px-2 py-0.5 rounded font-mono font-bold uppercase border border-emerald-400/30">
-                        {sessions.length} em Movimento
-                      </span>
-                    </h3>
-                  </div>
-                  <div className="flex items-center gap-2 text-xs font-mono text-slate-300">
-                    <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
-                    <span>Transmissão Simultânea Ativa</span>
-                  </div>
+            mosaicoLayout === 'radar_full' ? (
+              /* VISÃO SALA DE SITUAÇÃO: MAPA PANORÂMICO 100% DA ALTURA DA TELA */
+              <div className="flex-1 min-h-0 h-full w-full flex flex-col bg-[#001726] rounded-xl overflow-hidden border border-slate-700/80 shadow-2xl">
+                {/* Mapa Cartográfico Panorâmico Multi-Veículos - Estado do Paraná */}
+                <div className="flex-1 min-h-0 h-full w-full relative">
+                  <ParanaStateMap
+                    sessions={sessions}
+                    activeSessionId={activeSessionId}
+                    onSelectSession={(prefixo) => setActiveSessionId(prefixo)}
+                    fullHeight={true}
+                    className="w-full h-full"
+                  />
                 </div>
 
-                {/* Mapa Cartográfico Panorâmico Multi-Veículos - Estado do Paraná */}
-                <ParanaStateMap
-                  sessions={sessions}
-                  activeSessionId={activeSessionId}
-                  onSelectSession={(prefixo) => setActiveSessionId(prefixo)}
-                />
-              </div>
+                {/* Ticker / Painel Inferior de Telemetria Ao Vivo em Tempo Real */}
+                <div className="bg-[#001D33] border-t border-sky-900/60 px-4 py-2 shrink-0 flex items-center justify-between gap-3 text-xs">
+                  <div className="flex items-center gap-2 shrink-0">
+                    <span className="w-2.5 h-2.5 rounded-full bg-emerald-400 animate-pulse" />
+                    <span className="font-bold text-white uppercase text-[11px] tracking-wide">
+                      Telemetria em Tempo Real:
+                    </span>
+                  </div>
 
-              {/* GRID DE COCKPITS SIMULTÂNEOS: 1 COLUNA NO MOBILE / 2 COLUNAS NO DESKTOP */}
-              <div className="grid grid-cols-1 lg:grid-cols-2 gap-5">
+                  <div className="flex items-center gap-2.5 overflow-x-auto no-scrollbar py-0.5">
+                    {sessions.map((sess) => {
+                      const isSelected = activeSessionId === sess.vehicle.prefixo;
+                      const currentKm = Math.round(sess.routeProgress * sess.routeConfig.distanciaTotalKm);
+                      const remainingKm = Math.max(0, sess.routeConfig.distanciaTotalKm - currentKm);
+                      const remainingMin = Math.max(5, Math.round((remainingKm / (sess.currentSpeed || 60)) * 60));
+
+                      return (
+                        <button
+                          key={sess.vehicle.prefixo}
+                          type="button"
+                          onClick={() => setActiveSessionId(sess.vehicle.prefixo)}
+                          className={`flex items-center gap-2 px-2.5 py-1 rounded-lg border text-xs font-mono transition-all cursor-pointer whitespace-nowrap shrink-0 ${
+                            isSelected
+                              ? 'bg-[#C4A052] text-[#002B49] font-black border-[#C4A052] shadow-sm'
+                              : 'bg-white/5 hover:bg-white/10 text-slate-200 border-white/10'
+                          }`}
+                        >
+                          <span className="font-bold">{sess.vehicle.prefixo}</span>
+                          <span className="opacity-80">({sess.driver?.nome?.split(' ')[0] || 'Condutor'})</span>
+                          <span className={`font-bold px-1.5 py-0.2 rounded text-[10px] ${
+                            isSelected ? 'bg-[#002B49] text-amber-300' : 'bg-emerald-500/20 text-emerald-300'
+                          }`}>
+                            {sess.currentSpeed} km/h
+                          </span>
+                          <span className="text-[10px] opacity-75">
+                            ➔ {sess.trip.destino.split(' - ')[0].replace('Comarca de ', '')} ({remainingMin}m)
+                          </span>
+                        </button>
+                      );
+                    })}
+                  </div>
+
+                  <button
+                    type="button"
+                    onClick={() => setMosaicoLayout('grid')}
+                    className="shrink-0 text-[11px] font-bold text-amber-300 hover:text-white flex items-center gap-1 transition-colors px-2.5 py-1 rounded bg-white/10 hover:bg-white/20 border border-white/15 cursor-pointer"
+                  >
+                    <LayoutGrid className="w-3.5 h-3.5" />
+                    <span>Ver Cockpits</span>
+                  </button>
+                </div>
+              </div>
+            ) : (
+              <div className="space-y-6">
+                <div className="flex items-center justify-between bg-[#002B49] text-white px-4 py-2.5 rounded-xl border border-sky-800">
+                  <div className="flex items-center gap-2 text-xs font-bold">
+                    <LayoutGrid className="w-4 h-4 text-amber-300" />
+                    <span>Grade de Cockpits Individuais ({sessions.length} veículos em movimento)</span>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={() => setMosaicoLayout('radar_full')}
+                    className="flex items-center gap-1.5 text-xs font-bold text-amber-300 hover:text-white px-3 py-1 rounded-lg bg-white/10 hover:bg-white/20 transition-all cursor-pointer"
+                  >
+                    <Map className="w-3.5 h-3.5" />
+                    <span>Voltar ao Mapa Panorâmico</span>
+                  </button>
+                </div>
+
+                {/* RADAR PANORÂMICO CONSOLIDADO: MOSTRA TODOS OS VEÍCULOS NA MESMA TELA */}
+                <div className="bg-white border-2 border-slate-300 rounded-2xl overflow-hidden shadow-sm">
+                  <div className="bg-[#002B49] text-white px-5 py-3 flex items-center justify-between">
+                    <div className="flex items-center gap-2.5">
+                      <Map className="w-5 h-5 text-[#C4A052]" />
+                      <h3 className="font-black text-sm sm:text-base tracking-tight text-white flex items-center gap-2">
+                        <span>Radar Integrado da Frota no Paraná • Visão Multi-Veicular</span>
+                        <span className="text-[10px] bg-emerald-500/20 text-emerald-300 px-2 py-0.5 rounded font-mono font-bold uppercase border border-emerald-400/30">
+                          {sessions.length} em Movimento
+                        </span>
+                      </h3>
+                    </div>
+                    <div className="flex items-center gap-2 text-xs font-mono text-slate-300">
+                      <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
+                      <span>Transmissão Simultânea Ativa</span>
+                    </div>
+                  </div>
+
+                  {/* Mapa Cartográfico Panorâmico Multi-Veículos - Estado do Paraná */}
+                  <ParanaStateMap
+                    sessions={sessions}
+                    activeSessionId={activeSessionId}
+                    onSelectSession={(prefixo) => setActiveSessionId(prefixo)}
+                  />
+                </div>
+
+                {/* GRID DE COCKPITS SIMULTÂNEOS: 1 COLUNA NO MOBILE / 2 COLUNAS NO DESKTOP */}
+                <div className="grid grid-cols-1 lg:grid-cols-2 gap-5">
                 {sessions.map((sess) => {
                   const currentKm = Math.round(sess.routeProgress * sess.routeConfig.distanciaTotalKm);
                   const remainingKm = Math.max(0, sess.routeConfig.distanciaTotalKm - currentKm);
@@ -1108,7 +1277,7 @@ export const DriverGpsTrackingModal: React.FC<DriverGpsTrackingModalProps> = ({
               </div>
 
             </div>
-          ) : (
+          )) : (
             /* MODO 2: FOCO INDIVIDUAL (Mapa detalhado + logs e envio de despacho para o carro selecionado) */
             <div className="space-y-6">
               
@@ -1285,8 +1454,12 @@ export const DriverGpsTrackingModal: React.FC<DriverGpsTrackingModalProps> = ({
         {/* ========================================================= */}
         {/* 4. RODAPÉ DO MODAL                                        */}
         {/* ========================================================= */}
-        <div className="bg-slate-100 border-t border-slate-300 px-6 py-3.5 flex flex-col sm:flex-row items-center justify-between gap-3 text-xs shrink-0">
-          <div className="flex items-center gap-2 text-slate-600 font-medium">
+        <div className={`border-t shrink-0 flex flex-col sm:flex-row items-center justify-between gap-3 text-xs ${
+          isFullScreen 
+            ? 'bg-[#001D33] border-sky-950 px-4 py-2 text-slate-300' 
+            : 'bg-slate-100 border-slate-300 px-6 py-3.5 text-slate-600'
+        }`}>
+          <div className="flex items-center gap-2 font-medium">
             <Shield className="w-4 h-4 text-[#C4A052]" />
             <span>Módulo de Telemetria Oficial SIGPAT • Criptografia de Ponta a Ponta TJPR</span>
           </div>
@@ -1294,13 +1467,17 @@ export const DriverGpsTrackingModal: React.FC<DriverGpsTrackingModalProps> = ({
           <div className="flex items-center gap-2">
             <button
               type="button"
-              onClick={() => setIsFullScreen(!isFullScreen)}
-              className="px-4 py-2 bg-slate-200 hover:bg-slate-300 text-slate-800 font-bold rounded-xl transition-colors cursor-pointer flex items-center gap-1.5"
-              title={isFullScreen ? "Reduzir para janela normal" : "Expandir para Tela Cheia (Full Screen)"}
+              onClick={toggleFullScreen}
+              className={`px-4 py-1.5 font-bold rounded-xl transition-colors cursor-pointer flex items-center gap-1.5 ${
+                isFullScreen 
+                  ? 'bg-amber-400/20 hover:bg-amber-400/30 text-amber-200 border border-amber-400/30' 
+                  : 'bg-slate-200 hover:bg-slate-300 text-slate-800'
+              }`}
+              title={isFullScreen ? "Reduzir para janela normal (ESC)" : "Expandir para Tela Cheia (Full Screen)"}
             >
               {isFullScreen ? (
                 <>
-                  <Minimize2 className="w-3.5 h-3.5 text-amber-700" />
+                  <Minimize2 className="w-3.5 h-3.5 text-amber-300" />
                   <span>Restaurar Janela</span>
                 </>
               ) : (
@@ -1314,7 +1491,7 @@ export const DriverGpsTrackingModal: React.FC<DriverGpsTrackingModalProps> = ({
             <button
               type="button"
               onClick={onClose}
-              className="px-5 py-2 bg-[#002B49] hover:bg-[#003C66] text-white font-bold rounded-xl transition-colors cursor-pointer"
+              className="px-4 py-1.5 bg-[#002B49] hover:bg-[#003C66] text-white font-bold rounded-xl transition-colors cursor-pointer border border-white/20"
             >
               Fechar Acompanhamento
             </button>

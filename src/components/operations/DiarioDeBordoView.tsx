@@ -1043,7 +1043,7 @@ export const DiarioDeBordoView: React.FC<DiarioDeBordoViewProps> = ({
                 </div>
               </div>
 
-              {/* Linha 5: Processo SEI, Status e Finalidade */}
+              {/* Linha 5: Processo, Status e Finalidade */}
               <div className="grid grid-cols-1 sm:grid-cols-3 gap-3.5 text-xs">
                 <div>
                   <label className="block font-semibold text-slate-700 mb-1">Processo / Protocolo</label>

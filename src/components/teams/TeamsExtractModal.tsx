@@ -53,7 +53,7 @@ export const TeamsExtractModal: React.FC<TeamsExtractModalProps> = ({
 
   const handleCopyText = () => {
     const text = `EXTRATO DE SOLICITAÇÃO DE VIAGEM OFICIAL - TJPR
-Protocolo: ${trip.codigo} | Processo SEI: ${trip.processoSei}
+Protocolo: ${trip.codigo} | Processo: ${trip.processoSei}
 Demandante: ${trip.solicitanteNome} (${trip.solicitanteCargo}) - ${demandanteEmail}
 Coordenador Notificado: ${config.coordenadorNome} (${config.coordenadorCargo}) - ${coordenadorEmail}
 Origem: ${trip.origem}
@@ -265,7 +265,7 @@ Status: Aguardando Despacho na Divisão de Transportes`;
                   {/* Grid de Informações */}
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 text-xs">
                     <div>
-                      <span className="text-slate-500 font-medium block text-[11px]">Processo Eletrônico SEI</span>
+                      <span className="text-slate-500 font-medium block text-[11px]">Processo Eletrônico</span>
                       <span className="font-mono font-bold text-[#002B49]">{trip.processoSei}</span>
                     </div>
                     <div>
@@ -340,13 +340,13 @@ Status: Aguardando Despacho na Divisão de Transportes`;
                   </a>
 
                   <a
-                    href="https://sei.tjpr.jus.br"
+                    href="https://tjpr.jus.br"
                     target="_blank"
                     rel="noreferrer"
                     className="px-3 py-1.5 bg-white hover:bg-slate-100 text-slate-800 font-semibold text-[11px] rounded border border-slate-300 flex items-center gap-1 transition-colors"
                   >
                     <FileText className="w-3 h-3 text-blue-600" />
-                    Consultar SEI
+                    Consultar Processo
                   </a>
                 </div>
 

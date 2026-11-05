@@ -2019,7 +2019,7 @@ export const CoordinatorPortal: React.FC<CoordinatorPortalProps> = ({
         </div>
       )}
 
-      {/* Modal de Prévia do Documento Oficial (Portaria DiTrans nº 412/2025 SEI) */}
+      {/* Modal de Prévia do Documento Oficial (Portaria DiTrans nº 412/2025) */}
       <DocumentPreviewModal
         isOpen={previewDocModalOpen}
         onClose={() => setPreviewDocModalOpen(false)}

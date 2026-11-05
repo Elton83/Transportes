@@ -241,7 +241,7 @@ export const RelatoriosView: React.FC<RelatoriosViewProps> = ({
 
     switch (selectedReport) {
       case 'custas_meu_beneficio':
-        headers = ['ID Transação', 'NSU', 'Data/Hora', 'Tipo', 'Estabelecimento/Praça', 'Cidade/UF', 'Veículo', 'Placa', 'Condutor', 'Valor (R$)', 'Status Auditoria', 'Processo SEI'];
+        headers = ['ID Transação', 'NSU', 'Data/Hora', 'Tipo', 'Estabelecimento/Praça', 'Cidade/UF', 'Veículo', 'Placa', 'Condutor', 'Valor (R$)', 'Status Auditoria', 'Processo'];
         rows = meuBeneficioTransactions.map(t => [
           t.transacaoId,
           t.nsu,
@@ -294,7 +294,7 @@ export const RelatoriosView: React.FC<RelatoriosViewProps> = ({
         break;
 
       case 'viagens_diario':
-        headers = ['Código Viagem', 'Data/Saída', 'Origem', 'Destino', 'Veículo', 'Condutor Oficial', 'Status', 'Km Rodado', 'Passageiros', 'Processo SEI'];
+        headers = ['Código Viagem', 'Data/Saída', 'Origem', 'Destino', 'Veículo', 'Condutor Oficial', 'Status', 'Km Rodado', 'Passageiros', 'Processo'];
         rows = trips.map(t => {
           const kmCalc = (t.kmFinal && t.kmInicial) ? (t.kmFinal - t.kmInicial) : 0;
           return [
@@ -383,43 +383,43 @@ export const RelatoriosView: React.FC<RelatoriosViewProps> = ({
     custas_meu_beneficio: {
       titulo: 'Relatório Financeiro de Custas & API Meu Benefício',
       subtitulo: 'Verificação consolidada de abastecimentos, pedágios eletrônicos e despesas corporativas',
-      seiAnexo: 'SEI 0019283-44.2026.8.16.6000 • ANEXO FINANCEIRO I',
+      seiAnexo: 'TJPR 0019283-44.2026.8.16.6000 • ANEXO FINANCEIRO I',
       badge: 'API REST • Ticket Log & Veloe',
     },
     pesquisa_satisfacao: {
       titulo: 'Relatório Oficial de Pesquisa de Satisfação & Ouvidoria',
       subtitulo: 'Índice de satisfação dos magistrados e servidores solicitantes com notas de 1 a 5 carinhas e feedback do condutor',
-      seiAnexo: 'SEI 0023410-12.2026.8.16.6000 • QUALIDADE & CSAT',
+      seiAnexo: 'TJPR 0023410-12.2026.8.16.6000 • QUALIDADE & CSAT',
       badge: 'Ouvidoria & Frota TJPR',
     },
     geral_frota: {
       titulo: 'Relatório Geral da Frota Oficial TJPR',
       subtitulo: 'Inventário completo de veículos, lotação por comarca, disponibilidade e quilometragem',
-      seiAnexo: 'SEI 0001045-88.2026.8.16.6000 • INVENTÁRIO PATRIMONIAL',
+      seiAnexo: 'TJPR 0001045-88.2026.8.16.6000 • INVENTÁRIO PATRIMONIAL',
       badge: 'Patrimônio & SIGPAT',
     },
     viagens_diario: {
       titulo: 'Relatório Analítico de Viagens & Diário de Bordo',
       subtitulo: 'Registro de deslocamentos oficiais, passageiros, itinerários, quilometragens e conformidade',
-      seiAnexo: 'SEI 0021004-55.2026.8.16.6000 • DIÁRIO DE BORDO',
+      seiAnexo: 'TJPR 0021004-55.2026.8.16.6000 • DIÁRIO DE BORDO',
       badge: 'Ordem de Serviço TJPR',
     },
     combustivel_consumo: {
       titulo: 'Relatório de Consumo & Eficiência de Combustível',
       subtitulo: 'Controle de abastecimentos, volumetria em litros, preço médio e auditoria de odômetros',
-      seiAnexo: 'SEI 0018442-12.2026.8.16.6000 • EFICIÊNCIA ENERGÉTICA',
+      seiAnexo: 'TJPR 0018442-12.2026.8.16.6000 • EFICIÊNCIA ENERGÉTICA',
       badge: 'Cartão Frota Ticket Log',
     },
     manutencao_oficinas: {
       titulo: 'Relatório de Manutenções & Ordens de Serviço',
       subtitulo: 'Controle de custos em oficinas credenciadas, reparos preventivos/corretivos e laudos técnicos',
-      seiAnexo: 'SEI 0017990-33.2026.8.16.6000 • PRESTAÇÃO DE CONTAS OS',
+      seiAnexo: 'TJPR 0017990-33.2026.8.16.6000 • PRESTAÇÃO DE CONTAS OS',
       badge: 'Contrato de Manutenção TJPR',
     },
     condutores_conformidade: {
       titulo: 'Relatório de Prontuário & Conformidade de Condutores',
       subtitulo: 'Validação de CNHs, escala de plantão, direção defensiva e histórico operacional',
-      seiAnexo: 'SEI 0015672-90.2026.8.16.6000 • RECURSOS HUMANOS',
+      seiAnexo: 'TJPR 0015672-90.2026.8.16.6000 • RECURSOS HUMANOS',
       badge: 'Conformidade DETRAN/TJPR',
     },
   }[selectedReport];
@@ -427,7 +427,7 @@ export const RelatoriosView: React.FC<RelatoriosViewProps> = ({
   return (
     <div className="space-y-6">
       
-      {/* SELETOR PRINCIPAL DO MÓDULO: PLANILHA OFICIAL VS PRESTAÇÃO DE CONTAS & ESPELHOS SEI */}
+      {/* SELETOR PRINCIPAL DO MÓDULO: PLANILHA OFICIAL VS PRESTAÇÃO DE CONTAS & ESPELHOS OFICIAIS */}
       <div className="bg-white px-4 py-3 sm:px-5 rounded-2xl border border-slate-200/90 shadow-2xs flex flex-col md:flex-row md:items-center justify-between gap-3">
         <div className="flex flex-wrap items-center gap-2">
           <span className="text-xs font-bold text-slate-800 uppercase tracking-wide flex items-center gap-1.5 mr-1">
@@ -451,17 +451,17 @@ export const RelatoriosView: React.FC<RelatoriosViewProps> = ({
             </button>
             <button
               type="button"
-              id="relatorios-tab-sei"
+              id="relatorios-tab-oficiais"
               onClick={() => setMainSection('relatorios_sei')}
               className={`flex items-center gap-1.5 px-3.5 py-1.5 rounded-lg text-xs font-bold transition-all cursor-pointer ${
                 mainSection === 'relatorios_sei'
                   ? 'bg-[#002B49] text-white shadow-2xs'
                   : 'text-slate-600 hover:text-slate-900 hover:bg-slate-200/60'
               }`}
-              title="Prestação de Contas, Auditoria e Espelhos de Processos SEI"
+              title="Prestação de Contas, Auditoria e Espelhos Oficiais"
             >
               <BarChart3 className={`w-3.5 h-3.5 ${mainSection === 'relatorios_sei' ? 'text-amber-300' : 'text-slate-600'}`} />
-              <span>Prestação de Contas & Espelhos SEI</span>
+              <span>Prestação de Contas & Espelhos Oficiais</span>
             </button>
           </div>
         </div>
@@ -508,18 +508,18 @@ export const RelatoriosView: React.FC<RelatoriosViewProps> = ({
               </h1>
               <span className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full text-[10px] font-semibold bg-emerald-50 text-emerald-700 border border-emerald-200">
                 <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
-                SEI / TCE-PR
+                SIGPAT / TCE-PR
               </span>
             </div>
             <p className="text-xs text-slate-500 mt-0.5">
-              Auditoria de frotas, espelhos para processos SEI e exportação para planilhas
+              Auditoria de frotas, espelhos para processos oficiais e exportação para planilhas
             </p>
           </div>
         </div>
 
         {/* Botões de Ação de Exportação e Visualização */}
         <div className="flex flex-wrap items-center gap-2 shrink-0">
-          {/* Alternador de Modo: Tabela vs Espelho SEI */}
+          {/* Alternador de Modo: Tabela vs Espelho Oficial */}
           <div className="bg-slate-100 p-1 rounded-xl border border-slate-200 flex items-center">
             <button
               onClick={() => setViewMode('tabela')}
@@ -539,7 +539,7 @@ export const RelatoriosView: React.FC<RelatoriosViewProps> = ({
                   : 'text-slate-600 hover:text-slate-900'
               }`}
             >
-              Espelho SEI
+              Espelho Oficial
             </button>
           </div>
 
@@ -688,7 +688,7 @@ export const RelatoriosView: React.FC<RelatoriosViewProps> = ({
           <Search className="w-4 h-4 text-slate-400 absolute left-3 top-1/2 -translate-y-1/2" />
           <input
             type="text"
-            placeholder="Filtrar por placa, prefixo, condutor ou SEI..."
+            placeholder="Filtrar por placa, prefixo, condutor ou processo..."
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
             className="w-full pl-9 pr-3 py-2 text-xs bg-slate-50 border border-slate-200 rounded-xl focus:outline-hidden focus:ring-2 focus:ring-[#002B49]"
@@ -809,7 +809,7 @@ export const RelatoriosView: React.FC<RelatoriosViewProps> = ({
 
         <div className="bg-white p-4 rounded-2xl border border-slate-200 shadow-xs">
           <span className="text-[10px] font-semibold uppercase tracking-wider text-slate-500 block">
-            Referência Processo SEI
+            Referência do Processo
           </span>
           <p className="text-xs font-bold font-mono text-blue-700 mt-1 truncate" title={reportMeta.seiAnexo}>
             {reportMeta.seiAnexo.split(' • ')[0]}
@@ -821,10 +821,10 @@ export const RelatoriosView: React.FC<RelatoriosViewProps> = ({
 
       </div>
 
-      {/* 5. Área de Conteúdo: Modo Tabela ou Modo Espelho Oficial SEI */}
+      {/* 5. Área de Conteúdo: Modo Tabela ou Modo Espelho Oficial */}
       {viewMode === 'espelho_sei' ? (
         
-        /* MODO ESPELHO SEI: Diagramação Institucional para Impressão e Anexação */
+        /* MODO ESPELHO OFICIAL: Diagramação Institucional para Impressão e Anexação */
         <div className="bg-white rounded-2xl border-2 border-slate-300 p-8 shadow-md print:border-none print:shadow-none print:p-0">
           
           {/* Cabeçalho Oficial TJPR */}
@@ -867,7 +867,7 @@ export const RelatoriosView: React.FC<RelatoriosViewProps> = ({
             </div>
           </div>
 
-          {/* Tabela do Espelho SEI */}
+          {/* Tabela do Espelho Oficial */}
           <div className="border border-slate-300 rounded-lg overflow-hidden">
             
             {selectedReport === 'custas_meu_beneficio' && (
@@ -951,7 +951,7 @@ export const RelatoriosView: React.FC<RelatoriosViewProps> = ({
                     <th className="p-2 border-r border-slate-300">Veículo</th>
                     <th className="p-2 border-r border-slate-300">Condutor</th>
                     <th className="p-2 border-r border-slate-300">Km</th>
-                    <th className="p-2">Processo SEI</th>
+                    <th className="p-2">Processo</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-slate-200">
@@ -1066,7 +1066,7 @@ export const RelatoriosView: React.FC<RelatoriosViewProps> = ({
               <table className="w-full text-left text-[11px] border-collapse border border-slate-300">
                 <thead>
                   <tr className="bg-slate-100 font-bold border-b border-slate-300">
-                    <th className="p-2 border-r border-slate-300">Chamado / SEI</th>
+                    <th className="p-2 border-r border-slate-300">Chamado / Processo</th>
                     <th className="p-2 border-r border-slate-300">Data</th>
                     <th className="p-2 border-r border-slate-300">Solicitante / Vara</th>
                     <th className="p-2 border-r border-slate-300">Condutor</th>
@@ -1117,7 +1117,7 @@ export const RelatoriosView: React.FC<RelatoriosViewProps> = ({
             </div>
 
             <div className="text-right">
-              <p className="font-mono text-[10px] text-slate-400">CHANCELA DE SEGURANÇA SEI</p>
+              <p className="font-mono text-[10px] text-slate-400">CHANCELA DE SEGURANÇA TJPR</p>
               <p className="font-mono text-[10px] font-bold text-slate-700">CRC: 8B92-F11A-4901-TJPR</p>
               <p className="text-[10px] text-slate-400 mt-1">
                 Documento integrante dos autos oficiais de prestação de contas do TJPR.
@@ -1377,7 +1377,7 @@ export const RelatoriosView: React.FC<RelatoriosViewProps> = ({
                       <th className="py-3 px-4">Veículo</th>
                       <th className="py-3 px-4">Condutor</th>
                       <th className="py-3 px-4 text-right">Km</th>
-                      <th className="py-3 px-4">Processo SEI</th>
+                      <th className="py-3 px-4">Processo</th>
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-slate-100 text-slate-700">
@@ -1531,7 +1531,7 @@ export const RelatoriosView: React.FC<RelatoriosViewProps> = ({
                   <table className="w-full text-left text-xs border-collapse">
                     <thead>
                       <tr className="border-b border-slate-200 text-[11px] font-bold text-slate-600 bg-slate-50 uppercase tracking-wider">
-                        <th className="py-3 px-4">Chamado / SEI</th>
+                        <th className="py-3 px-4">Chamado / Processo</th>
                         <th className="py-3 px-4">Solicitante</th>
                         <th className="py-3 px-4">Condutor Oficial</th>
                         <th className="py-3 px-4 text-center">Nota (1 a 5)</th>

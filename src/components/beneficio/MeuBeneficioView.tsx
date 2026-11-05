@@ -866,7 +866,6 @@ export const MeuBeneficioView: React.FC<MeuBeneficioViewProps> = ({
                 </button>
               </div>
             </div>
-            </div>
 
           </div>
         </div>

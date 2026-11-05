@@ -5,7 +5,7 @@ export const INITIAL_CHAMADOS: Chamado[] = [
     id: 'cham-conducao-propria-1',
     codigo: 'CHA-2026-0053',
     titulo: 'Reserva de Veículo sem Motorista (Condução Própria) - Fórum de Paranaguá',
-    descricao: 'DEMANDA PROTOCOLADA NO SISTEMA DE SOLICITAÇÃO DE VEÍCULOS TJPR:\n• Solicitante: Dr. Elton Rabelo (Juiz de Direito Substituto)\n• Matrícula: TJPR-98.341-2 | CPF: 028.491.739-12\n• Contato: WhatsApp (41) 99820-1122 | E-mail: elton.rabelo@tjpr.jus.br\n• Modalidade: Reserva de Carro Oficial (Direção Própria pelo Servidor - Sem Motorista)\n• Trajeto: Saída de "Palácio da Justiça - Curitiba" -> Destino: "Fórum da Comarca de Paranaguá"\n• Partida: 2026-09-22 às 08:30 | Retorno: 2026-09-22 às 18:30\n• Total de Passageiros: 1 pessoa (o próprio solicitante como condutor)\n• Documento Vinculado Obrigatório: Autorização para Conduzir Veículos Oficiais (Portaria DiTrans nº 412/2025 • SEI: 0018492-41.2025.8.16.6000)\n• Requerimento: O Supervisor de Rodízio precisa validar o documento "Autorização para Conduzir Veículos Oficiais" para liberar a chave e o veículo oficial TJ-101.',
+    descricao: 'DEMANDA PROTOCOLADA NO SISTEMA DE SOLICITAÇÃO DE VEÍCULOS TJPR:\n• Solicitante: Dr. Elton Rabelo (Juiz de Direito Substituto)\n• Matrícula: TJPR-98.341-2 | CPF: 028.491.739-12\n• Contato: WhatsApp (41) 99820-1122 | E-mail: elton.rabelo@tjpr.jus.br\n• Modalidade: Reserva de Carro Oficial (Direção Própria pelo Servidor - Sem Motorista)\n• Trajeto: Saída de "Palácio da Justiça - Curitiba" -> Destino: "Fórum da Comarca de Paranaguá"\n• Partida: 2026-09-22 às 08:30 | Retorno: 2026-09-22 às 18:30\n• Total de Passageiros: 1 pessoa (o próprio solicitante como condutor)\n• Documento Vinculado Obrigatório: Autorização para Conduzir Veículos Oficiais (Portaria DiTrans nº 412/2025 • Processo: 0018492-41.2025.8.16.6000)\n• Requerimento: O Supervisor de Rodízio precisa validar o documento "Autorização para Conduzir Veículos Oficiais" para liberar a chave e o veículo oficial TJ-101.',
     tipo: 'solicitacao_veiculo',
     tipoServico: 'reserva_veiculo',
     prioridade: 'alta',
@@ -17,7 +17,7 @@ export const INITIAL_CHAMADOS: Chamado[] = [
     comarca: 'Curitiba - Sede Administrativa',
     prazoSugerido: '2026-09-22 08:30',
     processoSei: '0018492-41.2025.8.16.6000',
-    documentoAutorizacao: 'Portaria DiTrans nº 412/2025-TJPR (Processo SEI: 0018492-41.2025.8.16.6000)',
+    documentoAutorizacao: 'Portaria DiTrans nº 412/2025-TJPR (Processo: 0018492-41.2025.8.16.6000)',
     documentoIdVinculado: 'doc-aut-conduzir-oficial',
     autorizacaoConduzirValidada: false,
     escalaPreSelecionada: false,
@@ -32,9 +32,9 @@ export const INITIAL_CHAMADOS: Chamado[] = [
       {
         id: 'resp-aut-1',
         autor: 'Sistema SIGPAT (Protocolo de Condução Própria)',
-        cargo: 'Validador SEI / DiTrans',
+        cargo: 'Validador DiTrans',
         dataHora: '2026-09-19 12:10',
-        mensagem: 'Demanda protocolada na modalidade Condução Própria (Sem Motorista). O documento "Autorização para Conduzir Veículos Oficiais" (Portaria DiTrans nº 412/2025 • SEI 0018492-41.2025.8.16.6000) foi anexado e recebido automaticamente. Aguarda validação formal pelo Supervisor de Rodízio antes da liberação do veículo.',
+        mensagem: 'Demanda protocolada na modalidade Condução Própria (Sem Motorista). O documento "Autorização para Conduzir Veículos Oficiais" (Portaria DiTrans nº 412/2025 • Processo: 0018492-41.2025.8.16.6000) foi anexado e recebido automaticamente. Aguarda validação formal pelo Supervisor de Rodízio antes da liberação do veículo.',
         isAdmin: false,
       }
     ]
@@ -147,7 +147,7 @@ export const INITIAL_CHAMADOS: Chamado[] = [
     id: 'cham-elton-2',
     codigo: 'CHA-2026-0042',
     titulo: 'Diligência a Paranaguá - Transporte de Autos (Pendente Assinatura)',
-    descricao: 'Viagem operacional concluída pelo condutor Romão Sidney Rigos Junior (TJ-101). Aguardando assinatura/visto eletrônico do passageiro solicitante Dr. Elton Rabelo para homologação definitiva do processo SEI.',
+    descricao: 'Viagem operacional concluída pelo condutor Romão Sidney Rigos Junior (TJ-101). Aguardando assinatura/visto eletrônico do passageiro solicitante Dr. Elton Rabelo para homologação definitiva do processo.',
     tipo: 'solicitacao_veiculo',
     prioridade: 'media',
     status: 'em_atendimento',
@@ -202,7 +202,7 @@ export const INITIAL_CHAMADOS: Chamado[] = [
     id: 'cham-3',
     codigo: 'CHA-2026-0035',
     titulo: 'Divergência de Tag de Pedágio - Concessionária EPR Litoral',
-    descricao: 'Identificada passagem registrada na praça de São José dos Pinhais (BR-277) que não constava no itinerário inicial cadastrado no SEI pelo condutor. Solicitamos auditoria na API Meu Benefício.',
+    descricao: 'Identificada passagem registrada na praça de São José dos Pinhais (BR-277) que não constava no itinerário inicial cadastrado pelo condutor. Solicitamos auditoria na API Meu Benefício.',
     tipo: 'ajuste_beneficio',
     prioridade: 'media',
     status: 'concluido',
@@ -219,7 +219,7 @@ export const INITIAL_CHAMADOS: Chamado[] = [
         autor: 'Auditoria Meu Benefício',
         cargo: 'Analista de Custas TJPR',
         dataHora: '2026-09-17 15:40',
-        mensagem: 'Verificação concluída. Tratava-se de desvio de rota por motivo de bloqueio de pista na BR-277 pela PRF. Custa homologada no SEI com parecer favorável.',
+        mensagem: 'Verificação concluída. Tratava-se de desvio de rota por motivo de bloqueio de pista na BR-277 pela PRF. Custa homologada com parecer favorável.',
         isAdmin: true
       }
     ]

@@ -237,7 +237,7 @@ Agradecemos a colaboração com o transporte oficial do Tribunal de Justiça do 
                   {trip.solicitanteCargo}
                 </p>
                 <p className="text-[11px] text-slate-400 font-mono mt-0.5">
-                  {trip.sigaProtocolo ? `SIGA: ${trip.sigaProtocolo}` : `SEI: ${trip.processoSei}`}
+                  {trip.sigaProtocolo ? `SIGA: ${trip.sigaProtocolo}` : `Proc: ${trip.processoSei}`}
                 </p>
               </div>
 

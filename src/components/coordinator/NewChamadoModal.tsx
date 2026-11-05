@@ -139,7 +139,7 @@ export const NewChamadoModal: React.FC<NewChamadoModalProps> = ({
             </div>
           </div>
 
-          {/* Veículo Relacionado e Processo SEI */}
+          {/* Veículo Relacionado e Processo */}
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div>
               <label className="block font-bold text-slate-800 mb-1">Veículo Relacionado (Opcional)</label>

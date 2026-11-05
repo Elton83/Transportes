@@ -152,7 +152,7 @@ export const NewContratoModal: React.FC<NewContratoModalProps> = ({
         {/* CORPO DO FORMULÁRIO */}
         <form onSubmit={handleSubmit} className="flex-1 overflow-y-auto p-4 sm:p-6 space-y-4">
           
-          {/* SEÇÃO 1: IDENTIFICAÇÃO E SEI */}
+          {/* SEÇÃO 1: IDENTIFICAÇÃO E PROCESSO */}
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-3.5 text-xs">
             <div>
               <label className="block font-semibold text-slate-700 mb-1">Número do Contrato *</label>
@@ -167,7 +167,7 @@ export const NewContratoModal: React.FC<NewContratoModalProps> = ({
             </div>
 
             <div>
-              <label className="block font-semibold text-slate-700 mb-1">Processo SEI *</label>
+              <label className="block font-semibold text-slate-700 mb-1">Processo / Protocolo *</label>
               <input
                 type="text"
                 required

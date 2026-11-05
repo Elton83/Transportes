@@ -71,7 +71,7 @@ export const ContratosView: React.FC<ContratosViewProps> = ({
     if (selectedStatus !== 'todos' && c.status !== selectedStatus) {
       return false;
     }
-    // Filtro por Texto (Número, Fornecedor, SEI, CNPJ)
+    // Filtro por Texto (Número, Fornecedor, Processo, CNPJ)
     if (searchTerm.trim()) {
       const term = searchTerm.toLowerCase();
       const matchNumero = c.numeroContrato.toLowerCase().includes(term);
@@ -170,7 +170,7 @@ export const ContratosView: React.FC<ContratosViewProps> = ({
               </h1>
               <span className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full text-[10px] font-semibold bg-emerald-50 text-emerald-700 border border-emerald-200">
                 <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
-                Vigência & SEI
+                Vigência & Regularidade
               </span>
             </div>
             <p className="text-xs text-slate-500 mt-0.5">
@@ -296,7 +296,7 @@ export const ContratosView: React.FC<ContratosViewProps> = ({
           </p>
           <p className="text-[10px] text-amber-900 mt-2 font-medium">
             {contratosVencendo > 0 
-              ? 'Ação necessária: Protocolar prorrogação no SEI' 
+              ? 'Ação necessária: Protocolar prorrogação contratual' 
               : 'Nenhum contrato com expiração iminente'}
           </p>
         </div>
@@ -314,7 +314,7 @@ export const ContratosView: React.FC<ContratosViewProps> = ({
             <Search className="w-4 h-4 text-slate-400 absolute left-3 top-1/2 -translate-y-1/2" />
             <input
               type="text"
-              placeholder="Buscar por contrato, fornecedor, CNPJ ou SEI..."
+              placeholder="Buscar por contrato, fornecedor, CNPJ ou processo..."
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
               className="w-full pl-9 pr-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs text-slate-900 focus:outline-none focus:bg-white focus:border-[#002B49]"
@@ -434,7 +434,7 @@ export const ContratosView: React.FC<ContratosViewProps> = ({
                         {ct.numeroContrato}
                       </span>
                       <span className="text-[11px] font-mono text-slate-400">
-                        SEI: {ct.processoSei}
+                        Proc: {ct.processoSei}
                       </span>
                     </div>
                     <h3 className="text-base font-bold text-slate-900 mt-0.5">
