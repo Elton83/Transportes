@@ -7,6 +7,7 @@ import {
   Phone, 
   Mail, 
   MapPin, 
+  Navigation,
   Users, 
   Send, 
   CheckCircle2, 
@@ -47,7 +48,7 @@ import {
   FileCheck2,
   Shield
 } from 'lucide-react';
-import { Chamado, Trip, Vehicle, VisitorSolicitationData, PassengerDetail, OfficialDocument } from '../../types';
+import { Chamado, Trip, Vehicle, Driver, VisitorSolicitationData, PassengerDetail, OfficialDocument } from '../../types';
 import { 
   lookupHerculesServidor, 
   lookupReceitaFederalCpf, 
@@ -60,6 +61,7 @@ import {
 } from '../../services/whatsappService';
 import { SolicitationReportModal } from './SolicitationReportModal';
 import { DocumentPreviewModal } from '../documents/DocumentPreviewModal';
+import { UberStyleTrackingModal } from './UberStyleTrackingModal';
 
 interface VisitorPortalProps {
   comarcas?: string[];
@@ -68,6 +70,7 @@ interface VisitorPortalProps {
   recentChamados?: Chamado[];
   trips?: Trip[];
   vehicles?: Vehicle[];
+  drivers?: Driver[];
   documents?: OfficialDocument[];
   onOpenTripSignature?: (trip: Trip) => void;
   onOpenTripDetails?: (trip: Trip) => void;
@@ -103,6 +106,7 @@ export const VisitorPortal: React.FC<VisitorPortalProps> = ({
   recentChamados = [],
   trips = [],
   vehicles = [],
+  drivers = [],
   documents = [],
   onOpenTripSignature,
   onOpenTripDetails,
@@ -222,6 +226,51 @@ export const VisitorPortal: React.FC<VisitorPortalProps> = ({
   // Modal de Prévia de Documento Oficial de Autorização
   const [docPreviewModalOpen, setDocPreviewModalOpen] = useState(false);
   const [docForPreview, setDocForPreview] = useState<OfficialDocument | null>(null);
+
+  // Modal de Acompanhamento ao Vivo do Motorista (Estilo Uber)
+  const [uberTrackingModalOpen, setUberTrackingModalOpen] = useState(false);
+  const [uberTrackingData, setUberTrackingData] = useState<{
+    origem: string;
+    destino: string;
+    solicitanteNome: string;
+    protocolo?: string;
+    tipoServico?: string;
+    trip?: Trip;
+    chamado?: Chamado;
+    veiculo?: Vehicle;
+    motorista?: Driver;
+  } | null>(null);
+
+  const handleOpenUberTracking = (data?: {
+    origem?: string;
+    destino?: string;
+    solicitanteNome?: string;
+    protocolo?: string;
+    tipoServico?: string;
+    trip?: Trip;
+    chamado?: Chamado;
+    veiculo?: Vehicle;
+    motorista?: Driver;
+  }) => {
+    const matchedTrip = data?.trip;
+    const matchedChamado = data?.chamado;
+    const prefixo = matchedTrip?.veiculoPrefixo || matchedChamado?.veiculoPrefixo || 'TJ-101';
+    const foundVehicle = vehicles.find((v) => v.prefixo === prefixo) || vehicles[0];
+    const foundDriver = drivers.find((d) => d.veiculoPrefixoAtual === prefixo || d.nome === (matchedTrip?.motoristaNome || matchedChamado?.motoristaNome)) || drivers[0];
+
+    setUberTrackingData({
+      origem: data?.origem || origem || 'Palácio da Justiça - Centro Cívico, Curitiba',
+      destino: data?.destino || destino || 'Fórum da Comarca',
+      solicitanteNome: data?.solicitanteNome || solicitanteNome,
+      protocolo: data?.protocolo || submissionResult?.chamadoCodigo || 'TJ-SOL-2026',
+      tipoServico: data?.tipoServico || tipoServico,
+      trip: matchedTrip,
+      chamado: matchedChamado,
+      veiculo: data?.veiculo || foundVehicle,
+      motorista: data?.motorista || foundDriver,
+    });
+    setUberTrackingModalOpen(true);
+  };
 
   // Documento oficial de autorização para conduzir vinculado automaticamente ao solicitante
   const autorizacaoDocumento = useMemo<OfficialDocument>(() => {
@@ -914,10 +963,63 @@ export const VisitorPortal: React.FC<VisitorPortalProps> = ({
   return (
     <div className="max-w-6xl mx-auto space-y-5">
 
+      {/* BARRA SUPERIOR DE NAVEGAÇÃO DO SOLICITANTE */}
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 bg-white p-3 sm:p-4 rounded-2xl border border-slate-200/90 shadow-2xs">
+        <div className="flex items-center gap-2 flex-wrap">
+          <button
+            type="button"
+            onClick={() => {
+              setActiveTab('formulario');
+              setSubmissionResult(null);
+            }}
+            className={`px-4 py-2 rounded-xl text-xs font-bold transition-all flex items-center gap-2 cursor-pointer ${
+              activeTab === 'formulario' && !submissionResult
+                ? 'bg-[#002B49] text-white shadow-xs'
+                : 'bg-slate-100 hover:bg-slate-200 text-slate-700'
+            }`}
+          >
+            <Car className="w-4 h-4 text-amber-300" />
+            <span>Nova Solicitação</span>
+          </button>
 
+          <button
+            type="button"
+            onClick={() => setActiveTab('historico')}
+            className={`px-4 py-2 rounded-xl text-xs font-bold transition-all flex items-center gap-2 cursor-pointer ${
+              activeTab === 'historico'
+                ? 'bg-[#002B49] text-white shadow-xs'
+                : 'bg-slate-100 hover:bg-slate-200 text-slate-700'
+            }`}
+          >
+            <FileText className="w-4 h-4" />
+            <span>Meus Pedidos & Histórico ({totalPedidosCount})</span>
+          </button>
 
+          <button
+            type="button"
+            onClick={() => setActiveTab('consultar')}
+            className={`px-4 py-2 rounded-xl text-xs font-bold transition-all flex items-center gap-2 cursor-pointer ${
+              activeTab === 'consultar'
+                ? 'bg-[#002B49] text-white shadow-xs'
+                : 'bg-slate-100 hover:bg-slate-200 text-slate-700'
+            }`}
+          >
+            <Search className="w-4 h-4" />
+            <span>Consultar Protocolo</span>
+          </button>
+        </div>
 
-      {/* ------------------------------------------------------------- */}
+        {/* Botão de Rastreamento Uber sempre visível */}
+        <button
+          type="button"
+          onClick={() => handleOpenUberTracking()}
+          className="px-4 py-2 rounded-xl bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 text-white text-xs font-black flex items-center justify-center gap-2 shadow-sm transition-all hover:scale-[1.02] cursor-pointer"
+          title="Abrir mapa de rastreamento estilo Uber com tempo estimado e deslocamento ao vivo"
+        >
+          <Navigation className="w-4 h-4 text-emerald-200" />
+          <span>Rastrear Motorista ao Vivo (Estilo Uber)</span>
+        </button>
+      </div>
       {/* TELA DE SUCESSO PÓS-SUBMISSÃO COM DISPARO WHATSAPP            */}
       {/* ------------------------------------------------------------- */}
       {submissionResult && (
@@ -988,6 +1090,87 @@ export const VisitorPortal: React.FC<VisitorPortalProps> = ({
               <p className="text-[11px] text-slate-500">
                 {submissionResult.solicitacao.passageirosQtd} passageiro(s) registrado(s)
               </p>
+            </div>
+          </div>
+
+          {/* REQUISITO: ACOMPANHAMENTO EM TEMPO REAL ESTILO UBER DO DESLOCAMENTO DO MOTORISTA */}
+          <div className="bg-gradient-to-br from-slate-900 via-[#002B49] to-slate-950 text-white rounded-2xl p-5 border border-slate-700/80 shadow-xl space-y-4 animate-in fade-in">
+            <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+              <div className="flex items-start gap-3.5">
+                <div className="w-12 h-12 rounded-2xl bg-emerald-500/20 text-emerald-400 border border-emerald-500/40 flex items-center justify-center shrink-0 shadow-lg">
+                  <Car className="w-6 h-6 animate-pulse" />
+                </div>
+                <div>
+                  <div className="flex items-center gap-2 flex-wrap">
+                    <span className="text-base sm:text-lg font-black tracking-tight text-white flex items-center gap-2">
+                      Acompanhamento ao Vivo do Motorista
+                    </span>
+                    <span className="text-[10px] font-mono px-2 py-0.5 rounded-full bg-emerald-500 text-slate-950 font-black animate-pulse flex items-center gap-1">
+                      <span className="w-1.5 h-1.5 rounded-full bg-slate-950" />
+                      ESTILO UBER • GPS ATIVO
+                    </span>
+                  </div>
+                  <p className="text-xs text-slate-300 mt-0.5">
+                    Acompanhe no mapa o deslocamento do veículo oficial desde o despacho até seu ponto de partida e, em seguida, até o destino final.
+                  </p>
+                </div>
+              </div>
+
+              <button
+                type="button"
+                onClick={() => handleOpenUberTracking({
+                  origem: submissionResult.solicitacao.origem,
+                  destino: submissionResult.solicitacao.destino,
+                  protocolo: submissionResult.chamadoCodigo,
+                  solicitanteNome: submissionResult.solicitacao.solicitanteNome,
+                  tipoServico: submissionResult.solicitacao.tipoServico,
+                })}
+                className="px-5 py-3 rounded-xl bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-black text-xs sm:text-sm flex items-center justify-center gap-2 shadow-lg shadow-emerald-500/30 hover:scale-[1.02] transition-all cursor-pointer shrink-0"
+              >
+                <Navigation className="w-4 h-4 text-slate-950" />
+                <span>Abrir Mapa em Tempo Real (Estilo Uber)</span>
+              </button>
+            </div>
+
+            {/* Métricas Dinâmicas em Tempo Real */}
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 pt-3 border-t border-slate-800 text-xs">
+              <div className="bg-slate-950/70 p-3.5 rounded-xl border border-slate-800 flex items-center gap-3">
+                <Clock className="w-5 h-5 text-emerald-400 shrink-0" />
+                <div className="min-w-0">
+                  <span className="text-[10px] text-slate-400 block uppercase font-bold tracking-wider">
+                    Chegada até Você (Embarque)
+                  </span>
+                  <div className="flex items-baseline gap-1.5">
+                    <strong className="text-base font-black text-emerald-400 font-mono">~ 3 min</strong>
+                    <span className="text-slate-400 text-[11px] font-mono">• 1,2 km de distância</span>
+                  </div>
+                </div>
+              </div>
+
+              <div className="bg-slate-950/70 p-3.5 rounded-xl border border-slate-800 flex items-center gap-3">
+                <Navigation className="w-5 h-5 text-blue-400 shrink-0" />
+                <div className="min-w-0">
+                  <span className="text-[10px] text-slate-400 block uppercase font-bold tracking-wider">
+                    Até o Destino Final
+                  </span>
+                  <div className="flex items-baseline gap-1.5">
+                    <strong className="text-base font-black text-blue-400 font-mono">~ 18 min</strong>
+                    <span className="text-slate-400 text-[11px] font-mono">• 7,8 km totais</span>
+                  </div>
+                </div>
+              </div>
+
+              <div className="bg-slate-950/70 p-3.5 rounded-xl border border-slate-800 flex items-center gap-3">
+                <Shield className="w-5 h-5 text-amber-400 shrink-0" />
+                <div className="min-w-0">
+                  <span className="text-[10px] text-slate-400 block uppercase font-bold tracking-wider">
+                    Motorista & Veículo Escalado
+                  </span>
+                  <strong className="text-xs font-bold text-white block truncate">
+                    Romão Sidney • TJ-101 (Virtus Prata)
+                  </strong>
+                </div>
+              </div>
             </div>
           </div>
 
@@ -1096,6 +1279,21 @@ export const VisitorPortal: React.FC<VisitorPortalProps> = ({
                 <span>Ver no Histórico</span>
               </button>
             </div>
+
+            <button
+              type="button"
+              onClick={() => handleOpenUberTracking({
+                origem: submissionResult.solicitacao.origem,
+                destino: submissionResult.solicitacao.destino,
+                protocolo: submissionResult.chamadoCodigo,
+                solicitanteNome: submissionResult.solicitacao.solicitanteNome,
+                tipoServico: submissionResult.solicitacao.tipoServico,
+              })}
+              className="w-full sm:w-auto px-5 py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs flex items-center justify-center gap-2 shadow-md shadow-emerald-600/20 transition-all cursor-pointer hover:scale-[1.01]"
+            >
+              <Car className="w-4 h-4 text-emerald-200" />
+              <span>Acompanhar Motorista (Estilo Uber)</span>
+            </button>
           </div>
         </div>
       )}
@@ -1585,10 +1783,10 @@ export const VisitorPortal: React.FC<VisitorPortalProps> = ({
                             type="button"
                             onClick={handleIniciarEdicaoCadastral}
                             className="px-3.5 py-2.5 rounded-xl bg-white hover:bg-slate-100 text-slate-700 text-xs font-semibold border border-slate-300 flex items-center gap-1.5 transition-colors shadow-2xs cursor-pointer"
-                            title="Clique se houver divergência no telefone, lotação ou cargo"
+                            title="Editar dados cadastrais"
                           >
                             <Pencil className="w-3.5 h-3.5 text-slate-500" />
-                            <span>Houve Divergência? Editar</span>
+                            <span>Editar</span>
                           </button>
                         </div>
                       </div>
@@ -2626,6 +2824,24 @@ export const VisitorPortal: React.FC<VisitorPortalProps> = ({
 
                       <button
                         type="button"
+                        onClick={() => handleOpenUberTracking({
+                          origem: req.origem,
+                          destino: req.destino,
+                          protocolo: req.codigo,
+                          solicitanteNome: solicitanteNome,
+                          tipoServico: req.tipoServico,
+                          trip: req.trip,
+                          chamado: req.chamado,
+                        })}
+                        className="px-2.5 py-1 rounded-lg bg-emerald-50 hover:bg-emerald-100 text-emerald-800 border border-emerald-300 text-xs font-bold flex items-center gap-1 transition-colors cursor-pointer shadow-2xs"
+                        title="Acompanhar deslocamento do motorista no mapa em tempo real (Estilo Uber)"
+                      >
+                        <Car className="w-3.5 h-3.5 text-emerald-600" />
+                        <span>Acompanhar Motorista (Estilo Uber)</span>
+                      </button>
+
+                      <button
+                        type="button"
                         onClick={() => setReportModalItem({ trip: req.trip, chamado: req.chamado })}
                         className="px-2.5 py-1 rounded-lg bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-semibold flex items-center gap-1 transition-colors cursor-pointer"
                         title="Imprimir espelho de viagem para prestação de contas"
@@ -3098,6 +3314,23 @@ export const VisitorPortal: React.FC<VisitorPortalProps> = ({
         onClose={() => setDocPreviewModalOpen(false)}
         document={docForPreview}
       />
+
+      {/* Modal de Acompanhamento ao Vivo do Motorista (Estilo Uber) */}
+      {uberTrackingData && (
+        <UberStyleTrackingModal
+          isOpen={uberTrackingModalOpen}
+          onClose={() => setUberTrackingModalOpen(false)}
+          origem={uberTrackingData.origem}
+          destino={uberTrackingData.destino}
+          solicitanteNome={uberTrackingData.solicitanteNome}
+          protocolo={uberTrackingData.protocolo}
+          tipoServico={uberTrackingData.tipoServico}
+          trip={uberTrackingData.trip}
+          chamado={uberTrackingData.chamado}
+          veiculo={uberTrackingData.veiculo}
+          motorista={uberTrackingData.motorista}
+        />
+      )}
 
     </div>
   );

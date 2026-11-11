@@ -2058,6 +2058,7 @@ export default function App() {
                 recentChamados={chamados}
                 trips={trips}
                 vehicles={vehicles}
+                drivers={drivers}
                 documents={documents}
                 onOpenTripSignature={(trip) => setSignatureModalTrip(trip)}
                 onOpenTripDetails={(trip) => setTripLogTrip(trip)}
