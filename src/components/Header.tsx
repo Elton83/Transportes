@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import { 
   Bell, 
   Car, 
@@ -28,12 +28,13 @@ import {
   CalendarDays,
   Type
 } from 'lucide-react';
-import { Driver, NotificationItem, Role, Vehicle } from '../types';
+import { Driver, NotificationItem, Role, Vehicle, SecaoSubRole } from '../types';
 import { 
   getAllowedTabsForRole, 
   isDriverRole, 
   getTabLabelForRole,
-  ROLE_CONFIGS
+  ROLE_CONFIGS,
+  SECAO_SUBROLES
 } from '../services/accessControl';
 
 export type MainNavTab = 
@@ -52,6 +53,8 @@ export type MainNavTab =
 interface HeaderProps {
   currentRole: Role;
   onRoleChange: (role: Role) => void;
+  secaoSubRole?: SecaoSubRole;
+  onSecaoSubRoleChange?: (subRole: SecaoSubRole) => void;
   activeNavTab: MainNavTab;
   onNavTabChange: (tab: MainNavTab) => void;
   notifications: NotificationItem[];
@@ -77,6 +80,8 @@ interface HeaderProps {
 export const Header: React.FC<HeaderProps> = ({
   currentRole,
   onRoleChange,
+  secaoSubRole = 'rodizio',
+  onSecaoSubRoleChange,
   activeNavTab,
   onNavTabChange,
   notifications,
@@ -101,6 +106,20 @@ export const Header: React.FC<HeaderProps> = ({
   const [showNotifications, setShowNotifications] = useState(false);
   const unreadCount = notifications.filter(n => !n.lida).length;
   const isDriver = isDriverRole(currentRole);
+
+  // Dropdown de Subperfis da Seção
+  const [secaoMenuOpen, setSecaoMenuOpen] = useState(false);
+  const secaoDropdownRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (secaoDropdownRef.current && !secaoDropdownRef.current.contains(event.target as Node)) {
+        setSecaoMenuOpen(false);
+      }
+    };
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, []);
 
   // Controle de Tamanho de Fonte (Acessibilidade e Alta Visibilidade)
   const [fontScale, setFontScale] = useState<'sm' | 'md' | 'lg' | 'xl'>('md');
@@ -136,13 +155,21 @@ export const Header: React.FC<HeaderProps> = ({
 
   const handleRoleSelect = (newRole: Role) => {
     onRoleChange(newRole);
-    const allowed = getAllowedTabsForRole(newRole);
+    const allowed = getAllowedTabsForRole(newRole, (newRole === 'supervisor_operacional' || newRole === 'coordenador') ? secaoSubRole : undefined);
     if (!allowed.includes(activeNavTab)) {
       onNavTabChange(allowed[0]);
     }
   };
 
-  const allowedTabs = getAllowedTabsForRole(currentRole);
+  const handleSelectSecaoSubRole = (subRole: SecaoSubRole) => {
+    onRoleChange('supervisor_operacional');
+    onSecaoSubRoleChange?.(subRole);
+    setSecaoMenuOpen(false);
+    const targetTab = SECAO_SUBROLES[subRole]?.primaryTab || 'operacoes';
+    onNavTabChange(targetTab);
+  };
+
+  const allowedTabs = getAllowedTabsForRole(currentRole, secaoSubRole);
 
   // Mapeamento dos ícones para cada aba
   const tabIcons: Record<MainNavTab, typeof LayoutDashboard> = {
@@ -290,21 +317,136 @@ export const Header: React.FC<HeaderProps> = ({
                 <span>Chefia</span>
               </button>
 
-              {/* 4. Supervisor de Rodízio -> Seção */}
-              <button
-                id="role-btn-supervisor-op"
-                type="button"
-                onClick={() => handleRoleSelect('supervisor_operacional')}
-                className={`flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-xs font-medium transition-all cursor-pointer ${
-                  currentRole === 'supervisor_operacional' || currentRole === 'coordenador'
-                    ? 'bg-white/15 text-white shadow-xs font-semibold'
-                    : 'text-[#8E9CA8] hover:text-white hover:bg-white/5'
-                }`}
-                title="Seção: despacho de viagens, alocação e escala de rodízio de motoristas/veículos"
-              >
-                <LifeBuoy className="w-3.5 h-3.5" />
-                <span>Seção</span>
-              </button>
+              {/* 4. Seção (com Subperfis: Rodízio, Manutenção, Contrato de Manutenção, Controle de Frota) */}
+              <div className="relative" ref={secaoDropdownRef}>
+                <button
+                  id="role-btn-supervisor-op"
+                  type="button"
+                  onClick={() => {
+                    if (currentRole === 'supervisor_operacional' || currentRole === 'coordenador') {
+                      setSecaoMenuOpen((prev) => !prev);
+                    } else {
+                      handleRoleSelect('supervisor_operacional');
+                    }
+                  }}
+                  className={`flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-xs font-medium transition-all cursor-pointer ${
+                    currentRole === 'supervisor_operacional' || currentRole === 'coordenador'
+                      ? 'bg-white/15 text-white shadow-xs font-semibold'
+                      : 'text-[#8E9CA8] hover:text-white hover:bg-white/5'
+                  }`}
+                  title="Seção: Rodízio, Manutenção, Contrato de Manutenção e Controle de Frota"
+                >
+                  <LifeBuoy className="w-3.5 h-3.5" />
+                  <span>
+                    Seção
+                    {(currentRole === 'supervisor_operacional' || currentRole === 'coordenador') && secaoSubRole && (
+                      <span className="text-sky-300 font-bold ml-1 font-mono text-[11px]">
+                        : {SECAO_SUBROLES[secaoSubRole]?.label || 'Rodízio'}
+                      </span>
+                    )}
+                  </span>
+                  <ChevronDown
+                    className={`w-3 h-3 text-[#8E9CA8] transition-transform ${secaoMenuOpen ? 'rotate-180 text-white' : ''}`}
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      onRoleChange('supervisor_operacional');
+                      setSecaoMenuOpen((prev) => !prev);
+                    }}
+                  />
+                </button>
+
+                {/* Dropdown Menu de Subperfis da Seção */}
+                {secaoMenuOpen && (
+                  <div className="absolute top-full left-0 mt-1.5 w-64 bg-[#041C26] rounded-xl border border-white/15 shadow-2xl z-50 p-1.5 animate-in fade-in zoom-in-95 duration-150">
+                    <div className="px-2.5 py-1.5 text-[10px] font-bold uppercase tracking-wider text-[#8E9CA8] border-b border-white/10 flex items-center justify-between">
+                      <span>Subperfis da Seção</span>
+                      <span className="text-sky-400 font-mono">TJPR</span>
+                    </div>
+
+                    <div className="py-1 space-y-0.5">
+                      {/* 1. Rodízio */}
+                      <button
+                        type="button"
+                        onClick={() => handleSelectSecaoSubRole('rodizio')}
+                        className={`w-full text-left px-2.5 py-2 rounded-lg text-xs font-medium transition-colors flex items-center justify-between cursor-pointer ${
+                          secaoSubRole === 'rodizio' && (currentRole === 'supervisor_operacional' || currentRole === 'coordenador')
+                            ? 'bg-sky-500/25 text-sky-200 font-bold border border-sky-500/40'
+                            : 'text-slate-300 hover:text-white hover:bg-white/10'
+                        }`}
+                      >
+                        <div className="flex items-center gap-2">
+                          <Car className="w-3.5 h-3.5 text-sky-400 shrink-0" />
+                          <div>
+                            <span className="block leading-tight font-semibold">Rodízio</span>
+                            <span className="text-[10px] text-slate-400 font-normal block">Rodízio • Calendário • Relatórios</span>
+                          </div>
+                        </div>
+                        {secaoSubRole === 'rodizio' && <CheckCircle2 className="w-3.5 h-3.5 text-sky-400 shrink-0" />}
+                      </button>
+
+                      {/* 2. Manutenção */}
+                      <button
+                        type="button"
+                        onClick={() => handleSelectSecaoSubRole('manutencao')}
+                        className={`w-full text-left px-2.5 py-2 rounded-lg text-xs font-medium transition-colors flex items-center justify-between cursor-pointer ${
+                          secaoSubRole === 'manutencao' && (currentRole === 'supervisor_operacional' || currentRole === 'coordenador')
+                            ? 'bg-sky-500/25 text-sky-200 font-bold border border-sky-500/40'
+                            : 'text-slate-300 hover:text-white hover:bg-white/10'
+                        }`}
+                      >
+                        <div className="flex items-center gap-2">
+                          <LifeBuoy className="w-3.5 h-3.5 text-amber-400 shrink-0" />
+                          <div>
+                            <span className="block leading-tight font-semibold">Manutenção</span>
+                            <span className="text-[10px] text-slate-400 font-normal block">Chamado/Suporte • Calendário • Relatórios</span>
+                          </div>
+                        </div>
+                        {secaoSubRole === 'manutencao' && <CheckCircle2 className="w-3.5 h-3.5 text-sky-400 shrink-0" />}
+                      </button>
+
+                      {/* 3. Contrato de Manutenção */}
+                      <button
+                        type="button"
+                        onClick={() => handleSelectSecaoSubRole('contrato_manutencao')}
+                        className={`w-full text-left px-2.5 py-2 rounded-lg text-xs font-medium transition-colors flex items-center justify-between cursor-pointer ${
+                          secaoSubRole === 'contrato_manutencao' && (currentRole === 'supervisor_operacional' || currentRole === 'coordenador')
+                            ? 'bg-sky-500/25 text-sky-200 font-bold border border-sky-500/40'
+                            : 'text-slate-300 hover:text-white hover:bg-white/10'
+                        }`}
+                      >
+                        <div className="flex items-center gap-2">
+                          <FileSignature className="w-3.5 h-3.5 text-emerald-400 shrink-0" />
+                          <div>
+                            <span className="block leading-tight font-semibold">Contrato de Manutenção</span>
+                            <span className="text-[10px] text-slate-400 font-normal block">Contratos/Serviços • Calendário • Relatórios</span>
+                          </div>
+                        </div>
+                        {secaoSubRole === 'contrato_manutencao' && <CheckCircle2 className="w-3.5 h-3.5 text-sky-400 shrink-0" />}
+                      </button>
+
+                      {/* 4. Controle de Frota */}
+                      <button
+                        type="button"
+                        onClick={() => handleSelectSecaoSubRole('controle_frota')}
+                        className={`w-full text-left px-2.5 py-2 rounded-lg text-xs font-medium transition-colors flex items-center justify-between cursor-pointer ${
+                          secaoSubRole === 'controle_frota' && (currentRole === 'supervisor_operacional' || currentRole === 'coordenador')
+                            ? 'bg-sky-500/25 text-sky-200 font-bold border border-sky-500/40'
+                            : 'text-slate-300 hover:text-white hover:bg-white/10'
+                        }`}
+                      >
+                        <div className="flex items-center gap-2">
+                          <FolderLock className="w-3.5 h-3.5 text-purple-400 shrink-0" />
+                          <div>
+                            <span className="block leading-tight font-semibold">Controle de Frota</span>
+                            <span className="text-[10px] text-slate-400 font-normal block">Documentos Oficiais • Calendário • Relatórios</span>
+                          </div>
+                        </div>
+                        {secaoSubRole === 'controle_frota' && <CheckCircle2 className="w-3.5 h-3.5 text-sky-400 shrink-0" />}
+                      </button>
+                    </div>
+                  </div>
+                )}
+              </div>
 
               {/* 5. Solicitação do Veículo */}
               <button
@@ -331,21 +473,34 @@ export const Header: React.FC<HeaderProps> = ({
                 value={
                   isDriver 
                     ? 'motorista' 
-                    : currentRole === 'coordenador' 
-                    ? 'supervisor_operacional' 
+                    : (currentRole === 'coordenador' || currentRole === 'supervisor_operacional')
+                    ? `secao_${secaoSubRole}`
                     : currentRole === 'solicitante' 
                     ? 'supervisor_administrativo' 
                     : currentRole === 'gestor'
                     ? 'administrador'
                     : currentRole
                 }
-                onChange={(e) => handleRoleSelect(e.target.value as Role)}
+                onChange={(e) => {
+                  const val = e.target.value;
+                  if (val.startsWith('secao_')) {
+                    const sub = val.replace('secao_', '') as SecaoSubRole;
+                    handleSelectSecaoSubRole(sub);
+                  } else {
+                    handleRoleSelect(val as Role);
+                  }
+                }}
                 className="bg-transparent text-white font-medium text-xs focus:outline-none cursor-pointer pr-1"
               >
                 <option value="administrador" className="bg-[#05202B] text-white">Admin</option>
                 <option value="motorista" className="bg-[#05202B] text-white">Motorista (Restrito)</option>
                 <option value="supervisor_administrativo" className="bg-[#05202B] text-white">Chefia</option>
-                <option value="supervisor_operacional" className="bg-[#05202B] text-white">Seção</option>
+                <optgroup label="Seção (Subperfis)" className="bg-[#041C26] text-sky-300 font-bold">
+                  <option value="secao_rodizio" className="bg-[#05202B] text-white">Seção - Rodízio</option>
+                  <option value="secao_manutencao" className="bg-[#05202B] text-white">Seção - Manutenção</option>
+                  <option value="secao_contrato_manutencao" className="bg-[#05202B] text-white">Seção - Contrato de Manutenção</option>
+                  <option value="secao_controle_frota" className="bg-[#05202B] text-white">Seção - Controle de Frota</option>
+                </optgroup>
                 <option value="visitante" className="bg-[#05202B] text-white">Solicitação do Veículo</option>
               </select>
             </div>

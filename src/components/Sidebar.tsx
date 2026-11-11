@@ -30,13 +30,14 @@ import {
   CalendarDays
 } from 'lucide-react';
 import { MainNavTab } from './Header';
-import { Role, Driver, Vehicle } from '../types';
+import { Role, Driver, Vehicle, SecaoSubRole } from '../types';
 import { 
   isTabAllowedForRole, 
   isDriverRole, 
   getAllowedTabsForRole, 
   getTabLabelForRole,
-  ROLE_CONFIGS 
+  ROLE_CONFIGS,
+  SECAO_SUBROLES
 } from '../services/accessControl';
 
 interface SidebarProps {
@@ -44,6 +45,8 @@ interface SidebarProps {
   onNavTabChange: (tab: MainNavTab) => void;
   currentRole: Role;
   onRoleChange: (role: Role) => void;
+  secaoSubRole?: SecaoSubRole;
+  onSecaoSubRoleChange?: (subRole: SecaoSubRole) => void;
   selectedComarca: string;
   onComarcaChange?: (comarca: string) => void;
   maintenancesCount?: number;
@@ -71,6 +74,8 @@ export const Sidebar: React.FC<SidebarProps> = ({
   onNavTabChange,
   currentRole,
   onRoleChange,
+  secaoSubRole = 'rodizio',
+  onSecaoSubRoleChange,
   selectedComarca,
   maintenancesCount = 6,
   documentsCount = 8,
@@ -93,8 +98,8 @@ export const Sidebar: React.FC<SidebarProps> = ({
 }) => {
   const isDriver = isDriverRole(currentRole);
 
-  // Filtro de Segurança por Papel (RBAC)
-  const allowedTabs = getAllowedTabsForRole(currentRole);
+  // Filtro de Segurança por Papel (RBAC) com suporte aos subperfis da Seção
+  const allowedTabs = getAllowedTabsForRole(currentRole, secaoSubRole);
 
   // Lista mestre com os menus do sistema (com Dashboard da Frota já integrado no Diário de Bordo)
   const allNavItems = [
@@ -153,7 +158,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
   const roleOptions: { role: Role; label: string; sub: string; icon: typeof Car }[] = [
     {
       role: 'administrador',
-      label: 'Administrador',
+      label: 'Admin:',
       sub: 'Gestão Geral & Frota Total',
       icon: UserCheck,
     },
@@ -165,14 +170,14 @@ export const Sidebar: React.FC<SidebarProps> = ({
     },
     {
       role: 'supervisor_administrativo',
-      label: 'Supervisor Administrativo',
+      label: 'Chefia',
       sub: 'Supervisão Adm. & Contratos',
       icon: FileText,
     },
     {
       role: 'supervisor_operacional',
-      label: 'Supervisor de Rodízio',
-      sub: 'Escala de Rodízio & Despachos',
+      label: 'Seção',
+      sub: 'Subperfis: Rodízio, Manutenção, Contratos, Frota',
       icon: LifeBuoy,
     },
     {
@@ -185,7 +190,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
 
   const handleRoleSelect = (newRole: Role) => {
     onRoleChange(newRole);
-    const newAllowed = getAllowedTabsForRole(newRole);
+    const newAllowed = getAllowedTabsForRole(newRole, secaoSubRole);
     if (!newAllowed.includes(activeNavTab)) {
       onNavTabChange(newAllowed[0]);
     }
@@ -339,6 +344,45 @@ export const Sidebar: React.FC<SidebarProps> = ({
                 );
               })}
             </div>
+
+            {/* Seletor dos 4 Subperfis da Seção */}
+            {(currentRole === 'supervisor_operacional' || currentRole === 'coordenador') && (
+              <div className="mt-2.5 pt-2 border-t border-white/10 space-y-1">
+                <div className="text-[10px] font-bold uppercase tracking-wider text-amber-300 px-1 mb-1 flex items-center justify-between">
+                  <span>Subperfis da Seção:</span>
+                  <span className="text-[9px] bg-amber-400/20 text-amber-200 px-1.5 py-0.5 rounded font-mono">3 Menus</span>
+                </div>
+                {(Object.keys(SECAO_SUBROLES) as SecaoSubRole[]).map((subKey) => {
+                  const subCfg = SECAO_SUBROLES[subKey];
+                  const isSubActive = secaoSubRole === subKey;
+                  return (
+                    <button
+                      key={subKey}
+                      onClick={() => {
+                        onSecaoSubRoleChange?.(subKey);
+                        onNavTabChange(subCfg.primaryTab);
+                        onCloseMobile();
+                      }}
+                      className={`w-full text-left px-2 py-1.5 rounded-lg text-xs transition-colors cursor-pointer flex items-center justify-between ${
+                        isSubActive
+                          ? 'bg-[#002B49] text-white font-semibold border border-amber-400/40 shadow-xs'
+                          : 'text-[#8E9CA8] hover:text-white hover:bg-white/5'
+                      }`}
+                    >
+                      <div className="min-w-0 pr-1">
+                        <div className="truncate font-medium text-[11px] leading-tight text-white">{subCfg.label}</div>
+                        <div className="text-[9px] text-[#8E9CA8] truncate">{subCfg.menuLabel} • Calendário • Relatórios</div>
+                      </div>
+                      {isSubActive && (
+                        <span className="shrink-0 text-[9px] bg-emerald-500/20 text-emerald-300 px-1.5 py-0.5 rounded font-mono font-bold">
+                          Ativo
+                        </span>
+                      )}
+                    </button>
+                  );
+                })}
+              </div>
+            )}
           </div>
         )}
 
@@ -445,12 +489,12 @@ export const Sidebar: React.FC<SidebarProps> = ({
                 {isDriver
                   ? `Matrícula ${currentDriver?.matricula || '48.912-3'} • Motorista`
                   : currentRole === 'supervisor_operacional' || currentRole === 'coordenador'
-                  ? 'Seção de Rodízio e Transportes'
+                  ? `Seção • ${SECAO_SUBROLES[secaoSubRole]?.label || 'Rodízio'}`
                   : currentRole === 'supervisor_administrativo' || currentRole === 'solicitante'
                   ? 'Chefia da Divisão de Transportes'
                   : currentRole === 'visitante'
                   ? 'Matr. TJPR-98.341-2 • Solicitante'
-                  : 'Admin da Divisão de Transportes'}
+                  : 'Admin: Divisão de Transportes'}
               </p>
             </div>
           )}

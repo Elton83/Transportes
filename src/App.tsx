@@ -45,7 +45,8 @@ import {
   MeuBeneficioStatusAuditoria,
   Chamado,
   ChamadoStatus,
-  VisitorSolicitationData
+  VisitorSolicitationData,
+  SecaoSubRole
 } from './types';
 import { Header, MainNavTab } from './components/Header';
 import { Sidebar } from './components/Sidebar';
@@ -94,7 +95,8 @@ import { INITIAL_WHATSAPP_LOGS, formatWhatsAppTripStartNotification } from './se
 import { 
   isTabAllowedForRole, 
   isDriverRole, 
-  getAllowedTabsForRole 
+  getAllowedTabsForRole,
+  SECAO_SUBROLES
 } from './services/accessControl';
 import { AccessRestrictedView } from './components/common/AccessRestrictedView';
 import { DriverSessionBar } from './components/common/DriverSessionBar';
@@ -103,6 +105,8 @@ export default function App() {
   // Estado principal de navegação e perfis (Iniciando na Agenda de Serviços para Motorista)
   const [activeNavTab, setActiveNavTab] = useState<MainNavTab>('calendario');
   const [currentRole, setCurrentRole] = useState<Role>('motorista');
+  // Subperfil da Seção (Rodízio, Manutenção, Contrato de Manutenção, Controle de Frota)
+  const [secaoSubRole, setSecaoSubRole] = useState<SecaoSubRole>('rodizio');
   const [selectedComarca, setSelectedComarca] = useState<string>('Todas as Comarcas');
 
   const [vehicles, setVehicles] = useState<Vehicle[]>(INITIAL_VEHICLES);
@@ -141,9 +145,19 @@ export default function App() {
     if (isDriverRole(newRole) || newRole === 'supervisor_operacional' || newRole === 'coordenador') {
       setDiarioViewMode('operacional');
     }
-    const allowed = getAllowedTabsForRole(newRole);
+    const allowed = getAllowedTabsForRole(newRole, secaoSubRole);
     if (!allowed.includes(activeNavTab)) {
       setActiveNavTab(allowed[0]);
+    }
+  };
+
+  // Alternância de Subperfil da Seção (Menu específico + Calendário de Eventos + Relatórios)
+  const handleSecaoSubRoleChange = (newSubRole: SecaoSubRole) => {
+    setSecaoSubRole(newSubRole);
+    const subCfg = SECAO_SUBROLES[newSubRole];
+    if (subCfg) {
+      setActiveNavTab(subCfg.primaryTab);
+      showToast(`Subperfil ativado: ${subCfg.label}. Módulos: ${subCfg.menuLabel}, Calendário de Eventos e Relatórios.`);
     }
   };
 
@@ -1600,6 +1614,8 @@ export default function App() {
         onNavTabChange={setActiveNavTab}
         currentRole={currentRole}
         onRoleChange={handleRoleChange}
+        secaoSubRole={secaoSubRole}
+        onSecaoSubRoleChange={handleSecaoSubRoleChange}
         selectedComarca={selectedComarca}
         maintenancesCount={maintenances.length}
         documentsCount={documents.length}
@@ -1636,6 +1652,8 @@ export default function App() {
         <Header
           currentRole={currentRole}
           onRoleChange={handleRoleChange}
+          secaoSubRole={secaoSubRole}
+          onSecaoSubRoleChange={handleSecaoSubRoleChange}
           activeNavTab={activeNavTab}
           onNavTabChange={setActiveNavTab}
           notifications={notifications}

@@ -1,5 +1,54 @@
-import { Role, Driver } from '../types';
+import { Role, Driver, SecaoSubRole } from '../types';
 import { MainNavTab } from '../components/Header';
+
+export interface SecaoSubRoleConfig {
+  id: SecaoSubRole;
+  label: string;
+  menuLabel: string;
+  badgeLabel: string;
+  description: string;
+  allowedTabs: MainNavTab[];
+  primaryTab: MainNavTab;
+}
+
+export const SECAO_SUBROLES: Record<SecaoSubRole, SecaoSubRoleConfig> = {
+  rodizio: {
+    id: 'rodizio',
+    label: 'Rodízio',
+    menuLabel: 'Rodízio',
+    badgeLabel: 'Seção • Rodízio',
+    description: 'Acesso ao Rodízio, Calendário de Eventos e Relatórios',
+    allowedTabs: ['operacoes', 'calendario', 'relatorios'],
+    primaryTab: 'operacoes',
+  },
+  manutencao: {
+    id: 'manutencao',
+    label: 'Manutenção',
+    menuLabel: 'Chamado e Suporte',
+    badgeLabel: 'Seção • Manutenção',
+    description: 'Acesso a Chamado e Suporte, Calendário de Eventos e Relatórios',
+    allowedTabs: ['chamados', 'calendario', 'relatorios'],
+    primaryTab: 'chamados',
+  },
+  contrato_manutencao: {
+    id: 'contrato_manutencao',
+    label: 'Contrato de Manutenção',
+    menuLabel: 'Contratos & Serviços',
+    badgeLabel: 'Seção • Contratos',
+    description: 'Acesso a Contratos & Serviços, Calendário de Eventos e Relatórios',
+    allowedTabs: ['contratos', 'calendario', 'relatorios'],
+    primaryTab: 'contratos',
+  },
+  controle_frota: {
+    id: 'controle_frota',
+    label: 'Controle de Frota',
+    menuLabel: 'Documentos Oficiais',
+    badgeLabel: 'Seção • Controle de Frota',
+    description: 'Acesso a Documentos Oficiais, Calendário de Eventos e Relatórios',
+    allowedTabs: ['documentos', 'calendario', 'relatorios'],
+    primaryTab: 'documentos',
+  },
+};
 
 export interface RoleConfig {
   role: Role;
@@ -211,17 +260,20 @@ export const ROLE_CONFIGS: Record<Role, RoleConfig> = {
 };
 
 /**
- * Verifica se a aba solicitada é autorizada para o papel atual
+ * Verifica se a aba solicitada é autorizada para o papel atual (considerando subperfil de Seção se aplicável)
  */
-export function isTabAllowedForRole(role: Role, tab: MainNavTab): boolean {
-  const config = ROLE_CONFIGS[role] || ROLE_CONFIGS.administrador;
-  return config.allowedTabs.includes(tab);
+export function isTabAllowedForRole(role: Role, tab: MainNavTab, secaoSubRole?: SecaoSubRole): boolean {
+  const allowed = getAllowedTabsForRole(role, secaoSubRole);
+  return allowed.includes(tab);
 }
 
 /**
- * Retorna a lista de abas autorizadas para o papel
+ * Retorna a lista de abas autorizadas para o papel (considerando subperfil de Seção)
  */
-export function getAllowedTabsForRole(role: Role): MainNavTab[] {
+export function getAllowedTabsForRole(role: Role, secaoSubRole?: SecaoSubRole): MainNavTab[] {
+  if ((role === 'supervisor_operacional' || role === 'coordenador') && secaoSubRole && SECAO_SUBROLES[secaoSubRole]) {
+    return SECAO_SUBROLES[secaoSubRole].allowedTabs;
+  }
   const config = ROLE_CONFIGS[role] || ROLE_CONFIGS.administrador;
   return config.allowedTabs;
 }
@@ -261,7 +313,7 @@ export function getTabLabelForRole(tab: MainNavTab, role: Role): { label: string
       };
     case 'chamados':
       return {
-        label: 'Chamados & Suporte',
+        label: 'Chamado e Suporte',
         description: 'Demandas e apoio da comarca',
       };
     case 'oficinas':

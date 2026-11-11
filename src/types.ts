@@ -9,6 +9,12 @@ export type Role =
   | 'gestor' 
   | 'solicitante';
 
+export type SecaoSubRole = 
+  | 'rodizio' 
+  | 'manutencao' 
+  | 'contrato_manutencao' 
+  | 'controle_frota';
+
 export type ChamadoStatus = 'aberto' | 'em_atendimento' | 'concluido' | 'cancelado';
 export type ChamadoPrioridade = 'baixa' | 'media' | 'alta' | 'urgente';
 export type ChamadoTipo = 
