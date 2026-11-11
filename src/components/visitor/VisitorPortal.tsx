@@ -963,63 +963,7 @@ export const VisitorPortal: React.FC<VisitorPortalProps> = ({
   return (
     <div className="max-w-6xl mx-auto space-y-5">
 
-      {/* BARRA SUPERIOR DE NAVEGAÇÃO DO SOLICITANTE */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 bg-white p-3 sm:p-4 rounded-2xl border border-slate-200/90 shadow-2xs">
-        <div className="flex items-center gap-2 flex-wrap">
-          <button
-            type="button"
-            onClick={() => {
-              setActiveTab('formulario');
-              setSubmissionResult(null);
-            }}
-            className={`px-4 py-2 rounded-xl text-xs font-bold transition-all flex items-center gap-2 cursor-pointer ${
-              activeTab === 'formulario' && !submissionResult
-                ? 'bg-[#002B49] text-white shadow-xs'
-                : 'bg-slate-100 hover:bg-slate-200 text-slate-700'
-            }`}
-          >
-            <Car className="w-4 h-4 text-amber-300" />
-            <span>Nova Solicitação</span>
-          </button>
-
-          <button
-            type="button"
-            onClick={() => setActiveTab('historico')}
-            className={`px-4 py-2 rounded-xl text-xs font-bold transition-all flex items-center gap-2 cursor-pointer ${
-              activeTab === 'historico'
-                ? 'bg-[#002B49] text-white shadow-xs'
-                : 'bg-slate-100 hover:bg-slate-200 text-slate-700'
-            }`}
-          >
-            <FileText className="w-4 h-4" />
-            <span>Meus Pedidos & Histórico ({totalPedidosCount})</span>
-          </button>
-
-          <button
-            type="button"
-            onClick={() => setActiveTab('consultar')}
-            className={`px-4 py-2 rounded-xl text-xs font-bold transition-all flex items-center gap-2 cursor-pointer ${
-              activeTab === 'consultar'
-                ? 'bg-[#002B49] text-white shadow-xs'
-                : 'bg-slate-100 hover:bg-slate-200 text-slate-700'
-            }`}
-          >
-            <Search className="w-4 h-4" />
-            <span>Consultar Protocolo</span>
-          </button>
-        </div>
-
-        {/* Botão de Rastreamento Uber sempre visível */}
-        <button
-          type="button"
-          onClick={() => handleOpenUberTracking()}
-          className="px-4 py-2 rounded-xl bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 text-white text-xs font-black flex items-center justify-center gap-2 shadow-sm transition-all hover:scale-[1.02] cursor-pointer"
-          title="Abrir mapa de rastreamento estilo Uber com tempo estimado e deslocamento ao vivo"
-        >
-          <Navigation className="w-4 h-4 text-emerald-200" />
-          <span>Rastrear Motorista ao Vivo (Estilo Uber)</span>
-        </button>
-      </div>
+      {/* ------------------------------------------------------------- */}
       {/* TELA DE SUCESSO PÓS-SUBMISSÃO COM DISPARO WHATSAPP            */}
       {/* ------------------------------------------------------------- */}
       {submissionResult && (
