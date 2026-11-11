@@ -20,7 +20,7 @@ export interface RoleConfig {
 export const ROLE_CONFIGS: Record<Role, RoleConfig> = {
   administrador: {
     role: 'administrador',
-    label: 'Administrador',
+    label: 'Admin',
     shortLabel: 'Admin',
     badgeLabel: 'Gestão Geral & SIGPAT',
     sub: 'Gestão Geral & SIGPAT',
@@ -63,11 +63,11 @@ export const ROLE_CONFIGS: Record<Role, RoleConfig> = {
   },
   supervisor_administrativo: {
     role: 'supervisor_administrativo',
-    label: 'Supervisor Administrativo',
-    shortLabel: 'Sup. Administrativo',
-    badgeLabel: 'Gestão & Contratos',
-    sub: 'Supervisão Administrativa',
-    description: 'Supervisão administrativa da Divisão de Transportes, solicitações, contratos, relatórios e auditoria.',
+    label: 'Chefia',
+    shortLabel: 'Chefia',
+    badgeLabel: 'Chefia & Gestão',
+    sub: 'Chefia da Divisão de Transportes',
+    description: 'Chefia administrativa da Divisão de Transportes, solicitações, contratos, relatórios e auditoria.',
     color: 'purple',
     allowedTabs: [
       'operacoes',
@@ -87,10 +87,10 @@ export const ROLE_CONFIGS: Record<Role, RoleConfig> = {
   },
   supervisor_operacional: {
     role: 'supervisor_operacional',
-    label: 'Supervisor de Rodízio',
-    shortLabel: 'Sup. de Rodízio',
-    badgeLabel: 'Escala & Rodízio TJPR',
-    sub: 'Supervisão do Rodízio',
+    label: 'Seção',
+    shortLabel: 'Seção',
+    badgeLabel: 'Seção de Rodízio TJPR',
+    sub: 'Seção de Rodízio & Escala',
     description: 'Gestão da escala de motoristas, rodízio de diligências, confirmação e despacho de veículos da comarca.',
     color: 'sky',
     allowedTabs: [
@@ -124,7 +124,7 @@ export const ROLE_CONFIGS: Record<Role, RoleConfig> = {
   // Aliases para compatibilidade retroativa
   gestor: {
     role: 'gestor',
-    label: 'Administrador (Gestor)',
+    label: 'Admin',
     shortLabel: 'Admin',
     badgeLabel: 'Gestão da Frota TJPR',
     sub: 'Supervisão Executiva',
@@ -150,10 +150,10 @@ export const ROLE_CONFIGS: Record<Role, RoleConfig> = {
   },
   coordenador: {
     role: 'coordenador',
-    label: 'Supervisor de Rodízio',
-    shortLabel: 'Sup. de Rodízio',
-    badgeLabel: 'Escala & Rodízio TJPR',
-    sub: 'Supervisão do Rodízio',
+    label: 'Seção',
+    shortLabel: 'Seção',
+    badgeLabel: 'Seção de Rodízio TJPR',
+    sub: 'Seção de Rodízio',
     description: 'Acompanhamento regional da comarca, gestão de chamados de apoio e escala local de rodízio.',
     color: 'sky',
     allowedTabs: [
@@ -186,11 +186,11 @@ export const ROLE_CONFIGS: Record<Role, RoleConfig> = {
   },
   solicitante: {
     role: 'solicitante',
-    label: 'Supervisor Administrativo',
-    shortLabel: 'Sup. Administrativo',
-    badgeLabel: 'Gestão & Contratos',
-    sub: 'Supervisão Administrativa',
-    description: 'Supervisão administrativa da Divisão de Transportes, solicitações e contratos.',
+    label: 'Chefia',
+    shortLabel: 'Chefia',
+    badgeLabel: 'Chefia & Gestão',
+    sub: 'Chefia da Divisão de Transportes',
+    description: 'Chefia administrativa da Divisão de Transportes, solicitações e contratos.',
     color: 'purple',
     allowedTabs: [
       'operacoes',

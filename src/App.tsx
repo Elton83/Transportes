@@ -2053,7 +2053,7 @@ export default function App() {
                 onNavigateToCoordinator={() => {
                   handleRoleChange('supervisor_operacional');
                   setActiveNavTab('operacoes');
-                  showToast('Alternado para Supervisor de Rodízio: visualizando percursos e escala!');
+                  showToast('Alternado para Seção: visualizando percursos e escala!');
                 }}
                 recentChamados={chamados}
                 trips={trips}

@@ -239,7 +239,7 @@ export const Header: React.FC<HeaderProps> = ({
                 Perfil:
               </span>
               
-              {/* 1. Administrador */}
+              {/* 1. Administrador -> Admin */}
               <button
                 id="role-btn-admin"
                 type="button"
@@ -249,10 +249,10 @@ export const Header: React.FC<HeaderProps> = ({
                     ? 'bg-white/15 text-white shadow-xs font-semibold'
                     : 'text-[#8E9CA8] hover:text-white hover:bg-white/5'
                 }`}
-                title="Acesso total ao sistema e à frota estadual (22 veículos)"
+                title="Admin: Acesso total ao sistema e à frota estadual (22 veículos)"
               >
                 <UserCheck className="w-3.5 h-3.5" />
-                <span>Administrador</span>
+                <span>Admin</span>
               </button>
 
               {/* 2. Motorista */}
@@ -274,7 +274,7 @@ export const Header: React.FC<HeaderProps> = ({
                 </span>
               </button>
 
-              {/* 3. Supervisor Administrativo */}
+              {/* 3. Supervisor Administrativo -> Chefia */}
               <button
                 id="role-btn-supervisor-adm"
                 type="button"
@@ -284,13 +284,13 @@ export const Header: React.FC<HeaderProps> = ({
                     ? 'bg-white/15 text-white shadow-xs font-semibold'
                     : 'text-[#8E9CA8] hover:text-white hover:bg-white/5'
                 }`}
-                title="Supervisão Administrativa: solicitações de veículos, contratos, relatórios e auditoria"
+                title="Chefia: solicitações de veículos, contratos, relatórios e auditoria"
               >
                 <FileText className="w-3.5 h-3.5" />
-                <span>Supervisor Administrativo</span>
+                <span>Chefia</span>
               </button>
 
-              {/* 4. Supervisor Operacional */}
+              {/* 4. Supervisor de Rodízio -> Seção */}
               <button
                 id="role-btn-supervisor-op"
                 type="button"
@@ -300,10 +300,10 @@ export const Header: React.FC<HeaderProps> = ({
                     ? 'bg-white/15 text-white shadow-xs font-semibold'
                     : 'text-[#8E9CA8] hover:text-white hover:bg-white/5'
                 }`}
-                title="Supervisão de Rodízio: despacho de viagens, alocação e escala de rodízio de motoristas/veículos"
+                title="Seção: despacho de viagens, alocação e escala de rodízio de motoristas/veículos"
               >
                 <LifeBuoy className="w-3.5 h-3.5" />
-                <span>Supervisor de Rodízio</span>
+                <span>Seção</span>
               </button>
 
               {/* 5. Solicitação do Veículo */}
@@ -342,10 +342,10 @@ export const Header: React.FC<HeaderProps> = ({
                 onChange={(e) => handleRoleSelect(e.target.value as Role)}
                 className="bg-transparent text-white font-medium text-xs focus:outline-none cursor-pointer pr-1"
               >
-                <option value="administrador" className="bg-[#05202B] text-white">Administrador</option>
+                <option value="administrador" className="bg-[#05202B] text-white">Admin</option>
                 <option value="motorista" className="bg-[#05202B] text-white">Motorista (Restrito)</option>
-                <option value="supervisor_administrativo" className="bg-[#05202B] text-white">Supervisor Administrativo</option>
-                <option value="supervisor_operacional" className="bg-[#05202B] text-white">Supervisor de Rodízio</option>
+                <option value="supervisor_administrativo" className="bg-[#05202B] text-white">Chefia</option>
+                <option value="supervisor_operacional" className="bg-[#05202B] text-white">Seção</option>
                 <option value="visitante" className="bg-[#05202B] text-white">Solicitação do Veículo</option>
               </select>
             </div>

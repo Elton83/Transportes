@@ -420,9 +420,9 @@ export const Sidebar: React.FC<SidebarProps> = ({
             {isDriver
               ? 'MO'
               : currentRole === 'supervisor_operacional' || currentRole === 'coordenador'
-              ? 'SO'
+              ? 'SE'
               : currentRole === 'supervisor_administrativo' || currentRole === 'solicitante'
-              ? 'SA'
+              ? 'CH'
               : currentRole === 'visitante'
               ? 'SV'
               : 'AD'}
@@ -445,12 +445,12 @@ export const Sidebar: React.FC<SidebarProps> = ({
                 {isDriver
                   ? `Matrícula ${currentDriver?.matricula || '48.912-3'} • Motorista`
                   : currentRole === 'supervisor_operacional' || currentRole === 'coordenador'
-                  ? 'Supervisora Operacional de Transportes'
+                  ? 'Seção de Rodízio e Transportes'
                   : currentRole === 'supervisor_administrativo' || currentRole === 'solicitante'
-                  ? 'Supervisor Administrativo'
+                  ? 'Chefia da Divisão de Transportes'
                   : currentRole === 'visitante'
                   ? 'Matr. TJPR-98.341-2 • Solicitante'
-                  : 'Administrador da Divisão de Transportes'}
+                  : 'Admin da Divisão de Transportes'}
               </p>
             </div>
           )}
