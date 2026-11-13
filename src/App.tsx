@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { 
   AlertCircle, 
   Car, 
@@ -14,6 +14,7 @@ import {
   LayoutDashboard,
   SlidersHorizontal,
   Bell,
+  Volume2,
   X
 } from 'lucide-react';
 import { 
@@ -100,6 +101,12 @@ import {
 } from './services/accessControl';
 import { AccessRestrictedView } from './components/common/AccessRestrictedView';
 import { DriverSessionBar } from './components/common/DriverSessionBar';
+import {
+  initSoundAlertsUnlock,
+  playMotoristaAssignedAlert,
+  playRodizioChamadoConcluidoAlert,
+  SoundAlertEventDetail
+} from './services/soundAlerts';
 
 export default function App() {
   // Estado principal de navegação e perfis (Iniciando na Agenda de Serviços para Motorista)
@@ -189,6 +196,28 @@ export default function App() {
 
   // Banner informativo temporário
   const [toastMessage, setToastMessage] = useState<string | null>(null);
+
+  // Último alerta sonoro disparado (exibição visual discreta estilo app)
+  const [activeSoundAlertBanner, setActiveSoundAlertBanner] = useState<SoundAlertEventDetail | null>(null);
+
+  useEffect(() => {
+    initSoundAlertsUnlock();
+    let timer: ReturnType<typeof setTimeout> | null = null;
+    const onSoundAlert = (e: Event) => {
+      const detail = (e as CustomEvent<SoundAlertEventDetail>).detail;
+      if (!detail) return;
+      setActiveSoundAlertBanner(detail);
+      if (timer) clearTimeout(timer);
+      timer = setTimeout(() => {
+        setActiveSoundAlertBanner(null);
+      }, 4500);
+    };
+    window.addEventListener('sigpat-sound-alert', onSoundAlert);
+    return () => {
+      window.removeEventListener('sigpat-sound-alert', onSoundAlert);
+      if (timer) clearTimeout(timer);
+    };
+  }, []);
 
   // Estado para a Pesquisa de Satisfação com Carinhas de 1 a 5 (Finalização de Chamados)
   const [satisfactionSurveyData, setSatisfactionSurveyData] = useState<{
@@ -406,6 +435,11 @@ export default function App() {
     };
     setNotifications((prev) => [supervisorNotif, ...prev]);
 
+    // Alerta sonoro para o Rodízio: Chamado concluído após pesquisa do solicitante
+    playRodizioChamadoConcluidoAlert({
+      subtitle: `Chamado ${data.chamadoCodigo} concluído com avaliação ${data.rating}/5.`,
+    });
+
     showToast(`Avaliação ${data.rating}/5 registrada! Notificação transmitida à Supervisão de Rodízio e incluída no Relatório de Pesquisa.`);
   };
 
@@ -537,6 +571,11 @@ export default function App() {
 
     showToast(`Solicitação ${solicitationData.protocoloSiga} protocolada no SIGA com sucesso!`);
 
+    // Alerta sonoro para o Motorista: Nova viagem SIGA designada
+    playMotoristaAssignedAlert({
+      subtitle: `Nova viagem SIGA (${solicitationData.protocoloSiga}) designada para ${suitableDriver.nome} (${suitableVehicle.prefixo}).`,
+    });
+
     // Se optou por WhatsApp imediato, abre modal de confirmação do WhatsApp
     if (solicitationData.enviarWhatsAppImediato) {
       setTimeout(() => {
@@ -577,12 +616,18 @@ export default function App() {
 
     setChamados((prev) => [newChamado, ...prev]);
     setNewChamadoModalOpen(false);
+    if (newChamado.motoristaId) {
+      playMotoristaAssignedAlert({
+        subtitle: `Novo chamado ${newChamado.codigo} designado ao motorista ${newChamado.motoristaNome || 'escalado'}.`,
+      });
+    }
     showToast(`Chamado ${newChamado.codigo} aberto com sucesso e encaminhado à Divisão de Transportes.`);
   };
 
   const handleUpdateChamadoStatus = (chamadoId: string, novoStatus: ChamadoStatus) => {
     const now = new Date();
     const formattedDate = `${now.toISOString().split('T')[0]} ${now.toTimeString().split(' ')[0].substring(0, 5)}`;
+    const targetChamado = chamados.find((c) => c.id === chamadoId);
 
     setChamados((prev) =>
       prev.map((c) => {
@@ -612,6 +657,13 @@ export default function App() {
         return c;
       })
     );
+
+    if (novoStatus === 'concluido') {
+      playRodizioChamadoConcluidoAlert({
+        subtitle: `Chamado ${targetChamado?.codigo || ''} concluído no sistema.`,
+      });
+    }
+
     showToast(`Status do chamado atualizado.`);
   };
 
@@ -714,6 +766,12 @@ export default function App() {
       );
     }
 
+    // Alerta sonoro estilo Uber Driver para o Motorista designado
+    const targetChamadoRef = chamados.find((c) => c.id === chamadoId);
+    playMotoristaAssignedAlert({
+      subtitle: `Chamado ${targetChamadoRef?.codigo || ''} designado para ${selectedDriver?.nome || 'Motorista'} (${selectedVehicle?.prefixo || 'Frota'}).`,
+    });
+
     showToast(`Motorista (${selectedDriver?.nome}) e Veículo (${selectedVehicle?.prefixo}) atualizados com sucesso pelo Supervisor de Rodízio! SLA cumprido.`);
   };
 
@@ -785,6 +843,11 @@ export default function App() {
       ...prev,
     ]);
 
+    // Alerta sonoro estilo Uber Driver para o Motorista confirmado na escala
+    playMotoristaAssignedAlert({
+      subtitle: `Escala confirmada: Chamado ${targetChamado.codigo} designado para ${driverName} (${vehiclePrefixo}).`,
+    });
+
     showToast(`Escala de rodízio confirmada! Motorista ${driverName} (${vehiclePrefixo}) pronto para atendimento.`);
   };
 
@@ -818,6 +881,12 @@ export default function App() {
         return c;
       })
     );
+
+    // Alerta sonoro para o Rodízio: Chamado concluído
+    const closedChamado = chamados.find((c) => c.id === chamadoId);
+    playRodizioChamadoConcluidoAlert({
+      subtitle: `Chamado ${closedChamado?.codigo || ''} concluído e homologado no Rodízio.`,
+    });
 
     showToast(`Chamado encerrado e homologado oficialmente pela Coordenação!`);
   };
@@ -1171,6 +1240,11 @@ export default function App() {
           : t
       )
     );
+
+    // Alerta sonoro para o Motorista designado
+    playMotoristaAssignedAlert({
+      subtitle: `Viagem aprovada e designada para ${drv?.nome || 'Motorista'} (${veh?.prefixo || 'Frota'}).`,
+    });
 
     showToast(`Solicitação aprovada! Veículo ${veh?.prefixo} e motorista ${drv?.nome} escalados.`);
   };
@@ -2299,6 +2373,38 @@ export default function App() {
           <Phone className="w-7 h-7 sm:w-8 sm:h-8 fill-white" />
         </button>
       </div>
+
+      {/* Alerta Flutuante Discreto de Aviso Sonoro Emitido (Solicitante / Motorista / Rodízio) */}
+      {activeSoundAlertBanner && (
+        <div className="fixed bottom-5 left-5 z-50 max-w-sm bg-slate-900/95 text-white border border-emerald-400/40 rounded-2xl shadow-2xl px-4 py-3 flex items-center gap-3 backdrop-blur-md animate-in slide-in-from-bottom-4 duration-200">
+          <div className={`w-9 h-9 rounded-xl flex items-center justify-center shrink-0 ${
+            activeSoundAlertBanner.targetProfile === 'Motorista'
+              ? 'bg-amber-500/20 text-amber-300 border border-amber-400/40'
+              : activeSoundAlertBanner.targetProfile === 'Rodízio'
+              ? 'bg-sky-500/20 text-sky-300 border border-sky-400/40'
+              : 'bg-emerald-500/20 text-emerald-300 border border-emerald-400/40'
+          }`}>
+            <Volume2 className="w-4 h-4 animate-pulse" />
+          </div>
+          <div className="min-w-0 flex-1">
+            <div className="flex items-center gap-1.5">
+              <span className="text-[10px] font-extrabold uppercase tracking-wider text-emerald-300">
+                Alerta Sonoro • {activeSoundAlertBanner.targetProfile}
+              </span>
+            </div>
+            <p className="text-xs font-bold text-white truncate">{activeSoundAlertBanner.title}</p>
+            <p className="text-[11px] text-slate-300 truncate">{activeSoundAlertBanner.description}</p>
+          </div>
+          <button
+            type="button"
+            onClick={() => setActiveSoundAlertBanner(null)}
+            className="text-slate-400 hover:text-white p-1 rounded-lg cursor-pointer"
+            aria-label="Fechar alerta sonoro"
+          >
+            <X className="w-3.5 h-3.5" />
+          </button>
+        </div>
+      )}
 
       </div>
 

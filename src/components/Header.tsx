@@ -26,7 +26,9 @@ import {
   UserPlus,
   FileSignature,
   CalendarDays,
-  Type
+  Type,
+  Volume2,
+  VolumeX
 } from 'lucide-react';
 import { Driver, NotificationItem, Role, Vehicle, SecaoSubRole } from '../types';
 import { 
@@ -36,6 +38,13 @@ import {
   ROLE_CONFIGS,
   SECAO_SUBROLES
 } from '../services/accessControl';
+import {
+  isSoundAlertsEnabled,
+  setSoundAlertsEnabled,
+  playSolicitanteApproachingAlert,
+  playMotoristaAssignedAlert,
+  playRodizioChamadoConcluidoAlert
+} from '../services/soundAlerts';
 
 export type MainNavTab = 
   | 'dashboard' 
@@ -111,14 +120,40 @@ export const Header: React.FC<HeaderProps> = ({
   const [secaoMenuOpen, setSecaoMenuOpen] = useState(false);
   const secaoDropdownRef = useRef<HTMLDivElement>(null);
 
+  // Controle de Avisos Sonoros (Solicitante / Motorista / Rodízio)
+  const [soundEnabled, setSoundEnabled] = useState<boolean>(() => isSoundAlertsEnabled());
+  const [showSoundMenu, setShowSoundMenu] = useState(false);
+  const [soundPulse, setSoundPulse] = useState(false);
+  const soundMenuRef = useRef<HTMLDivElement>(null);
+
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
       if (secaoDropdownRef.current && !secaoDropdownRef.current.contains(event.target as Node)) {
         setSecaoMenuOpen(false);
       }
+      if (soundMenuRef.current && !soundMenuRef.current.contains(event.target as Node)) {
+        setShowSoundMenu(false);
+      }
+    };
+    const onSettingChange = (e: Event) => {
+      const enabled = (e as CustomEvent<{ enabled: boolean }>).detail?.enabled;
+      if (typeof enabled === 'boolean') setSoundEnabled(enabled);
+    };
+    let pulseTimer: ReturnType<typeof setTimeout> | null = null;
+    const onSoundAlert = () => {
+      setSoundPulse(true);
+      if (pulseTimer) clearTimeout(pulseTimer);
+      pulseTimer = setTimeout(() => setSoundPulse(false), 1600);
     };
     document.addEventListener('mousedown', handleClickOutside);
-    return () => document.removeEventListener('mousedown', handleClickOutside);
+    window.addEventListener('sigpat-sound-setting-changed', onSettingChange);
+    window.addEventListener('sigpat-sound-alert', onSoundAlert);
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+      window.removeEventListener('sigpat-sound-setting-changed', onSettingChange);
+      window.removeEventListener('sigpat-sound-alert', onSoundAlert);
+      if (pulseTimer) clearTimeout(pulseTimer);
+    };
   }, []);
 
   // Controle de Tamanho de Fonte (Acessibilidade e Alta Visibilidade)
@@ -567,6 +602,124 @@ export const Header: React.FC<HeaderProps> = ({
               >
                 A+
               </button>
+            </div>
+
+            {/* Avisos Sonoros (Estilo Uber: Solicitante, Motorista e Rodízio) */}
+            <div className="relative" ref={soundMenuRef}>
+              <button
+                id="header-sound-btn"
+                type="button"
+                aria-label="Configurar avisos sonoros"
+                onClick={() => setShowSoundMenu((prev) => !prev)}
+                className={`relative p-1.5 rounded-lg transition-all cursor-pointer ${
+                  soundPulse
+                    ? 'bg-emerald-500/25 text-emerald-300 ring-2 ring-emerald-400/60 scale-105'
+                    : soundEnabled
+                    ? 'text-emerald-300 hover:text-white hover:bg-white/10'
+                    : 'text-[#8E9CA8] hover:text-white hover:bg-white/10'
+                }`}
+                title={soundEnabled ? 'Avisos Sonoros Ativos (Clique para configurar/testar)' : 'Avisos Sonoros Silenciados'}
+              >
+                {soundEnabled ? (
+                  <Volume2 className="w-4 h-4 sm:w-5 sm:h-5" />
+                ) : (
+                  <VolumeX className="w-4 h-4 sm:w-5 sm:h-5 text-slate-400" />
+                )}
+                {soundEnabled && (
+                  <span className={`absolute top-1 right-1 w-1.5 h-1.5 rounded-full bg-emerald-400 ${soundPulse ? 'animate-ping' : ''}`} />
+                )}
+              </button>
+
+              {showSoundMenu && (
+                <div className="absolute right-0 mt-2 w-72 sm:w-80 bg-white text-slate-800 rounded-xl shadow-2xl border border-slate-200 z-50 overflow-hidden animate-in fade-in-50 zoom-in-95">
+                  <div className="flex items-center justify-between p-3 bg-slate-50 border-b border-slate-200">
+                    <div className="flex items-center gap-1.5">
+                      <Volume2 className="w-4 h-4 text-[#002B49]" />
+                      <h3 className="font-bold text-xs text-slate-900 uppercase tracking-wide">
+                        Avisos Sonoros (Estilo Uber)
+                      </h3>
+                    </div>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        const next = !soundEnabled;
+                        setSoundEnabled(next);
+                        setSoundAlertsEnabled(next);
+                      }}
+                      className={`px-2 py-0.5 rounded-full text-[10px] font-bold cursor-pointer border transition-colors ${
+                        soundEnabled
+                          ? 'bg-emerald-100 text-emerald-800 border-emerald-300 hover:bg-emerald-200'
+                          : 'bg-slate-200 text-slate-600 border-slate-300 hover:bg-slate-300'
+                      }`}
+                    >
+                      {soundEnabled ? 'Ativado' : 'Silenciado'}
+                    </button>
+                  </div>
+
+                  <div className="p-2.5 space-y-1.5 text-xs">
+                    <p className="text-[11px] text-slate-500 px-1 mb-1">
+                      Alertas automáticos configurados por perfil (clique para ouvir):
+                    </p>
+
+                    <button
+                      type="button"
+                      onClick={() =>
+                        playSolicitanteApproachingAlert({
+                          force: true,
+                          subtitle: 'Prévia do alerta quando o veículo está se aproximando.',
+                        })
+                      }
+                      className="w-full text-left p-2 rounded-lg border border-emerald-100 bg-emerald-50/60 hover:bg-emerald-100/70 transition-colors flex items-center justify-between gap-2 cursor-pointer"
+                    >
+                      <div className="min-w-0">
+                        <p className="font-bold text-emerald-950 text-[11px]">1. Solicitante (Veículo Aproximando)</p>
+                        <p className="text-[10px] text-emerald-700 truncate">Chime ao se aproximar e ao chegar</p>
+                      </div>
+                      <span className="text-[10px] font-bold bg-emerald-600 text-white px-2 py-0.5 rounded-md shrink-0">
+                        Ouvir
+                      </span>
+                    </button>
+
+                    <button
+                      type="button"
+                      onClick={() =>
+                        playMotoristaAssignedAlert({
+                          force: true,
+                          subtitle: 'Prévia do alerta ao motorista quando um novo chamado é designado.',
+                        })
+                      }
+                      className="w-full text-left p-2 rounded-lg border border-amber-100 bg-amber-50/60 hover:bg-amber-100/70 transition-colors flex items-center justify-between gap-2 cursor-pointer"
+                    >
+                      <div className="min-w-0">
+                        <p className="font-bold text-amber-950 text-[11px]">2. Motorista (Novo Chamado)</p>
+                        <p className="text-[10px] text-amber-700 truncate">Pulso estilo Uber Driver ao designar</p>
+                      </div>
+                      <span className="text-[10px] font-bold bg-amber-600 text-white px-2 py-0.5 rounded-md shrink-0">
+                        Ouvir
+                      </span>
+                    </button>
+
+                    <button
+                      type="button"
+                      onClick={() =>
+                        playRodizioChamadoConcluidoAlert({
+                          force: true,
+                          subtitle: 'Prévia do alerta ao Rodízio quando um chamado é concluído.',
+                        })
+                      }
+                      className="w-full text-left p-2 rounded-lg border border-sky-100 bg-sky-50/60 hover:bg-sky-100/70 transition-colors flex items-center justify-between gap-2 cursor-pointer"
+                    >
+                      <div className="min-w-0">
+                        <p className="font-bold text-sky-950 text-[11px]">3. Rodízio (Chamado Concluído)</p>
+                        <p className="text-[10px] text-sky-700 truncate">Acorde de conclusão e homologação</p>
+                      </div>
+                      <span className="text-[10px] font-bold bg-[#002B49] text-white px-2 py-0.5 rounded-md shrink-0">
+                        Ouvir
+                      </span>
+                    </button>
+                  </div>
+                </div>
+              )}
             </div>
 
             {/* Notificações */}

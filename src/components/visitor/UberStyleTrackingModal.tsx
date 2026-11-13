@@ -23,9 +23,16 @@ import {
   Sparkles,
   Volume2,
   VolumeX,
-  Zap
+  Zap,
+  BellRing
 } from 'lucide-react';
 import { Trip, Chamado, Vehicle, Driver } from '../../types';
+import {
+  playSolicitanteApproachingAlert,
+  playSolicitanteArrivedAlert,
+  isSoundAlertsEnabled,
+  setSoundAlertsEnabled
+} from '../../services/soundAlerts';
 
 export interface UberStyleTrackingModalProps {
   isOpen: boolean;
@@ -90,7 +97,17 @@ export const UberStyleTrackingModal: React.FC<UberStyleTrackingModalProps> = ({
   const [isPlaying, setIsPlaying] = useState(true);
   const [speedMultiplier, setSpeedMultiplier] = useState<number>(1);
   const [copiedLink, setCopiedLink] = useState(false);
-  const [audioAlerta, setAudioAlerta] = useState(true);
+  const [audioAlerta, setAudioAlerta] = useState<boolean>(() => isSoundAlertsEnabled());
+  const [proximityBanner, setProximityBanner] = useState<{ title: string; detail: string; tone: 'approaching' | 'arrived' } | null>(null);
+  const approachingSoundFiredRef = useRef(false);
+  const arrivedSoundFiredRef = useRef(false);
+
+  // Sincronizar preferência global ao abrir o modal
+  useEffect(() => {
+    if (isOpen) {
+      setAudioAlerta(isSoundAlertsEnabled());
+    }
+  }, [isOpen]);
 
   // Ponto de foco no mapa
   const [mapFocus, setMapFocus] = useState<'car' | 'user' | 'all'>('car');
@@ -144,6 +161,51 @@ export const UberStyleTrackingModal: React.FC<UberStyleTrackingModalProps> = ({
     return () => clearInterval(interval);
   }, [isOpen, isPlaying, speedMultiplier, etapa]);
 
+  // Avisos sonoros estilo Uber para o Solicitante (quando o veículo está se aproximando ou chega)
+  useEffect(() => {
+    if (!isOpen) return;
+
+    if (etapa === 'a_caminho_solicitante') {
+      if (progress < 0.65) {
+        approachingSoundFiredRef.current = false;
+        arrivedSoundFiredRef.current = false;
+        setProximityBanner(null);
+      } else if (progress >= 0.70 && !approachingSoundFiredRef.current) {
+        approachingSoundFiredRef.current = true;
+        const distRestante = Math.max(0.1, (1 - progress) * distTotalOrigemKm);
+        const minRestante = Math.max(1, Math.round((1 - progress) * tempoTotalOrigemMin));
+        if (audioAlerta) {
+          playSolicitanteApproachingAlert({
+            force: true,
+            subtitle: `${driverData.veiculoPrefixo} (${driverData.nome.split(' ')[0]}) está a ${distRestante.toFixed(1)} km (~${minRestante} min) do seu embarque.`,
+          });
+        }
+        setProximityBanner({
+          title: 'Veículo se aproximando!',
+          detail: `${driverData.veiculoPrefixo} está a ~${distRestante.toFixed(1)} km (${minRestante} min) • Prepare-se para o embarque.`,
+          tone: 'approaching',
+        });
+      }
+    } else if (etapa === 'no_local') {
+      if (!arrivedSoundFiredRef.current) {
+        arrivedSoundFiredRef.current = true;
+        if (audioAlerta) {
+          playSolicitanteArrivedAlert({
+            force: true,
+            subtitle: `${driverData.veiculoPrefixo} chegou ao local de embarque (${origem}).`,
+          });
+        }
+        setProximityBanner({
+          title: 'Motorista chegou ao local!',
+          detail: `O veículo oficial ${driverData.veiculoPrefixo} (${driverData.veiculoPlaca}) aguarda você no embarque.`,
+          tone: 'arrived',
+        });
+      }
+    } else {
+      setProximityBanner(null);
+    }
+  }, [isOpen, etapa, progress, audioAlerta, driverData, origem, distTotalOrigemKm, tempoTotalOrigemMin]);
+
   // Transição automática de 'no_local' para 'a_caminho_destino' após breve pausa simulando o embarque
   useEffect(() => {
     if (etapa === 'no_local' && isPlaying) {
@@ -187,7 +249,7 @@ export const UberStyleTrackingModal: React.FC<UberStyleTrackingModalProps> = ({
         tempoAteDestino: `${tempoTotalDestinoMin} min`,
         velocidade: '0 km/h (Parado)',
         statusTitulo: 'Motorista chegou ao local de embarque!',
-        statusDesc: 'O veículo oficial TJ-101 aguarda você no ponto de partida informado.',
+        statusDesc: `O veículo oficial ${driverData.veiculoPrefixo} aguarda você no ponto de partida informado.`,
         badgeColor: 'bg-blue-600 text-white animate-pulse',
       };
     }
@@ -305,11 +367,26 @@ export const UberStyleTrackingModal: React.FC<UberStyleTrackingModalProps> = ({
             {/* Botão de Som / Alerta sonoro */}
             <button
               type="button"
-              onClick={() => setAudioAlerta(!audioAlerta)}
-              className="p-2 rounded-xl bg-slate-800/80 hover:bg-slate-700 text-slate-300 hover:text-white transition-colors cursor-pointer border border-slate-700"
+              onClick={() => {
+                const next = !audioAlerta;
+                setAudioAlerta(next);
+                setSoundAlertsEnabled(next);
+                if (next) {
+                  playSolicitanteApproachingAlert({
+                    force: true,
+                    subtitle: 'Avisos sonoros de aproximação ativados.',
+                  });
+                }
+              }}
+              className={`px-2.5 py-2 rounded-xl transition-colors cursor-pointer border flex items-center gap-1.5 text-xs font-semibold ${
+                audioAlerta
+                  ? 'bg-emerald-500/15 hover:bg-emerald-500/25 text-emerald-300 border-emerald-500/30'
+                  : 'bg-slate-800/80 hover:bg-slate-700 text-slate-400 border-slate-700'
+              }`}
               title={audioAlerta ? 'Silenciar avisos sonoros' : 'Ativar avisos sonoros'}
             >
               {audioAlerta ? <Volume2 className="w-4 h-4 text-emerald-400" /> : <VolumeX className="w-4 h-4 text-slate-500" />}
+              <span className="hidden sm:inline">{audioAlerta ? 'Som Ativo' : 'Mudo'}</span>
             </button>
 
             {/* Compartilhar link seguro */}
@@ -485,6 +562,30 @@ export const UberStyleTrackingModal: React.FC<UberStyleTrackingModalProps> = ({
                   </p>
                 </div>
               </div>
+
+              {/* Alerta Visual + Sonoro de Proximidade (Estilo Uber) */}
+              {proximityBanner && (
+                <div
+                  className={`mt-2.5 rounded-2xl px-3.5 py-2.5 shadow-xl border backdrop-blur-md flex items-center gap-2.5 pointer-events-auto animate-in slide-in-from-top-2 duration-300 ${
+                    proximityBanner.tone === 'arrived'
+                      ? 'bg-blue-600/95 border-blue-300 text-white'
+                      : 'bg-emerald-600/95 border-emerald-300 text-white'
+                  }`}
+                >
+                  <div className="w-8 h-8 rounded-xl bg-white/20 flex items-center justify-center shrink-0 animate-bounce">
+                    <BellRing className="w-4 h-4 text-white" />
+                  </div>
+                  <div className="min-w-0">
+                    <p className="text-xs font-extrabold uppercase tracking-wider leading-tight flex items-center gap-1.5">
+                      <span>{proximityBanner.title}</span>
+                      {audioAlerta && <Volume2 className="w-3.5 h-3.5 text-amber-200 shrink-0" />}
+                    </p>
+                    <p className="text-[11px] text-white/95 font-medium truncate mt-0.5">
+                      {proximityBanner.detail}
+                    </p>
+                  </div>
+                </div>
+              )}
             </div>
 
             {/* Controles de Câmera do Mapa */}
