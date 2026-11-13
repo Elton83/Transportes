@@ -2130,6 +2130,7 @@ export default function App() {
             {/* ABA 8: Portal do Visitante (Solicitação Rápida de Viagem e Reserva) */}
             {(activeNavTab === 'visitante' || currentRole === 'visitante') && (
               <VisitorPortal
+                currentRole={currentRole}
                 comarcas={[
                   'Curitiba - Sede Administrativa',
                   'Curitiba - Palácio da Justiça',

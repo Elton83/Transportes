@@ -19,6 +19,8 @@ import {
   Share2,
   ChevronRight,
   Eye,
+  EyeOff,
+  Lock,
   Crosshair,
   Sparkles,
   Volume2,
@@ -46,6 +48,7 @@ export interface UberStyleTrackingModalProps {
   chamado?: Chamado;
   veiculo?: Vehicle;
   motorista?: Driver;
+  isSolicitante?: boolean;
 }
 
 // Coordenadas simuladas realistas da malha viária de Curitiba / Região Central (Centro Cívico / Palácio da Justiça / Fóruns)
@@ -80,7 +83,8 @@ export const UberStyleTrackingModal: React.FC<UberStyleTrackingModalProps> = ({
   trip,
   chamado,
   veiculo,
-  motorista
+  motorista,
+  isSolicitante = true,
 }) => {
   // Controle de tela cheia
   const [isFullScreen, setIsFullScreen] = useState(false);
@@ -98,9 +102,16 @@ export const UberStyleTrackingModal: React.FC<UberStyleTrackingModalProps> = ({
   const [speedMultiplier, setSpeedMultiplier] = useState<number>(1);
   const [copiedLink, setCopiedLink] = useState(false);
   const [audioAlerta, setAudioAlerta] = useState<boolean>(() => isSoundAlertsEnabled());
+  // Opção exclusiva do Solicitante após a chegada do motorista: habilitar ou não o monitoramento no trecho seguinte
+  const [monitoramentoPosChegada, setMonitoramentoPosChegada] = useState<boolean>(true);
   const [proximityBanner, setProximityBanner] = useState<{ title: string; detail: string; tone: 'approaching' | 'arrived' } | null>(null);
   const approachingSoundFiredRef = useRef(false);
   const arrivedSoundFiredRef = useRef(false);
+
+  // Indica se o motorista já chegou ao solicitante (etapa >= no_local)
+  const hasDriverArrived = etapa !== 'a_caminho_solicitante';
+  // Monitoramento visual para o usuário atual: sempre ativo antes da chegada ou para perfis não-solicitante; após chegada, o Solicitante escolhe
+  const isMonitoringVisible = !isSolicitante || !hasDriverArrived || monitoramentoPosChegada;
 
   // Sincronizar preferência global ao abrir o modal
   useEffect(() => {
@@ -125,7 +136,6 @@ export const UberStyleTrackingModal: React.FC<UberStyleTrackingModalProps> = ({
       veiculoModelo: veiculo?.modelo || trip?.veiculoModelo || chamado?.veiculoModelo || 'Volkswagen Virtus TSI 2024',
       veiculoPlaca: veiculo?.placa || chamado?.veiculoPlaca || 'TZI6J11',
       corVeiculo: 'Prata Metálico',
-      pinSeguranca: '4821', // PIN de confirmação de embarque Uber
     };
   }, [motorista, trip, chamado, veiculo]);
 
@@ -619,6 +629,28 @@ export const UberStyleTrackingModal: React.FC<UberStyleTrackingModalProps> = ({
 
             {/* Canvas / SVG Map Vectorial de Curitiba */}
             <div className="w-full h-full min-h-[380px] flex-1 relative flex items-center justify-center select-none overflow-hidden">
+              {!isMonitoringVisible && (
+                <div className="absolute inset-0 z-30 bg-slate-950/92 backdrop-blur-md flex flex-col items-center justify-center p-6 text-center animate-in fade-in duration-200">
+                  <div className="w-16 h-16 rounded-2xl bg-slate-800/90 border border-slate-700 flex items-center justify-center text-slate-300 mb-4 shadow-xl">
+                    <EyeOff className="w-8 h-8 text-amber-400" />
+                  </div>
+                  <h4 className="text-base sm:text-lg font-extrabold text-white">
+                    Monitoramento Desabilitado pelo Solicitante
+                  </h4>
+                  <p className="text-xs sm:text-sm text-slate-300 max-w-md mt-1.5 leading-relaxed">
+                    Após a chegada do motorista ao ponto de embarque, você optou por desabilitar o acompanhamento visual em mapa.
+                    Para os demais fins operacionais e controle de frota do TJPR, a telemetria continua sempre habilitada.
+                  </p>
+                  <button
+                    type="button"
+                    onClick={() => setMonitoramentoPosChegada(true)}
+                    className="mt-5 px-4 py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-bold flex items-center gap-2 shadow-lg transition-all cursor-pointer"
+                  >
+                    <Eye className="w-4 h-4" />
+                    <span>Habilitar Monitoramento Novamente</span>
+                  </button>
+                </div>
+              )}
               <svg
                 viewBox="0 0 960 700"
                 className="w-full h-full object-cover"
@@ -914,53 +946,43 @@ export const UberStyleTrackingModal: React.FC<UberStyleTrackingModalProps> = ({
                       Até o Destino Final:
                     </span>
                     <span className="text-xl font-black text-blue-400 font-mono tracking-tight">
-                      {metricas.tempoAteDestino}
+                      {isMonitoringVisible ? metricas.tempoAteDestino : 'Oculto'}
                     </span>
                   </div>
                   <div className="flex items-center justify-between text-xs text-slate-400 mt-1">
                     <span>Distância total até o destino:</span>
-                    <strong className="text-slate-200 font-mono">{metricas.distAteDestino}</strong>
+                    <strong className="text-slate-200 font-mono">
+                      {isMonitoringVisible ? metricas.distAteDestino : 'Desabilitado'}
+                    </strong>
                   </div>
                 </div>
               </div>
 
               {/* CARD DO MOTORISTA & VEÍCULO OFICIAL (UBER DRIVER PROFILE) */}
               <div className="bg-slate-800/80 p-4 rounded-2xl border border-slate-700/80 space-y-3">
-                <div className="flex items-center justify-between gap-3">
-                  <div className="flex items-center gap-3 min-w-0">
-                    <img
-                      src={driverData.foto}
-                      alt={driverData.nome}
-                      className="w-13 h-13 rounded-2xl object-cover border-2 border-emerald-500/60 shadow-md shrink-0"
-                    />
-                    <div className="min-w-0">
-                      <div className="flex items-center gap-1.5">
-                        <strong className="text-sm font-bold text-white truncate block">
-                          {driverData.nome}
-                        </strong>
-                      </div>
-                      <p className="text-xs text-slate-400">
-                        Motorista Oficial • Matr. {driverData.matricula}
-                      </p>
-                      <div className="flex items-center gap-2 mt-1 text-xs">
-                        <span className="inline-flex items-center gap-1 text-amber-400 font-bold bg-amber-400/10 px-1.5 py-0.5 rounded border border-amber-400/20">
-                          ★ {driverData.avaliacao}
-                        </span>
-                        <span className="text-slate-400">
-                          {driverData.totalViagens} viagens oficiais
-                        </span>
-                      </div>
+                <div className="flex items-center gap-3">
+                  <img
+                    src={driverData.foto}
+                    alt={driverData.nome}
+                    className="w-13 h-13 rounded-2xl object-cover border-2 border-emerald-500/60 shadow-md shrink-0"
+                  />
+                  <div className="min-w-0 flex-1">
+                    <div className="flex items-center gap-1.5">
+                      <strong className="text-sm font-bold text-white truncate block">
+                        {driverData.nome}
+                      </strong>
                     </div>
-                  </div>
-
-                  {/* PIN de Segurança de Embarque */}
-                  <div className="bg-slate-950 p-2 rounded-xl border border-slate-700 text-center shrink-0">
-                    <span className="text-[9px] uppercase font-bold text-slate-400 block">
-                      PIN Confirmação
-                    </span>
-                    <span className="text-base font-mono font-black text-emerald-400">
-                      {driverData.pinSeguranca}
-                    </span>
+                    <p className="text-xs text-slate-400">
+                      Motorista Oficial • Matr. {driverData.matricula}
+                    </p>
+                    <div className="flex items-center gap-2 mt-1 text-xs">
+                      <span className="inline-flex items-center gap-1 text-amber-400 font-bold bg-amber-400/10 px-1.5 py-0.5 rounded border border-amber-400/20">
+                        ★ {driverData.avaliacao}
+                      </span>
+                      <span className="text-slate-400">
+                        {driverData.totalViagens} viagens oficiais
+                      </span>
+                    </div>
                   </div>
                 </div>
 
@@ -1024,6 +1046,66 @@ export const UberStyleTrackingModal: React.FC<UberStyleTrackingModalProps> = ({
                   </div>
                 </div>
               </div>
+
+              {/* Opção Exclusiva do Solicitante após a chegada do motorista */}
+              {hasDriverArrived && (
+                <div className={`p-3 rounded-xl border text-xs transition-colors ${
+                  isSolicitante
+                    ? 'bg-slate-950/80 border-slate-700/80'
+                    : 'bg-slate-950/60 border-emerald-500/30'
+                }`}>
+                  <div className="flex items-center justify-between gap-3">
+                    <div className="min-w-0">
+                      <span className="text-[10px] uppercase font-bold tracking-wider text-slate-400 block">
+                        {isSolicitante ? 'Monitoramento (Solicitante)' : 'Monitoramento Institucional'}
+                      </span>
+                      <p className="text-[11px] font-semibold text-white mt-0.5">
+                        {isSolicitante
+                          ? (monitoramentoPosChegada
+                              ? 'Habilitado após a chegada do motorista'
+                              : 'Desabilitado pelo solicitante')
+                          : 'Sempre habilitado para os demais fins'}
+                      </p>
+                    </div>
+
+                    {isSolicitante ? (
+                      <button
+                        type="button"
+                        role="switch"
+                        aria-checked={monitoramentoPosChegada}
+                        onClick={() => setMonitoramentoPosChegada((prev) => !prev)}
+                        className={`shrink-0 px-3 py-1.5 rounded-lg font-bold text-[11px] flex items-center gap-1.5 transition-all cursor-pointer border ${
+                          monitoramentoPosChegada
+                            ? 'bg-emerald-600/25 hover:bg-emerald-600/35 text-emerald-300 border-emerald-500/50'
+                            : 'bg-slate-800 hover:bg-slate-700 text-slate-300 border-slate-600'
+                        }`}
+                      >
+                        {monitoramentoPosChegada ? (
+                          <>
+                            <Eye className="w-3.5 h-3.5 text-emerald-400" />
+                            <span>Habilitado</span>
+                          </>
+                        ) : (
+                          <>
+                            <EyeOff className="w-3.5 h-3.5 text-amber-400" />
+                            <span>Desabilitado</span>
+                          </>
+                        )}
+                      </button>
+                    ) : (
+                      <span className="shrink-0 px-2.5 py-1 rounded-lg bg-emerald-500/15 text-emerald-300 border border-emerald-500/30 font-bold text-[10px] flex items-center gap-1">
+                        <Lock className="w-3 h-3" />
+                        Sempre Ativo
+                      </span>
+                    )}
+                  </div>
+                  {isSolicitante && (
+                    <p className="text-[10px] text-slate-400 mt-1.5 leading-snug">
+                      Após a chegada do motorista, você pode optar por manter ou desabilitar o monitoramento. Para a Frota/Rodízio, permanece sempre habilitado.
+                    </p>
+                  )}
+                </div>
+              )}
             </div>
 
             {/* Rodapé do Painel */}

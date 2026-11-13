@@ -48,7 +48,7 @@ import {
   FileCheck2,
   Shield
 } from 'lucide-react';
-import { Chamado, Trip, Vehicle, Driver, VisitorSolicitationData, PassengerDetail, OfficialDocument } from '../../types';
+import { Chamado, Trip, Vehicle, Driver, VisitorSolicitationData, PassengerDetail, OfficialDocument, Role } from '../../types';
 import { 
   lookupHerculesServidor, 
   lookupReceitaFederalCpf, 
@@ -64,6 +64,7 @@ import { DocumentPreviewModal } from '../documents/DocumentPreviewModal';
 import { UberStyleTrackingModal } from './UberStyleTrackingModal';
 
 interface VisitorPortalProps {
+  currentRole?: Role;
   comarcas?: string[];
   onSubmitSolicitation: (solicitation: VisitorSolicitationData) => { chamadoCodigo: string; tripCodigo?: string };
   onNavigateToCoordinator?: () => void;
@@ -90,6 +91,7 @@ interface VisitorPortalProps {
 const DEFAULT_HERCULES_USER = HERCULES_SERVIDORES[0]; // Dr. Elton Rabelo
 
 export const VisitorPortal: React.FC<VisitorPortalProps> = ({
+  currentRole = 'visitante',
   comarcas = [
     'Curitiba - Sede Administrativa',
     'Curitiba - Palácio da Justiça',
@@ -1037,26 +1039,17 @@ export const VisitorPortal: React.FC<VisitorPortalProps> = ({
             </div>
           </div>
 
-          {/* REQUISITO: ACOMPANHAMENTO EM TEMPO REAL ESTILO UBER DO DESLOCAMENTO DO MOTORISTA */}
+          {/* REQUISITO: ACOMPANHAMENTO EM TEMPO REAL DO DESLOCAMENTO DO MOTORISTA */}
           <div className="bg-gradient-to-br from-slate-900 via-[#002B49] to-slate-950 text-white rounded-2xl p-5 border border-slate-700/80 shadow-xl space-y-4 animate-in fade-in">
             <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
-              <div className="flex items-start gap-3.5">
+              <div className="flex items-center gap-3.5">
                 <div className="w-12 h-12 rounded-2xl bg-emerald-500/20 text-emerald-400 border border-emerald-500/40 flex items-center justify-center shrink-0 shadow-lg">
                   <Car className="w-6 h-6 animate-pulse" />
                 </div>
                 <div>
-                  <div className="flex items-center gap-2 flex-wrap">
-                    <span className="text-base sm:text-lg font-black tracking-tight text-white flex items-center gap-2">
-                      Acompanhamento ao Vivo do Motorista
-                    </span>
-                    <span className="text-[10px] font-mono px-2 py-0.5 rounded-full bg-emerald-500 text-slate-950 font-black animate-pulse flex items-center gap-1">
-                      <span className="w-1.5 h-1.5 rounded-full bg-slate-950" />
-                      ESTILO UBER • GPS ATIVO
-                    </span>
-                  </div>
-                  <p className="text-xs text-slate-300 mt-0.5">
-                    Acompanhe no mapa o deslocamento do veículo oficial desde o despacho até seu ponto de partida e, em seguida, até o destino final.
-                  </p>
+                  <span className="text-base sm:text-lg font-black tracking-tight text-white flex items-center gap-2">
+                    Acompanhamento do Motorista
+                  </span>
                 </div>
               </div>
 
@@ -1072,7 +1065,7 @@ export const VisitorPortal: React.FC<VisitorPortalProps> = ({
                 className="px-5 py-3 rounded-xl bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-black text-xs sm:text-sm flex items-center justify-center gap-2 shadow-lg shadow-emerald-500/30 hover:scale-[1.02] transition-all cursor-pointer shrink-0"
               >
                 <Navigation className="w-4 h-4 text-slate-950" />
-                <span>Abrir Mapa em Tempo Real (Estilo Uber)</span>
+                <span>Abrir Mapa em Tempo Real</span>
               </button>
             </div>
 
@@ -3273,6 +3266,7 @@ export const VisitorPortal: React.FC<VisitorPortalProps> = ({
           chamado={uberTrackingData.chamado}
           veiculo={uberTrackingData.veiculo}
           motorista={uberTrackingData.motorista}
+          isSolicitante={currentRole === 'visitante'}
         />
       )}
 
