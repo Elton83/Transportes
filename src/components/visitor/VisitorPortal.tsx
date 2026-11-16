@@ -137,6 +137,8 @@ export const VisitorPortal: React.FC<VisitorPortalProps> = ({
   const [lotacaoServidor, setLotacaoServidor] = useState(DEFAULT_HERCULES_USER.lotacao);
   const [documentoOuCpf, setDocumentoOuCpf] = useState(DEFAULT_HERCULES_USER.cpf);
   const [telefone, setTelefone] = useState(DEFAULT_HERCULES_USER.telefone);
+  const [telefoneSecundario, setTelefoneSecundario] = useState('');
+  const [showSegundoTelefone, setShowSegundoTelefone] = useState(false);
   const [email, setEmail] = useState(DEFAULT_HERCULES_USER.email);
   const [comarca, setComarca] = useState(DEFAULT_HERCULES_USER.comarca);
 
@@ -150,6 +152,7 @@ export const VisitorPortal: React.FC<VisitorPortalProps> = ({
     cargo: string;
     cpf: string;
     telefone: string;
+    telefoneSecundario: string;
     email: string;
     comarca: string;
   } | null>(null);
@@ -366,6 +369,8 @@ export const VisitorPortal: React.FC<VisitorPortalProps> = ({
       setDocumentoOuCpf(achado.cpf);
       setEmail(achado.email);
       setTelefone(achado.telefone);
+      setTelefoneSecundario('');
+      setShowSegundoTelefone(false);
       setComarca(achado.comarca);
     } else {
       setHerculesValidado(false);
@@ -381,14 +386,12 @@ export const VisitorPortal: React.FC<VisitorPortalProps> = ({
       cargo: cargoServidor,
       cpf: documentoOuCpf,
       telefone: telefone,
+      telefoneSecundario: telefoneSecundario,
       email: email,
       comarca: comarca,
     });
     setModoEdicaoCadastral(true);
-    setCadastralFeedback({
-      tipo: 'info',
-      texto: 'Modo de edição habilitado: altere os campos que apresentarem divergência e clique em "Atualizar Dados".'
-    });
+    setCadastralFeedback(null);
   };
 
   // Salvar e atualizar dados cadastrais editados
@@ -417,6 +420,8 @@ export const VisitorPortal: React.FC<VisitorPortalProps> = ({
       setCargoServidor(dadosBackup.cargo);
       setDocumentoOuCpf(dadosBackup.cpf);
       setTelefone(dadosBackup.telefone);
+      setTelefoneSecundario(dadosBackup.telefoneSecundario);
+      setShowSegundoTelefone(Boolean(dadosBackup.telefoneSecundario));
       setEmail(dadosBackup.email);
       setComarca(dadosBackup.comarca);
     }
@@ -476,6 +481,8 @@ export const VisitorPortal: React.FC<VisitorPortalProps> = ({
     setLotacaoServidor(DEFAULT_HERCULES_USER.lotacao);
     setDocumentoOuCpf(DEFAULT_HERCULES_USER.cpf);
     setTelefone(DEFAULT_HERCULES_USER.telefone);
+    setTelefoneSecundario('');
+    setShowSegundoTelefone(false);
     setEmail(DEFAULT_HERCULES_USER.email);
     setComarca(DEFAULT_HERCULES_USER.comarca);
     setHerculesServidor(DEFAULT_HERCULES_USER);
@@ -695,6 +702,7 @@ export const VisitorPortal: React.FC<VisitorPortalProps> = ({
       lotacaoServidor,
       documentoOuCpf: documentoOuCpf.trim(),
       telefone: telefone.trim(),
+      telefoneSecundario: telefoneSecundario.trim() || undefined,
       email: email.trim(),
       orgaoOuVinculo: cargoServidor || 'Servidor do Judiciário',
       comarca,
@@ -1570,7 +1578,9 @@ export const VisitorPortal: React.FC<VisitorPortalProps> = ({
                           <span className="text-slate-400">•</span>
                           <span className="text-slate-600">{comarca}</span>
                           <span className="text-slate-400">•</span>
-                          <span className="text-emerald-700 font-medium">WhatsApp: {telefone}</span>
+                          <span className="text-emerald-700 font-medium">
+                            WhatsApp: {telefone}{telefoneSecundario.trim() ? ` / ${telefoneSecundario.trim()}` : ''}
+                          </span>
                         </div>
                       </div>
                     </div>
@@ -1617,29 +1627,10 @@ export const VisitorPortal: React.FC<VisitorPortalProps> = ({
                     )}
                   </div>
 
-                  <p className="text-[11px] text-slate-500">
-                    {dadosCadastraisConfirmados
-                      ? 'Dados cadastrais conferidos e validados pelo solicitante para este pedido.'
-                      : 'Verifique se seus dados funcionais do sistema Hércules TJPR estão corretos antes de prosseguir.'}
-                  </p>
-
-                  {/* Banner Informativo quando modo edição está ativo */}
-                  {modoEdicaoCadastral && (
-                    <div className="p-3 rounded-xl bg-blue-50 border border-blue-200 flex flex-col sm:flex-row sm:items-center justify-between gap-2 animate-in fade-in">
-                      <div className="flex items-center gap-2 text-xs text-blue-900 font-medium">
-                        <span className="w-2 h-2 rounded-full bg-blue-600 animate-pulse shrink-0" />
-                        <span>
-                          <strong>Modo de Edição Habilitado:</strong> Modifique os campos com divergência abaixo e clique em <strong>"Atualizar & Confirmar Dados"</strong> abaixo do campo.
-                        </span>
-                      </div>
-                      <button
-                        type="button"
-                        onClick={handleRestaurarHercules}
-                        className="text-[11px] font-semibold text-blue-700 hover:text-blue-900 underline self-start sm:self-auto cursor-pointer"
-                      >
-                        Restaurar Padrão Hércules TJPR
-                      </button>
-                    </div>
+                  {dadosCadastraisConfirmados && (
+                    <p className="text-[11px] text-slate-500">
+                      Dados cadastrais conferidos e validados pelo solicitante para este pedido.
+                    </p>
                   )}
 
                   {/* Feedback inline */}
@@ -1737,6 +1728,11 @@ export const VisitorPortal: React.FC<VisitorPortalProps> = ({
                               WhatsApp / Celular
                             </span>
                             <span className="font-bold text-slate-800 truncate block">{telefone}</span>
+                            {telefoneSecundario.trim() && (
+                              <span className="text-[11px] font-semibold text-slate-600 truncate block mt-0.5">
+                                Alt.: {telefoneSecundario.trim()}
+                              </span>
+                            )}
                           </div>
                         </div>
 
@@ -1779,14 +1775,9 @@ export const VisitorPortal: React.FC<VisitorPortalProps> = ({
                       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3.5">
                         {/* Nome Completo */}
                         <div className="sm:col-span-2">
-                          <div className="flex items-center justify-between mb-1">
-                            <label className="block text-xs font-semibold text-slate-700">
-                              Nome Completo do Servidor *
-                            </label>
-                            <span className="text-[10px] font-bold text-blue-600 uppercase tracking-wider">
-                              Editável
-                            </span>
-                          </div>
+                          <label className="block text-xs font-semibold text-slate-700 mb-1">
+                            Nome Completo do Servidor *
+                          </label>
                           <div className="relative">
                             <User className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-blue-600" />
                             <input
@@ -1801,14 +1792,9 @@ export const VisitorPortal: React.FC<VisitorPortalProps> = ({
 
                         {/* Matrícula Funcional */}
                         <div>
-                          <div className="flex items-center justify-between mb-1">
-                            <label className="block text-xs font-semibold text-slate-700">
-                              Matrícula Funcional TJPR
-                            </label>
-                            <span className="text-[10px] font-bold text-blue-600 uppercase tracking-wider">
-                              Editável
-                            </span>
-                          </div>
+                          <label className="block text-xs font-semibold text-slate-700 mb-1">
+                            Matrícula Funcional TJPR
+                          </label>
                           <div className="relative">
                             <SearchCode className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-blue-600" />
                             <input
@@ -1822,14 +1808,9 @@ export const VisitorPortal: React.FC<VisitorPortalProps> = ({
 
                         {/* Cargo / Função */}
                         <div>
-                          <div className="flex items-center justify-between mb-1">
-                            <label className="block text-xs font-semibold text-slate-700">
-                              Cargo / Função Oficial
-                            </label>
-                            <span className="text-[10px] font-bold text-blue-600 uppercase tracking-wider">
-                              Editável
-                            </span>
-                          </div>
+                          <label className="block text-xs font-semibold text-slate-700 mb-1">
+                            Cargo / Função Oficial
+                          </label>
                           <div className="relative">
                             <Briefcase className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-blue-600" />
                             <input
@@ -1843,14 +1824,9 @@ export const VisitorPortal: React.FC<VisitorPortalProps> = ({
 
                         {/* CPF */}
                         <div>
-                          <div className="flex items-center justify-between mb-1">
-                            <label className="block text-xs font-semibold text-slate-700">
-                              CPF do Solicitante
-                            </label>
-                            <span className="text-[10px] font-bold text-blue-600 uppercase tracking-wider">
-                              Editável
-                            </span>
-                          </div>
+                          <label className="block text-xs font-semibold text-slate-700 mb-1">
+                            CPF do Solicitante
+                          </label>
                           <div className="relative">
                             <FileText className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-blue-600" />
                             <input
@@ -1864,14 +1840,9 @@ export const VisitorPortal: React.FC<VisitorPortalProps> = ({
 
                         {/* WhatsApp / Celular */}
                         <div>
-                          <div className="flex items-center justify-between mb-1">
-                            <label className="block text-xs font-semibold text-slate-700">
-                              WhatsApp / Celular (Avisos de Reserva) *
-                            </label>
-                            <span className="text-[10px] font-bold text-blue-600 uppercase tracking-wider">
-                              Editável
-                            </span>
-                          </div>
+                          <label className="block text-xs font-semibold text-slate-700 mb-1">
+                            WhatsApp / Celular (Avisos de Reserva) *
+                          </label>
                           <div className="relative">
                             <Phone className="w-4 h-4 text-emerald-600 absolute left-3 top-1/2 -translate-y-1/2" />
                             <input
@@ -1884,16 +1855,52 @@ export const VisitorPortal: React.FC<VisitorPortalProps> = ({
                           </div>
                         </div>
 
+                        {/* Telefone Adicional (Opcional) */}
+                        <div>
+                          <label className="block text-xs font-semibold text-slate-700 mb-1">
+                            Telefone Adicional (Opcional)
+                          </label>
+                          {showSegundoTelefone || telefoneSecundario ? (
+                            <div className="relative flex items-center gap-1.5">
+                              <div className="relative flex-1">
+                                <Phone className="w-4 h-4 text-blue-600 absolute left-3 top-1/2 -translate-y-1/2" />
+                                <input
+                                  type="tel"
+                                  value={telefoneSecundario}
+                                  onChange={(e) => setTelefoneSecundario(e.target.value)}
+                                  placeholder="Ex: (41) 99999-0000"
+                                  className="w-full pl-9 pr-3 py-2 rounded-xl text-xs font-medium bg-white border-2 border-blue-500 text-slate-900 focus:outline-none focus:ring-2 focus:ring-blue-400/20 shadow-xs"
+                                />
+                              </div>
+                              <button
+                                type="button"
+                                onClick={() => {
+                                  setTelefoneSecundario('');
+                                  setShowSegundoTelefone(false);
+                                }}
+                                title="Remover telefone adicional"
+                                className="p-2 rounded-xl border border-slate-200 text-slate-400 hover:text-rose-600 hover:bg-rose-50 transition-colors cursor-pointer shrink-0"
+                              >
+                                <X className="w-4 h-4" />
+                              </button>
+                            </div>
+                          ) : (
+                            <button
+                              type="button"
+                              onClick={() => setShowSegundoTelefone(true)}
+                              className="w-full px-3 py-2 rounded-xl border-2 border-dashed border-blue-300 hover:border-blue-500 bg-blue-50/40 hover:bg-blue-50 text-blue-700 text-xs font-semibold flex items-center justify-center gap-1.5 transition-colors cursor-pointer"
+                            >
+                              <Plus className="w-3.5 h-3.5" />
+                              <span>Adicionar outro telefone</span>
+                            </button>
+                          )}
+                        </div>
+
                         {/* E-mail Institucional */}
                         <div>
-                          <div className="flex items-center justify-between mb-1">
-                            <label className="block text-xs font-semibold text-slate-700">
-                              E-mail Institucional (@tjpr.jus.br)
-                            </label>
-                            <span className="text-[10px] font-bold text-blue-600 uppercase tracking-wider">
-                              Editável
-                            </span>
-                          </div>
+                          <label className="block text-xs font-semibold text-slate-700 mb-1">
+                            E-mail Institucional (@tjpr.jus.br)
+                          </label>
                           <div className="relative">
                             <Mail className="w-4 h-4 text-blue-600 absolute left-3 top-1/2 -translate-y-1/2" />
                             <input
@@ -1906,15 +1913,10 @@ export const VisitorPortal: React.FC<VisitorPortalProps> = ({
                         </div>
 
                         {/* Comarca de Partida */}
-                        <div className="sm:col-span-2 lg:col-span-3">
-                          <div className="flex items-center justify-between mb-1">
-                            <label className="block text-xs font-semibold text-slate-700">
-                              Comarca de Origem / Lotação *
-                            </label>
-                            <span className="text-[10px] font-bold text-blue-600 uppercase tracking-wider">
-                              Editável
-                            </span>
-                          </div>
+                        <div className="sm:col-span-2 lg:col-span-1">
+                          <label className="block text-xs font-semibold text-slate-700 mb-1">
+                            Comarca de Origem / Lotação *
+                          </label>
                           <div className="relative">
                             <Building2 className="w-4 h-4 text-blue-600 absolute left-3 top-1/2 -translate-y-1/2" />
                             <select
@@ -2007,36 +2009,19 @@ export const VisitorPortal: React.FC<VisitorPortalProps> = ({
                 <div className={`transition-all duration-200 p-4 sm:p-5 rounded-2xl border space-y-4 ${
                   item3Confirmado ? 'bg-slate-50/70 border-slate-200/90' : 'bg-white border-slate-200/90 shadow-2xs'
                 }`}>
-                  <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
-                    <div className="flex items-center gap-2 flex-wrap">
-                      <label className="text-xs sm:text-sm font-bold text-slate-900 tracking-tight">
-                        Datas, Horários & Itinerário do Deslocamento
-                      </label>
-                      {item3Confirmado ? (
-                        <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-bold bg-emerald-50 text-emerald-700 border border-emerald-200 shadow-2xs animate-in fade-in">
-                          <CheckCircle2 className="w-3.5 h-3.5 text-emerald-600" />
-                          <span>Etapa Concluída</span>
-                        </span>
-                      ) : (
-                        <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[11px] font-bold bg-amber-50 text-amber-700 border border-amber-200 shadow-2xs animate-in fade-in">
-                          <Clock className="w-3.5 h-3.5 text-amber-600" />
-                          <span>Aguardando Confirmação</span>
-                        </span>
-                      )}
-                    </div>
-
-                    {item3Confirmado && (
+                  {item3Confirmado && (
+                    <div className="flex items-center justify-end">
                       <button
                         type="button"
                         onClick={() => setItem3Expandido(false)}
-                        className="px-3.5 py-1.5 rounded-xl text-xs font-semibold text-slate-600 hover:text-slate-900 bg-white hover:bg-slate-100 border border-slate-300 flex items-center gap-1.5 transition-colors cursor-pointer shadow-2xs self-start sm:self-auto"
+                        className="px-3.5 py-1.5 rounded-xl text-xs font-semibold text-slate-600 hover:text-slate-900 bg-white hover:bg-slate-100 border border-slate-300 flex items-center gap-1.5 transition-colors cursor-pointer shadow-2xs"
                         title="Reduzir datas e itinerário"
                       >
                         <Minus className="w-3.5 h-3.5 text-slate-500 stroke-[2.5]" />
                         <span>Reduzir (-)</span>
                       </button>
-                    )}
-                  </div>
+                    </div>
+                  )}
 
                   {item3Erro && (
                     <div className="p-2.5 rounded-xl bg-red-50 border border-red-200 text-xs font-semibold text-red-900 flex items-center gap-2 animate-in fade-in">
@@ -2045,14 +2030,9 @@ export const VisitorPortal: React.FC<VisitorPortalProps> = ({
                     </div>
                   )}
 
-                  {/* 1º BLOCO: DATAS E HORÁRIOS DO DESLOCAMENTO (ORDEM SOLICITADA) */}
+                  {/* 1º BLOCO: DATAS E HORÁRIOS DO DESLOCAMENTO */}
                   <div className="bg-white p-4 rounded-xl border border-slate-200/90 shadow-2xs space-y-3">
-                    <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-slate-100 pb-2.5">
-                      <span className="text-xs font-bold text-slate-900 flex items-center gap-2">
-                        <Calendar className="w-4 h-4 text-[#05202B]" />
-                        <span>Datas e Horários do Deslocamento:</span>
-                      </span>
-
+                    <div className="flex items-center justify-start border-b border-slate-100 pb-2.5">
                       {/* Checkbox de Retorno em Aberto */}
                       <label className="flex items-center gap-2 cursor-pointer">
                         <input
@@ -2139,14 +2119,6 @@ export const VisitorPortal: React.FC<VisitorPortalProps> = ({
                       </div>
                     </div>
 
-                    {retornoEmAberto && (
-                      <div className="bg-blue-50/70 border border-blue-200 rounded-lg p-2.5 flex items-center gap-2 text-xs text-blue-900">
-                        <Clock className="w-4 h-4 text-blue-600 shrink-0" />
-                        <span>
-                          <strong>Retorno em aberto:</strong> A data e o horário de retorno não são obrigatórios inicialmente e serão preenchidos pelo motorista diretamente no fechamento do Diário de Bordo Oficial.
-                        </span>
-                      </div>
-                    )}
                   </div>
 
                   {/* 2º BLOCO: ITINERÁRIO DO DESLOCAMENTO (ORDEM SOLICITADA) */}

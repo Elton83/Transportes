@@ -150,7 +150,8 @@ export const MagnitudeEventsView: React.FC<MagnitudeEventsViewProps> = ({
   const [veiculosNecessarios, setVeiculosNecessarios] = useState<number>(3);
   const [selectedDrivers, setSelectedDrivers] = useState<string[]>([]);
   const [publicoEstimado, setPublicoEstimado] = useState<string>('150');
-  const [responsavelNome, setResponsavelNome] = useState('Cerimonial / Divisão de Transportes');
+  const [responsavelNome, setResponsavelNome] = useState('Cerimonial • Divisão de Transportes');
+  const [ajudanteDeOrdem, setAjudanteDeOrdem] = useState('');
   const [processoSei, setProcessoSei] = useState('');
   const [observacoes, setObservacoes] = useState('');
   const [formError, setFormError] = useState<string | null>(null);
@@ -174,6 +175,7 @@ export const MagnitudeEventsView: React.FC<MagnitudeEventsViewProps> = ({
           ev.local.toLowerCase().includes(q) ||
           ev.comarca.toLowerCase().includes(q) ||
           (ev.processoSei && ev.processoSei.toLowerCase().includes(q)) ||
+          (ev.ajudanteDeOrdem && ev.ajudanteDeOrdem.toLowerCase().includes(q)) ||
           ev.responsavelNome.toLowerCase().includes(q);
         if (!match) return false;
       }
@@ -309,7 +311,8 @@ export const MagnitudeEventsView: React.FC<MagnitudeEventsViewProps> = ({
       veiculosNecessarios: Math.max(1, Number(veiculosNecessarios) || 1),
       motoristasDesignados: selectedDrivers,
       publicoEstimado: publicoEstimado ? Number(publicoEstimado) : undefined,
-      responsavelNome: responsavelNome.trim() || 'Coordenação de Transportes TJPR',
+      responsavelNome: responsavelNome.trim() || 'Divisão de Transportes TJPR',
+      ajudanteDeOrdem: ajudanteDeOrdem.trim() || undefined,
       processoSei: processoSei.trim() || undefined,
       status: 'planejado',
       observacoes: observacoes.trim() || undefined,
@@ -322,6 +325,7 @@ export const MagnitudeEventsView: React.FC<MagnitudeEventsViewProps> = ({
     // Resetar formulário
     setTitulo('');
     setLocal('');
+    setAjudanteDeOrdem('');
     setProcessoSei('');
     setObservacoes('');
     setSelectedDrivers([]);
@@ -754,6 +758,22 @@ export const MagnitudeEventsView: React.FC<MagnitudeEventsViewProps> = ({
                             </span>
                           )}
                         </div>
+                        {ev.responsavelNome && (
+                          <div className="flex items-start gap-2">
+                            <Users className="w-3.5 h-3.5 text-[#002B49] mt-0.5 shrink-0" />
+                            <span className="text-[11px] text-slate-700">
+                              <strong>Unidades Envolvidas:</strong> {ev.responsavelNome}
+                            </span>
+                          </div>
+                        )}
+                        {ev.ajudanteDeOrdem && (
+                          <div className="flex items-start gap-2">
+                            <Shield className="w-3.5 h-3.5 text-[#C4A052] mt-0.5 shrink-0" />
+                            <span className="text-[11px] text-slate-700">
+                              <strong>Ajudante de Ordem:</strong> {ev.ajudanteDeOrdem}
+                            </span>
+                          </div>
+                        )}
                         {ev.motoristasDesignados.length > 0 && (
                           <div className="flex items-start gap-2">
                             <UserCheck className="w-3.5 h-3.5 text-emerald-600 mt-0.5 shrink-0" />
@@ -838,6 +858,18 @@ export const MagnitudeEventsView: React.FC<MagnitudeEventsViewProps> = ({
                             <MapPin className="w-3.5 h-3.5 text-slate-400" />
                             {ev.local} ({ev.comarca})
                           </span>
+                          {ev.responsavelNome && (
+                            <>
+                              <span>•</span>
+                              <span>Unidades: {ev.responsavelNome}</span>
+                            </>
+                          )}
+                          {ev.ajudanteDeOrdem && (
+                            <>
+                              <span>•</span>
+                              <span>Ajudante de Ordem: {ev.ajudanteDeOrdem}</span>
+                            </>
+                          )}
                         </p>
                       </div>
 
@@ -1063,16 +1095,29 @@ export const MagnitudeEventsView: React.FC<MagnitudeEventsViewProps> = ({
                 </div>
               </div>
 
-              {/* Responsável, Público e SEI */}
-              <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+              {/* Unidades Envolvidas, Ajudante de Ordem, Público e SEI */}
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                 <div>
                   <label className="block text-xs font-bold text-slate-700 mb-1">
-                    Responsável / Setor
+                    Unidades Envolvidas
                   </label>
                   <input
                     type="text"
                     value={responsavelNome}
                     onChange={(e) => setResponsavelNome(e.target.value)}
+                    placeholder="Ex: Cerimonial, Divisão de Transportes, Presidência"
+                    className="w-full px-3 py-2 rounded-xl border border-slate-200 text-xs focus:outline-none focus:border-[#002B49]"
+                  />
+                </div>
+                <div>
+                  <label className="block text-xs font-bold text-slate-700 mb-1">
+                    Ajudante de Ordem
+                  </label>
+                  <input
+                    type="text"
+                    value={ajudanteDeOrdem}
+                    onChange={(e) => setAjudanteDeOrdem(e.target.value)}
+                    placeholder="Ex: Maj. PM Oliveira / Cap. Souza"
                     className="w-full px-3 py-2 rounded-xl border border-slate-200 text-xs focus:outline-none focus:border-[#002B49]"
                   />
                 </div>

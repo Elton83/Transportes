@@ -663,6 +663,7 @@ export interface VisitorSolicitationData {
   lotacaoServidor?: string;
   documentoOuCpf: string;
   telefone: string;
+  telefoneSecundario?: string;
   email: string;
   orgaoOuVinculo: string;
   comarca: string;
@@ -828,6 +829,7 @@ export interface MagnitudeEvent {
   motoristasDesignados: string[];
   publicoEstimado?: number;
   responsavelNome: string;
+  ajudanteDeOrdem?: string;
   processoSei?: string;
   status: MagnitudeEventStatus;
   observacoes?: string;
