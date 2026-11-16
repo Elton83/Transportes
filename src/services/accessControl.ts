@@ -17,8 +17,8 @@ export const SECAO_SUBROLES: Record<SecaoSubRole, SecaoSubRoleConfig> = {
     label: 'Rodízio',
     menuLabel: 'Rodízio',
     badgeLabel: 'Seção • Rodízio',
-    description: 'Acesso ao Rodízio, Calendário de Eventos e Relatórios',
-    allowedTabs: ['operacoes', 'calendario', 'relatorios'],
+    description: 'Acesso ao Rodízio, Agenda, Eventos e Relatórios',
+    allowedTabs: ['operacoes', 'calendario', 'eventos', 'relatorios'],
     primaryTab: 'operacoes',
   },
   manutencao: {
@@ -26,8 +26,8 @@ export const SECAO_SUBROLES: Record<SecaoSubRole, SecaoSubRoleConfig> = {
     label: 'Manutenção',
     menuLabel: 'Chamado e Suporte',
     badgeLabel: 'Seção • Manutenção',
-    description: 'Acesso a Chamado e Suporte, Calendário de Eventos e Relatórios',
-    allowedTabs: ['chamados', 'calendario', 'relatorios'],
+    description: 'Acesso a Chamado e Suporte, Agenda, Eventos e Relatórios',
+    allowedTabs: ['chamados', 'calendario', 'eventos', 'relatorios'],
     primaryTab: 'chamados',
   },
   contrato_manutencao: {
@@ -35,8 +35,8 @@ export const SECAO_SUBROLES: Record<SecaoSubRole, SecaoSubRoleConfig> = {
     label: 'Contrato de Manutenção',
     menuLabel: 'Contratos & Serviços',
     badgeLabel: 'Seção • Contratos',
-    description: 'Acesso a Contratos & Serviços, Calendário de Eventos e Relatórios',
-    allowedTabs: ['contratos', 'calendario', 'relatorios'],
+    description: 'Acesso a Contratos & Serviços, Agenda, Eventos e Relatórios',
+    allowedTabs: ['contratos', 'calendario', 'eventos', 'relatorios'],
     primaryTab: 'contratos',
   },
   controle_frota: {
@@ -44,8 +44,8 @@ export const SECAO_SUBROLES: Record<SecaoSubRole, SecaoSubRoleConfig> = {
     label: 'Controle de Frota',
     menuLabel: 'Documentos Oficiais',
     badgeLabel: 'Seção • Controle de Frota',
-    description: 'Acesso a Documentos Oficiais, Calendário de Eventos e Relatórios',
-    allowedTabs: ['documentos', 'calendario', 'relatorios'],
+    description: 'Acesso a Documentos Oficiais, Agenda, Eventos e Relatórios',
+    allowedTabs: ['documentos', 'calendario', 'eventos', 'relatorios'],
     primaryTab: 'documentos',
   },
 };
@@ -78,6 +78,7 @@ export const ROLE_CONFIGS: Record<Role, RoleConfig> = {
     allowedTabs: [
       'operacoes',
       'calendario',
+      'eventos',
       'chamados',
       'oficinas',
       'abastecer',
@@ -121,6 +122,7 @@ export const ROLE_CONFIGS: Record<Role, RoleConfig> = {
     allowedTabs: [
       'operacoes',
       'calendario',
+      'eventos',
       'chamados',
       'documentos',
       'relatorios',
@@ -145,6 +147,7 @@ export const ROLE_CONFIGS: Record<Role, RoleConfig> = {
     allowedTabs: [
       'operacoes',
       'calendario',
+      'eventos',
       'relatorios',
     ],
     canViewGlobalFleet: true,
@@ -182,6 +185,7 @@ export const ROLE_CONFIGS: Record<Role, RoleConfig> = {
     allowedTabs: [
       'operacoes',
       'calendario',
+      'eventos',
       'chamados',
       'oficinas',
       'abastecer',
@@ -208,6 +212,7 @@ export const ROLE_CONFIGS: Record<Role, RoleConfig> = {
     allowedTabs: [
       'operacoes',
       'calendario',
+      'eventos',
       'relatorios',
     ],
     canViewGlobalFleet: true,
@@ -244,6 +249,7 @@ export const ROLE_CONFIGS: Record<Role, RoleConfig> = {
     allowedTabs: [
       'operacoes',
       'calendario',
+      'eventos',
       'chamados',
       'documentos',
       'relatorios',
@@ -306,10 +312,15 @@ export function getTabLabelForRole(tab: MainNavTab, role: Role): { label: string
       };
     case 'calendario':
       return {
-        label: isDriver ? 'Agenda de Serviços' : 'Calendário de Eventos',
+        label: isDriver ? 'Agenda de Serviços' : 'Agenda',
         description: isDriver 
           ? 'Minhas viagens e atividades agendadas' 
           : 'Agenda em tempo real de serviços, viagens e manutenções',
+      };
+    case 'eventos':
+      return {
+        label: 'Eventos',
+        description: 'Eventos de magnitude, comitivas e logística especial',
       };
     case 'chamados':
       return {

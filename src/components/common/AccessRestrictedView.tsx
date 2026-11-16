@@ -22,7 +22,8 @@ export const AccessRestrictedView: React.FC<AccessRestrictedViewProps> = ({
   const tabLabels: Record<MainNavTab, string> = {
     dashboard: 'Dashboard Geral da Frota',
     operacoes: 'Diário de Bordo Oficial',
-    calendario: 'Calendário de Eventos & Serviços',
+    calendario: 'Agenda & Serviços',
+    eventos: 'Eventos de Magnitude',
     chamados: 'Central de Chamados TJPR',
     oficinas: 'Oficinas & Gestão de Contratos',
     abastecer: 'Auditoria Geral de Abastecimentos',

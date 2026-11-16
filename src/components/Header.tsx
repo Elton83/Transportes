@@ -28,7 +28,8 @@ import {
   CalendarDays,
   Type,
   Volume2,
-  VolumeX
+  VolumeX,
+  Award
 } from 'lucide-react';
 import { Driver, NotificationItem, Role, Vehicle, SecaoSubRole } from '../types';
 import { 
@@ -50,6 +51,7 @@ export type MainNavTab =
   | 'dashboard' 
   | 'operacoes' 
   | 'calendario'
+  | 'eventos'
   | 'chamados' 
   | 'oficinas' 
   | 'abastecer' 
@@ -74,6 +76,7 @@ interface HeaderProps {
   maintenancesCount?: number;
   documentsCount?: number;
   chamadosCount?: number;
+  eventsCount?: number;
   onOpenMobileSidebar?: () => void;
   isSidebarCollapsed?: boolean;
   onToggleSidebar?: () => void;
@@ -101,6 +104,7 @@ export const Header: React.FC<HeaderProps> = ({
   maintenancesCount = 6,
   documentsCount = 8,
   chamadosCount = 3,
+  eventsCount = 0,
   onOpenMobileSidebar,
   isSidebarCollapsed,
   onToggleSidebar,
@@ -211,6 +215,7 @@ export const Header: React.FC<HeaderProps> = ({
     dashboard: LayoutDashboard,
     operacoes: Car,
     calendario: CalendarDays,
+    eventos: Award,
     chamados: LifeBuoy,
     oficinas: Wrench,
     abastecer: Fuel,
@@ -224,6 +229,7 @@ export const Header: React.FC<HeaderProps> = ({
   // Contadores para as abas
   const getTabBadge = (tab: MainNavTab): string | undefined => {
     if (tab === 'dashboard') return `${totalVehicles}`;
+    if (tab === 'eventos' && eventsCount > 0) return `${eventsCount}`;
     if (tab === 'oficinas' && maintenancesCount > 0) return `${maintenancesCount}`;
     if (tab === 'chamados' && chamadosCount > 0) return `${chamadosCount}`;
     if (tab === 'documentos' && documentsCount > 0) return `${documentsCount}`;
@@ -413,7 +419,7 @@ export const Header: React.FC<HeaderProps> = ({
                           <Car className="w-3.5 h-3.5 text-sky-400 shrink-0" />
                           <div>
                             <span className="block leading-tight font-semibold">Rodízio</span>
-                            <span className="text-[10px] text-slate-400 font-normal block">Rodízio • Calendário • Relatórios</span>
+                            <span className="text-[10px] text-slate-400 font-normal block">Rodízio • Agenda • Eventos • Relatórios</span>
                           </div>
                         </div>
                         {secaoSubRole === 'rodizio' && <CheckCircle2 className="w-3.5 h-3.5 text-sky-400 shrink-0" />}
@@ -433,7 +439,7 @@ export const Header: React.FC<HeaderProps> = ({
                           <LifeBuoy className="w-3.5 h-3.5 text-amber-400 shrink-0" />
                           <div>
                             <span className="block leading-tight font-semibold">Manutenção</span>
-                            <span className="text-[10px] text-slate-400 font-normal block">Chamado/Suporte • Calendário • Relatórios</span>
+                            <span className="text-[10px] text-slate-400 font-normal block">Chamado/Suporte • Agenda • Eventos • Relatórios</span>
                           </div>
                         </div>
                         {secaoSubRole === 'manutencao' && <CheckCircle2 className="w-3.5 h-3.5 text-sky-400 shrink-0" />}
@@ -453,7 +459,7 @@ export const Header: React.FC<HeaderProps> = ({
                           <FileSignature className="w-3.5 h-3.5 text-emerald-400 shrink-0" />
                           <div>
                             <span className="block leading-tight font-semibold">Contrato de Manutenção</span>
-                            <span className="text-[10px] text-slate-400 font-normal block">Contratos/Serviços • Calendário • Relatórios</span>
+                            <span className="text-[10px] text-slate-400 font-normal block">Contratos/Serviços • Agenda • Eventos • Relatórios</span>
                           </div>
                         </div>
                         {secaoSubRole === 'contrato_manutencao' && <CheckCircle2 className="w-3.5 h-3.5 text-sky-400 shrink-0" />}
@@ -473,7 +479,7 @@ export const Header: React.FC<HeaderProps> = ({
                           <FolderLock className="w-3.5 h-3.5 text-purple-400 shrink-0" />
                           <div>
                             <span className="block leading-tight font-semibold">Controle de Frota</span>
-                            <span className="text-[10px] text-slate-400 font-normal block">Documentos Oficiais • Calendário • Relatórios</span>
+                            <span className="text-[10px] text-slate-400 font-normal block">Documentos Oficiais • Agenda • Eventos • Relatórios</span>
                           </div>
                         </div>
                         {secaoSubRole === 'controle_frota' && <CheckCircle2 className="w-3.5 h-3.5 text-sky-400 shrink-0" />}
@@ -852,12 +858,12 @@ export const Header: React.FC<HeaderProps> = ({
                   {isDriver
                     ? `Matr. ${currentDriver?.matricula || '48.912-3'}`
                     : currentRole === 'supervisor_operacional' || currentRole === 'coordenador'
-                    ? 'Supervisor de Rodízio'
+                    ? `Seção • ${SECAO_SUBROLES[secaoSubRole]?.label || 'Rodízio'}`
                     : currentRole === 'supervisor_administrativo' || currentRole === 'solicitante'
-                    ? 'Supervisor Administrativo'
+                    ? 'Chefia • Div. Transportes'
                     : currentRole === 'visitante'
                     ? 'Solicitação do Veículo'
-                    : 'Administrador da Frota'}
+                    : 'Admin • Frota Estadual'}
                 </p>
               </div>
             </div>

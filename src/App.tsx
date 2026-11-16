@@ -47,7 +47,9 @@ import {
   Chamado,
   ChamadoStatus,
   VisitorSolicitationData,
-  SecaoSubRole
+  SecaoSubRole,
+  MagnitudeEvent,
+  MagnitudeEventStatus
 } from './types';
 import { Header, MainNavTab } from './components/Header';
 import { Sidebar } from './components/Sidebar';
@@ -70,6 +72,7 @@ import { CoordinatorPortal } from './components/coordinator/CoordinatorPortal';
 import { VisitorPortal } from './components/visitor/VisitorPortal';
 import { ContratosView } from './components/contracts/ContratosView';
 import { CalendarEventsView } from './components/calendar/CalendarEventsView';
+import { MagnitudeEventsView } from './components/events/MagnitudeEventsView';
 import { DiarioDeBordoView } from './components/operations/DiarioDeBordoView';
 import { TripSignatureModal } from './components/dashboard/TripSignatureModal';
 import { SatisfactionSurveyModal } from './components/satisfaction/SatisfactionSurveyModal';
@@ -108,6 +111,89 @@ import {
   SoundAlertEventDetail
 } from './services/soundAlerts';
 
+const INITIAL_MAGNITUDE_EVENTS: MagnitudeEvent[] = [
+  {
+    id: 'mag-evt-1',
+    titulo: 'Sessão Solene do Tribunal Pleno & Posse de Desembargadores',
+    magnitude: 'critica',
+    categoria: 'solenidade',
+    dataInicio: '2026-11-13',
+    dataFim: '2026-11-13',
+    horaInicio: '14:00',
+    horaFim: '19:30',
+    comarca: 'Curitiba - Palácio da Justiça',
+    local: 'Auditório Pleno — Praça Nossa Senhora de Salete, s/n',
+    veiculosNecessarios: 5,
+    motoristasDesignados: ['Carlos Eduardo Silveira', 'Marcos Antonio Lima', 'Rafael Santos'],
+    publicoEstimado: 420,
+    responsavelNome: 'Dr. Roberto Magalhães',
+    processoSei: '0098412-45.2026.8.16.6000',
+    status: 'confirmado',
+    observacoes: 'Protocolo cerimonial de alta prioridade com escolta institucional e reserva de vagas VIP no subsolo.',
+    criadoEm: '2026-11-05 10:15',
+  },
+  {
+    id: 'mag-evt-2',
+    titulo: 'Mutirão Regional Justiça no Bairro — Norte Pioneiro',
+    magnitude: 'alta',
+    categoria: 'mutirao_itinerante',
+    dataInicio: '2026-11-17',
+    dataFim: '2026-11-18',
+    horaInicio: '08:00',
+    horaFim: '17:30',
+    comarca: 'Londrina',
+    local: 'Fórum da Comarca de Londrina & Centro Cívico Municipal',
+    veiculosNecessarios: 4,
+    motoristasDesignados: ['José Pereira da Costa', 'Carlos Eduardo Silveira'],
+    publicoEstimado: 650,
+    responsavelNome: 'Juliana Mendes',
+    processoSei: '0102344-11.2026.8.16.6000',
+    status: 'planejado',
+    observacoes: 'Mobilização de vans e utilitários para equipe multidisciplinar, equipamentos e materiais de atendimento.',
+    criadoEm: '2026-11-08 14:40',
+  },
+  {
+    id: 'mag-evt-3',
+    titulo: 'Congresso Estadual da Magistratura Paranaense (EMAP)',
+    magnitude: 'critica',
+    categoria: 'congresso_seminario',
+    dataInicio: '2026-11-24',
+    dataFim: '2026-11-25',
+    horaInicio: '08:30',
+    horaFim: '20:00',
+    comarca: 'Curitiba - Sede Administrativa',
+    local: 'Centro de Convenções & Sede Mauá TJPR',
+    veiculosNecessarios: 8,
+    motoristasDesignados: ['Carlos Eduardo Silveira', 'Marcos Antonio Lima', 'Rafael Santos', 'José Pereira da Costa'],
+    publicoEstimado: 800,
+    responsavelNome: 'Dr. Marcelo Ramos',
+    processoSei: '0110021-88.2026.8.16.6000',
+    status: 'confirmado',
+    observacoes: 'Traslado contínuo Aeroporto Afonso Pena ↔ Hotéis ↔ Sede EMAP para palestrantes e ministros convidados.',
+    criadoEm: '2026-11-10 09:20',
+  },
+  {
+    id: 'mag-evt-4',
+    titulo: 'Inspeção da Corregedoria-Geral às Comarcas do Oeste',
+    magnitude: 'media',
+    categoria: 'visita_autoridade',
+    dataInicio: '2026-11-27',
+    dataFim: '2026-11-27',
+    horaInicio: '09:00',
+    horaFim: '18:00',
+    comarca: 'Cascavel',
+    local: 'Fórum Estadual da Comarca de Cascavel',
+    veiculosNecessarios: 2,
+    motoristasDesignados: ['Marcos Antonio Lima'],
+    publicoEstimado: 60,
+    responsavelNome: 'Juliana Mendes',
+    processoSei: '0114890-19.2026.8.16.6000',
+    status: 'planejado',
+    observacoes: 'Veículos executivos revisados com apoio local da Seção de Transportes.',
+    criadoEm: '2026-11-12 16:05',
+  },
+];
+
 export default function App() {
   // Estado principal de navegação e perfis (Iniciando na Agenda de Serviços para Motorista)
   const [activeNavTab, setActiveNavTab] = useState<MainNavTab>('calendario');
@@ -128,6 +214,7 @@ export default function App() {
   const [meuBeneficioApiConfig, setMeuBeneficioApiConfig] = useState<MeuBeneficioApiConfig>(INITIAL_MEU_BENEFICIO_CONFIG);
   const [chamados, setChamados] = useState<Chamado[]>(INITIAL_CHAMADOS);
   const [contratos, setContratos] = useState<Contrato[]>(INITIAL_CONTRATOS);
+  const [magnitudeEvents, setMagnitudeEvents] = useState<MagnitudeEvent[]>(INITIAL_MAGNITUDE_EVENTS);
   const [diarioViewMode, setDiarioViewMode] = useState<'planilha' | 'dashboard' | 'operacional'>('operacional');
 
   // Integração com o Microsoft Teams TJPR (Envio de extratos ao demandante e ao coordenador)
@@ -158,13 +245,13 @@ export default function App() {
     }
   };
 
-  // Alternância de Subperfil da Seção (Menu específico + Calendário de Eventos + Relatórios)
+  // Alternância de Subperfil da Seção (Menu específico + Agenda + Eventos + Relatórios)
   const handleSecaoSubRoleChange = (newSubRole: SecaoSubRole) => {
     setSecaoSubRole(newSubRole);
     const subCfg = SECAO_SUBROLES[newSubRole];
     if (subCfg) {
       setActiveNavTab(subCfg.primaryTab);
-      showToast(`Subperfil ativado: ${subCfg.label}. Módulos: ${subCfg.menuLabel}, Calendário de Eventos e Relatórios.`);
+      showToast(`Subperfil ativado: ${subCfg.label}. Módulos: ${subCfg.menuLabel}, Agenda, Eventos e Relatórios.`);
     }
   };
 
@@ -1616,6 +1703,29 @@ export default function App() {
     showToast(`Contrato ${contratoAtualizado.numeroContrato} atualizado com sucesso!`);
   };
 
+  // Gestão de Eventos de Magnitude (Menu Eventos)
+  const handleAddMagnitudeEvent = (eventData: Omit<MagnitudeEvent, 'id' | 'criadoEm'>) => {
+    const newEvent: MagnitudeEvent = {
+      ...eventData,
+      id: `mag-evt-${Date.now()}`,
+      criadoEm: new Date().toISOString().replace('T', ' ').substring(0, 16),
+    };
+    setMagnitudeEvents((prev) => [newEvent, ...prev]);
+    showToast(`Evento de magnitude "${newEvent.titulo}" registrado no calendário de Eventos!`);
+  };
+
+  const handleUpdateMagnitudeEventStatus = (eventId: string, status: MagnitudeEventStatus) => {
+    setMagnitudeEvents((prev) =>
+      prev.map((evt) => (evt.id === eventId ? { ...evt, status } : evt))
+    );
+    showToast('Status do evento de magnitude atualizado!');
+  };
+
+  const handleDeleteMagnitudeEvent = (eventId: string) => {
+    setMagnitudeEvents((prev) => prev.filter((evt) => evt.id !== eventId));
+    showToast('Evento removido do calendário de Eventos.');
+  };
+
   // Lançamento e Atualização no Diário de Bordo da Frota
   const handleAddTrip = (newTrip: Trip) => {
     setTrips((prev) => [newTrip, ...prev]);
@@ -1696,6 +1806,7 @@ export default function App() {
         fuelLogsCount={fuelLogs.length}
         meuBeneficioCount={meuBeneficioTransactions.length}
         chamadosCount={chamados.filter(c => c.status === 'aberto' || c.status === 'em_atendimento').length}
+        eventsCount={magnitudeEvents.filter(e => e.status !== 'concluido').length}
         isCollapsed={isSidebarCollapsed}
         onToggleCollapse={() => setIsSidebarCollapsed((prev) => !prev)}
         isMobileOpen={isMobileSidebarOpen}
@@ -1737,6 +1848,7 @@ export default function App() {
           maintenancesCount={maintenances.length}
           documentsCount={documents.length}
           chamadosCount={chamados.filter(c => c.status === 'aberto' || c.status === 'em_atendimento').length}
+          eventsCount={magnitudeEvents.filter(e => e.status !== 'concluido').length}
           onOpenMobileSidebar={() => setIsMobileSidebarOpen(true)}
           isSidebarCollapsed={isSidebarCollapsed}
           onToggleSidebar={() => setIsSidebarCollapsed((prev) => !prev)}
@@ -1838,7 +1950,7 @@ export default function App() {
       <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 sm:py-8 flex-1 w-full">
         
         {/* Verificação de Permissão: Se o perfil não tiver acesso à aba solicitada, exibe tela de bloqueio com navegação segura */}
-        {!isTabAllowedForRole(currentRole, activeNavTab) ? (
+        {!isTabAllowedForRole(currentRole, activeNavTab, secaoSubRole) ? (
           <AccessRestrictedView
             currentRole={currentRole}
             attemptedTab={activeNavTab}
@@ -1971,7 +2083,7 @@ export default function App() {
           </div>
         )}
 
-            {/* ABA: Calendário de Eventos & Agenda de Serviços (Alimentada Automaticamente) */}
+            {/* ABA: Agenda & Serviços (Alimentada Automaticamente) */}
             {activeNavTab === 'calendario' && (
               isDriverRole(currentRole) ? (
                 <DriverPortal
@@ -2001,6 +2113,18 @@ export default function App() {
                   onNavigateToTab={(tab) => setActiveNavTab(tab)}
                 />
               )
+            )}
+
+            {/* ABA: Eventos de Magnitude (Calendário dedicado para grandes eventos e comitivas) */}
+            {activeNavTab === 'eventos' && (
+              <MagnitudeEventsView
+                events={magnitudeEvents}
+                onAddEvent={handleAddMagnitudeEvent}
+                onUpdateEventStatus={handleUpdateMagnitudeEventStatus}
+                onDeleteEvent={handleDeleteMagnitudeEvent}
+                drivers={drivers}
+                selectedComarca={selectedComarca}
+              />
             )}
 
             {/* ABA: Central de Chamados & Apoio Logístico */}

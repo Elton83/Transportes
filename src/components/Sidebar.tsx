@@ -27,7 +27,8 @@ import {
   FileSignature,
   FileSpreadsheet,
   LayoutGrid,
-  CalendarDays
+  CalendarDays,
+  Award
 } from 'lucide-react';
 import { MainNavTab } from './Header';
 import { Role, Driver, Vehicle, SecaoSubRole } from '../types';
@@ -54,6 +55,7 @@ interface SidebarProps {
   fuelLogsCount?: number;
   meuBeneficioCount?: number;
   chamadosCount?: number;
+  eventsCount?: number;
   isCollapsed: boolean;
   onToggleCollapse: () => void;
   isMobileOpen: boolean;
@@ -82,6 +84,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
   fuelLogsCount = 3,
   meuBeneficioCount = 9,
   chamadosCount = 3,
+  eventsCount = 0,
   isCollapsed,
   onToggleCollapse,
   isMobileOpen,
@@ -112,6 +115,11 @@ export const Sidebar: React.FC<SidebarProps> = ({
       id: 'calendario' as MainNavTab,
       icon: CalendarDays,
       badge: isDriver ? '12' : undefined,
+    },
+    {
+      id: 'eventos' as MainNavTab,
+      icon: Award,
+      badge: eventsCount > 0 ? `${eventsCount}` : undefined,
     },
     {
       id: 'chamados' as MainNavTab,
@@ -350,7 +358,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
               <div className="mt-2.5 pt-2 border-t border-white/10 space-y-1">
                 <div className="text-[10px] font-bold uppercase tracking-wider text-amber-300 px-1 mb-1 flex items-center justify-between">
                   <span>Subperfis da Seção:</span>
-                  <span className="text-[9px] bg-amber-400/20 text-amber-200 px-1.5 py-0.5 rounded font-mono">3 Menus</span>
+                  <span className="text-[9px] bg-amber-400/20 text-amber-200 px-1.5 py-0.5 rounded font-mono">4 Menus</span>
                 </div>
                 {(Object.keys(SECAO_SUBROLES) as SecaoSubRole[]).map((subKey) => {
                   const subCfg = SECAO_SUBROLES[subKey];
@@ -371,7 +379,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
                     >
                       <div className="min-w-0 pr-1">
                         <div className="truncate font-medium text-[11px] leading-tight text-white">{subCfg.label}</div>
-                        <div className="text-[9px] text-[#8E9CA8] truncate">{subCfg.menuLabel} • Calendário • Relatórios</div>
+                        <div className="text-[9px] text-[#8E9CA8] truncate">{subCfg.menuLabel} • Agenda • Eventos • Relatórios</div>
                       </div>
                       {isSubActive && (
                         <span className="shrink-0 text-[9px] bg-emerald-500/20 text-emerald-300 px-1.5 py-0.5 rounded font-mono font-bold">

@@ -801,3 +801,36 @@ export interface CalendarEventItem {
   sourceType: 'trip' | 'maintenance' | 'chamado' | 'operational_event';
   rawObject?: any;
 }
+
+export type MagnitudeLevel = 'critica' | 'alta' | 'media';
+
+export type MagnitudeEventCategory =
+  | 'solenidade'
+  | 'visita_autoridade'
+  | 'mutirao_itinerante'
+  | 'congresso_seminario'
+  | 'operacao_especial';
+
+export type MagnitudeEventStatus = 'planejado' | 'confirmado' | 'em_execucao' | 'concluido';
+
+export interface MagnitudeEvent {
+  id: string;
+  titulo: string;
+  magnitude: MagnitudeLevel;
+  categoria: MagnitudeEventCategory;
+  dataInicio: string; // YYYY-MM-DD
+  dataFim: string; // YYYY-MM-DD
+  horaInicio: string; // HH:mm
+  horaFim: string; // HH:mm
+  comarca: string;
+  local: string;
+  veiculosNecessarios: number;
+  motoristasDesignados: string[];
+  publicoEstimado?: number;
+  responsavelNome: string;
+  processoSei?: string;
+  status: MagnitudeEventStatus;
+  observacoes?: string;
+  criadoEm: string;
+}
+
