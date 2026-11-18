@@ -56,7 +56,7 @@ Central de Tráfego: (41) 3200-2100 | Plantão: (41) 98822-4910`;
 export const formatWhatsAppSolicitationNotification = (
   chamadoCodigo: string,
   solicitanteNome: string,
-  tipoServico: 'com_motorista' | 'reserva_veiculo',
+  tipoServico: 'com_motorista' | 'reserva_veiculo' | 'comarca_interior',
   origem: string,
   destino: string,
   dataSaida: string,
@@ -67,6 +67,8 @@ export const formatWhatsAppSolicitationNotification = (
 ): string => {
   const modalidade = tipoServico === 'com_motorista'
     ? '🚗 Solicitação de veículo com motorista'
+    : tipoServico === 'comarca_interior'
+    ? '📍 Solicitação em Comarca / Interior (Atendimento Descentralizado)'
     : '🔑 Solicitação de veículo sem motorista (Você será o condutor)';
   
   return `🏛️ *TRIBUNAL DE JUSTIÇA DO PARANÁ*

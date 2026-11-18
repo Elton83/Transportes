@@ -1452,6 +1452,24 @@ export default function App() {
 
     // 2. Criar a Trip correspondente
     const isReserva = solicitation.tipoServico === 'reserva_veiculo';
+    const isComarcaInterior = solicitation.tipoServico === 'comarca_interior';
+
+    const frotaInteriorLabel = solicitation.tipoFrotaInterior === 'pool_regional'
+      ? 'Pool Regional'
+      : solicitation.tipoFrotaInterior === 'veiculo_transito'
+      ? 'Veículo de Trânsito'
+      : 'Veículo próprio da Comarca';
+
+    const abrangenciaLabel = solicitation.abrangenciaDeslocamento === 'intramunicipal'
+      ? 'Intramunicipal'
+      : solicitation.abrangenciaDeslocamento === 'intermunicipal'
+      ? 'Deslocamento Intermunicipal'
+      : 'Jurisdição da Comarca';
+
+    const interiorDetalhesTexto = isComarcaInterior
+      ? ` | Frota Interior: ${frotaInteriorLabel} | Abrangência: ${abrangenciaLabel}${solicitation.autorizacaoLocalResponsavel ? ` | Autorização Local: ${solicitation.autorizacaoLocalResponsavel}` : ''}`
+      : '';
+
     const newTrip: Trip = {
       id: tripId,
       codigo: tripCodigo,
@@ -1470,11 +1488,11 @@ export default function App() {
       solicitanteCargo: `Servidor / ${solicitation.orgaoOuVinculo}`,
       solicitanteVara: `Solicitação de Veículo TJPR • ${solicitation.orgaoOuVinculo}`,
       comarca: solicitation.comarca,
-      finalidade: `${isReserva ? '[Reserva de Carro - Condução Própria]' : '[Viagem c/ Motorista Oficial]'} ${solicitation.finalidade || 'Deslocamento Institucional TJPR'}`,
-      motoristaId: isReserva ? undefined : scheduledDriver?.id,
-      motoristaNome: isReserva ? `${solicitation.solicitanteNome} (Condutor Autorizado)` : scheduledDriver?.nome,
-      veiculoId: scheduledVehicle?.id,
-      veiculoPrefixo: scheduledVehicle?.prefixo,
+      finalidade: `${isReserva ? '[Reserva de Carro - Condução Própria]' : isComarcaInterior ? `[Comarca / Interior • ${frotaInteriorLabel}]` : '[Viagem c/ Motorista Oficial]'} ${solicitation.finalidade || 'Deslocamento Institucional TJPR'}`,
+      motoristaId: isReserva || isComarcaInterior ? undefined : scheduledDriver?.id,
+      motoristaNome: isReserva ? `${solicitation.solicitanteNome} (Condutor Autorizado)` : isComarcaInterior ? 'Alocação Local (Comarca / Interior)' : scheduledDriver?.nome,
+      veiculoId: isComarcaInterior ? undefined : scheduledVehicle?.id,
+      veiculoPrefixo: isComarcaInterior ? undefined : scheduledVehicle?.prefixo,
       passageiros: [
         solicitation.solicitanteNome,
         ...(solicitation.demaisPassageiros && solicitation.demaisPassageiros.length > 0
@@ -1483,7 +1501,7 @@ export default function App() {
       ],
       diarioBordo: [],
       dataCriacao: formattedDate,
-      observacoes: `Matrícula: ${solicitation.matriculaServidor || 'TJPR-98.341-2'} | WhatsApp: ${solicitation.telefone}${solicitation.telefoneSecundario ? ` | Tel. Adicional: ${solicitation.telefoneSecundario}` : ''} | E-mail: ${solicitation.email} | Doc: ${solicitation.documentoOuCpf}${isReserva ? ' | Documento Vinculado: Autorização para Conduzir Veículos Oficiais (Portaria DiTrans nº 412/2025 • Processo 0018492-41.2025.8.16.6000)' : ''}${solicitation.demaisPassageiros && solicitation.demaisPassageiros.length > 0 ? ` | Demais Passageiros: ${solicitation.demaisPassageiros.join('; ')}` : ''}${solicitation.observacoes ? ` | Observações: ${solicitation.observacoes}` : ''}`,
+      observacoes: `Matrícula: ${solicitation.matriculaServidor || 'TJPR-98.341-2'} | WhatsApp: ${solicitation.telefone}${solicitation.telefoneSecundario ? ` | Tel. Adicional: ${solicitation.telefoneSecundario}` : ''} | E-mail: ${solicitation.email} | Doc: ${solicitation.documentoOuCpf}${interiorDetalhesTexto}${isReserva ? ' | Documento Vinculado: Autorização para Conduzir Veículos Oficiais (Portaria DiTrans nº 412/2025 • Processo 0018492-41.2025.8.16.6000)' : ''}${solicitation.demaisPassageiros && solicitation.demaisPassageiros.length > 0 ? ` | Demais Passageiros: ${solicitation.demaisPassageiros.join('; ')}` : ''}${solicitation.observacoes ? ` | Observações: ${solicitation.observacoes}` : ''}`,
       processoSei: `VIS-${solicitation.documentoOuCpf.replace(/\D/g, '').substring(0, 7) || '2026'}.8.16.6000`,
     };
 
@@ -1493,8 +1511,10 @@ export default function App() {
       codigo: chamadoCodigo,
       titulo: isReserva
         ? `Reserva de Veículo sem Motorista (Condução Própria) - ${solicitation.destino}`
+        : isComarcaInterior
+        ? `Solicitação em Comarca / Interior (${solicitation.comarca.split(' - ')[0]}) - ${solicitation.destino}`
         : `Solicitação de Viagem c/ Motorista Oficial - ${solicitation.destino}`,
-      descricao: `DEMANDA PROTOCOLADA NO SISTEMA DE SOLICITAÇÃO DE VEÍCULOS TJPR:\n• Solicitante: ${solicitation.solicitanteNome} (${solicitation.orgaoOuVinculo})\n• Matrícula: ${solicitation.matriculaServidor || 'TJPR-98.341-2'} | CPF: ${solicitation.documentoOuCpf}\n• Contato: WhatsApp ${solicitation.telefone}${solicitation.telefoneSecundario ? ` / Tel. Adicional: ${solicitation.telefoneSecundario}` : ''} | E-mail: ${solicitation.email}\n• Modalidade: ${isReserva ? 'Reserva de Carro Oficial (Condução Própria pelo Servidor - Sem Motorista)' : 'Viagem com Motorista Oficial Credenciado'}\n• Trajeto: Saída de "${solicitation.origem}" -> Destino: "${solicitation.destino}"\n• Partida: ${solicitation.dataSaida} às ${solicitation.horaSaida}\n• Retorno Previsto: ${solicitation.dataRetorno ? `${solicitation.dataRetorno} às ${solicitation.horaRetorno}` : 'Em aberto (preenchimento no diário de bordo pelo condutor)'}\n• Total de Passageiros: ${solicitation.passageirosQtd} pessoa(s)${solicitation.demaisPassageiros && solicitation.demaisPassageiros.length > 0 ? `\n• Demais Passageiros: ${solicitation.demaisPassageiros.join(', ')}` : ''}\n• Alocação do Veículo: A cargo da Gestão/Coordenação de Frotas TJPR${isReserva ? '\n• Documento Vinculado Obrigatório: Autorização para Conduzir Veículos Oficiais (Portaria DiTrans nº 412/2025 • Processo: 0018492-41.2025.8.16.6000)\n• Requisito Legal: O Supervisor de Rodízio precisa validar o documento "Autorização para Conduzir Veículos Oficiais" para liberar a chave e despachar o veículo oficial.' : ''}${solicitation.observacoes ? `\n• Observações: "${solicitation.observacoes}"` : ''}`,
+      descricao: `DEMANDA PROTOCOLADA NO SISTEMA DE SOLICITAÇÃO DE VEÍCULOS TJPR:\n• Solicitante: ${solicitation.solicitanteNome} (${solicitation.orgaoOuVinculo})\n• Matrícula: ${solicitation.matriculaServidor || 'TJPR-98.341-2'} | CPF: ${solicitation.documentoOuCpf}\n• Contato: WhatsApp ${solicitation.telefone}${solicitation.telefoneSecundario ? ` / Tel. Adicional: ${solicitation.telefoneSecundario}` : ''} | E-mail: ${solicitation.email}\n• Modalidade: ${isReserva ? 'Reserva de Carro Oficial (Condução Própria pelo Servidor - Sem Motorista)' : isComarcaInterior ? `Solicitação em Comarca / Interior (${frotaInteriorLabel} • ${abrangenciaLabel})` : 'Viagem com Motorista Oficial Credenciado'}${isComarcaInterior ? `\n• Comarca de Origem / Lotação: ${solicitation.comarca}\n• Tipo de Frota: ${frotaInteriorLabel}\n• Abrangência do Deslocamento: ${abrangenciaLabel}\n• Autorização Local (Direção do Fórum / Chefia): ${solicitation.autorizacaoLocalResponsavel || 'Pendente de indicação'}` : ''}\n• Trajeto: Saída de "${solicitation.origem}" -> Destino: "${solicitation.destino}"\n• Partida: ${solicitation.dataSaida} às ${solicitation.horaSaida}\n• Retorno Previsto: ${solicitation.dataRetorno ? `${solicitation.dataRetorno} às ${solicitation.horaRetorno}` : 'Em aberto (preenchimento no diário de bordo pelo condutor)'}\n• Total de Passageiros: ${solicitation.passageirosQtd} pessoa(s)${solicitation.demaisPassageiros && solicitation.demaisPassageiros.length > 0 ? `\n• Demais Passageiros: ${solicitation.demaisPassageiros.join(', ')}` : ''}\n• Alocação do Veículo: ${isComarcaInterior ? 'Atendimento descentralizado / Direção do Fórum Local' : 'A cargo da Gestão/Coordenação de Frotas TJPR'}${isReserva ? '\n• Documento Vinculado Obrigatório: Autorização para Conduzir Veículos Oficiais (Portaria DiTrans nº 412/2025 • Processo: 0018492-41.2025.8.16.6000)\n• Requisito Legal: O Supervisor de Rodízio precisa validar o documento "Autorização para Conduzir Veículos Oficiais" para liberar a chave e despachar o veículo oficial.' : ''}${solicitation.observacoes ? `\n• Observações: "${solicitation.observacoes}"` : ''}`,
       tipo: 'solicitacao_veiculo',
       tipoServico: solicitation.tipoServico,
       documentoAutorizacao: isReserva ? (solicitation.documentoAutorizacaoVinculado || 'Portaria DiTrans nº 412/2025-TJPR (Processo: 0018492-41.2025.8.16.6000)') : undefined,
@@ -1510,31 +1530,33 @@ export default function App() {
       prazoSugerido: `${solicitation.dataSaida} ${solicitation.horaSaida}`,
       tripIdVinculada: tripId,
       processoSei: newTrip.processoSei,
-      escalaPreSelecionada: !isReserva && !!scheduledDriver,
+      escalaPreSelecionada: !isReserva && !isComarcaInterior && !!scheduledDriver,
       escalaConfirmada: false,
       slaRodizioMinutos: 30,
       slaMinutosRestantes: 30,
       slaStatus: 'dentro_prazo',
       slaAberturaTimestamp: Date.now(),
-      motoristaId: isReserva ? undefined : scheduledDriver?.id,
-      motoristaNome: isReserva ? undefined : scheduledDriver?.nome,
-      motoristaMatricula: isReserva ? undefined : scheduledDriver?.matricula,
-      motoristaTelefone: isReserva ? undefined : scheduledDriver?.telefone,
-      veiculoId: scheduledVehicle?.id,
-      veiculoPrefixo: scheduledVehicle?.prefixo,
-      veiculoModelo: scheduledVehicle?.modelo,
-      veiculoPlaca: scheduledVehicle?.placa,
+      motoristaId: isReserva || isComarcaInterior ? undefined : scheduledDriver?.id,
+      motoristaNome: isReserva || isComarcaInterior ? undefined : scheduledDriver?.nome,
+      motoristaMatricula: isReserva || isComarcaInterior ? undefined : scheduledDriver?.matricula,
+      motoristaTelefone: isReserva || isComarcaInterior ? undefined : scheduledDriver?.telefone,
+      veiculoId: isComarcaInterior ? undefined : scheduledVehicle?.id,
+      veiculoPrefixo: isComarcaInterior ? undefined : scheduledVehicle?.prefixo,
+      veiculoModelo: isComarcaInterior ? undefined : scheduledVehicle?.modelo,
+      veiculoPlaca: isComarcaInterior ? undefined : scheduledVehicle?.placa,
       respostas: [
         {
           id: `resp-${Date.now()}`,
-          autor: isReserva ? 'Sistema SIGPAT (Protocolo de Condução Própria)' : 'Sistema SIGPAT (Escala de Rodízio)',
-          cargo: isReserva ? 'Validador DiTrans' : 'Escala Automática TJPR',
+          autor: isReserva ? 'Sistema SIGPAT (Protocolo de Condução Própria)' : isComarcaInterior ? 'Sistema SIGPAT (Atendimento Comarca / Interior)' : 'Sistema SIGPAT (Escala de Rodízio)',
+          cargo: isReserva ? 'Validador DiTrans' : isComarcaInterior ? 'Direção do Fórum / Chefia Local' : 'Escala Automática TJPR',
           dataHora: formattedDate,
           mensagem: isReserva
             ? `Demanda protocolada sob nº ${chamadoCodigo} na modalidade CONDUÇÃO PRÓPRIA (Sem Motorista). O documento "Autorização para Conduzir Veículos Oficiais" (Portaria DiTrans nº 412/2025 • Processo 0018492-41.2025.8.16.6000) foi anexado automaticamente e aguarda validação formal pelo Supervisor de Rodízio para liberação da chave do veículo oficial.`
-            : scheduledDriver
-              ? `Demanda protocolada sob nº ${chamadoCodigo}. Conforme escala oficial de rodízio da Comarca, o motorista escalado ${scheduledDriver.nome} (Matrícula: ${scheduledDriver.matricula} • Veículo ${scheduledVehicle?.prefixo}) foi pré-selecionado automaticamente. O chamado aguarda confirmação da escala ou alteração do condutor pelo Supervisor de Rodízio.`
-              : `Demanda protocolada sob nº ${chamadoCodigo}. Entrada direta na fila de chamados em aberto do Supervisor de Rodízio de ${solicitation.comarca}. Aguardando direcionamento de motorista e veículo.`,
+            : isComarcaInterior
+              ? `Demanda protocolada sob nº ${chamadoCodigo} na modalidade COMARCA / INTERIOR (${solicitation.comarca}). Frota: ${frotaInteriorLabel} • Abrangência: ${abrangenciaLabel}. Autorização local indicada: ${solicitation.autorizacaoLocalResponsavel || 'Direção do Fórum Local'}.`
+              : scheduledDriver
+                ? `Demanda protocolada sob nº ${chamadoCodigo}. Conforme escala oficial de rodízio da Comarca, o motorista escalado ${scheduledDriver.nome} (Matrícula: ${scheduledDriver.matricula} • Veículo ${scheduledVehicle?.prefixo}) foi pré-selecionado automaticamente. O chamado aguarda confirmação da escala ou alteração do condutor pelo Supervisor de Rodízio.`
+                : `Demanda protocolada sob nº ${chamadoCodigo}. Entrada direta na fila de chamados em aberto do Supervisor de Rodízio de ${solicitation.comarca}. Aguardando direcionamento de motorista e veículo.`,
           isAdmin: false,
         },
       ],
@@ -1548,9 +1570,13 @@ export default function App() {
       id: `notif-vis-${Date.now()}`,
       titulo: isReserva
         ? `Novo Chamado: ${chamadoCodigo} • Condução Própria (Validar Autorização)`
+        : isComarcaInterior
+        ? `Novo Chamado: ${chamadoCodigo} • Comarca / Interior (${solicitation.comarca.split(' - ')[0]})`
         : `Novo Chamado: ${chamadoCodigo} • Escala Pré-Selecionada`,
       mensagem: isReserva
         ? `${solicitation.solicitanteNome} solicitou reserva de veículo sem motorista (condução própria). Documento "Autorização para Conduzir Veículos Oficiais" anexado, aguardando validação pelo Supervisor de Rodízio.`
+        : isComarcaInterior
+        ? `${solicitation.solicitanteNome} solicitou atendimento descentralizado em ${solicitation.comarca} (${frotaInteriorLabel} • ${abrangenciaLabel}). Responsável local: ${solicitation.autorizacaoLocalResponsavel || 'Direção do Fórum'}.`
         : `${solicitation.solicitanteNome} (${solicitation.orgaoOuVinculo}) solicitou transporte para "${solicitation.destino}". Motorista escalado no rodízio: ${scheduledDriver ? `${scheduledDriver.nome} (${scheduledVehicle?.prefixo})` : 'Aguardando alocação'}. Pendente de confirmação pelo Supervisor de Rodízio.`,
       dataHora: `Hoje às ${now.toTimeString().split(' ')[0].substring(0, 5)}`,
       lida: false,
@@ -1562,6 +1588,8 @@ export default function App() {
     showToast(
       isReserva
         ? `Demanda ${chamadoCodigo} protocolada! Documento "Autorização para Conduzir" enviado ao Supervisor de Rodízio para validação.`
+        : isComarcaInterior
+        ? `Demanda ${chamadoCodigo} protocolada para Comarca / Interior (${solicitation.comarca.split(' - ')[0]})!`
         : scheduledDriver
           ? `Solicitação ${chamadoCodigo} protocolada! Motorista escalado (${scheduledDriver.nome}) pré-selecionado no rodízio.`
           : `Solicitação ${chamadoCodigo} protocolada com sucesso!`

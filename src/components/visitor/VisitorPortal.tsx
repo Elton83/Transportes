@@ -124,7 +124,25 @@ export const VisitorPortal: React.FC<VisitorPortalProps> = ({
   const [filtroItensAberto, setFiltroItensAberto] = useState<'total' | 'nao_concluidos' | 'falta_assinatura' | 'concluidos' | null>(null);
 
   // REQUISITO 2: Modalidade do Pedido (Definição Inicial Simples)
-  const [tipoServico, setTipoServico] = useState<'com_motorista' | 'reserva_veiculo'>('com_motorista');
+  const [tipoServico, setTipoServico] = useState<'com_motorista' | 'reserva_veiculo' | 'comarca_interior'>('com_motorista');
+
+  // Campos específicos para Solicitação em Comarca / Interior
+  const [tipoFrotaInterior, setTipoFrotaInterior] = useState<'veiculo_proprio_comarca' | 'pool_regional' | 'veiculo_transito'>('veiculo_proprio_comarca');
+  const [abrangenciaDeslocamento, setAbrangenciaDeslocamento] = useState<'intramunicipal' | 'jurisdicao_comarca' | 'intermunicipal'>('jurisdicao_comarca');
+  const [autorizacaoLocalResponsavel, setAutorizacaoLocalResponsavel] = useState('');
+  const [autorizacaoLocalErro, setAutorizacaoLocalErro] = useState<string | null>(null);
+
+  const comarcasDisponiveis = useMemo(() => {
+    const extrasInterior = [
+      'Apucarana',
+      'Campo Mourão',
+      'Francisco Beltrão',
+      'Paranaguá',
+      'Pato Branco',
+      'Umuarama',
+    ];
+    return Array.from(new Set([...comarcas, ...extrasInterior]));
+  }, [comarcas]);
   
   // REQUISITO 5: Matrícula e Integração Sistema Hércules TJPR
   const [matriculaInput, setMatriculaInput] = useState(DEFAULT_HERCULES_USER.matricula);
@@ -396,6 +414,11 @@ export const VisitorPortal: React.FC<VisitorPortalProps> = ({
 
   // Salvar e atualizar dados cadastrais editados
   const handleSalvarEAtualizarCadastral = () => {
+    if (tipoServico === 'comarca_interior' && !autorizacaoLocalResponsavel.trim()) {
+      setAutorizacaoLocalErro('Informe a Matrícula ou Nome do Responsável pela Autorização Local (Direção do Fórum / Chefia Local).');
+      return;
+    }
+    setAutorizacaoLocalErro(null);
     if (matriculaInput.trim()) {
       const servidorAchado = lookupHerculesServidor(matriculaInput.trim());
       if (servidorAchado) {
@@ -431,6 +454,11 @@ export const VisitorPortal: React.FC<VisitorPortalProps> = ({
 
   // Confirmar dados cadastrais diretamente (Item 2)
   const handleConfirmarDadosCadastrais = () => {
+    if (tipoServico === 'comarca_interior' && !autorizacaoLocalResponsavel.trim()) {
+      setAutorizacaoLocalErro('Informe a Matrícula ou Nome do Responsável pela Autorização Local (Direção do Fórum / Chefia Local).');
+      return;
+    }
+    setAutorizacaoLocalErro(null);
     setDadosCadastraisConfirmados(true);
     setItem2Expandido(false);
     setModoEdicaoCadastral(false);
@@ -441,8 +469,9 @@ export const VisitorPortal: React.FC<VisitorPortalProps> = ({
   };
 
   // Handler do Item 1: Selecionar modalidade diretamente (a escolha é a própria confirmação e agrupa)
-  const handleSelectModalidade = (servico: 'com_motorista' | 'reserva_veiculo') => {
+  const handleSelectModalidade = (servico: 'com_motorista' | 'reserva_veiculo' | 'comarca_interior') => {
     setTipoServico(servico);
+    setAutorizacaoLocalErro(null);
     setItem1Confirmado(true);
     setItem1Expandido(false);
   };
@@ -680,6 +709,10 @@ export const VisitorPortal: React.FC<VisitorPortalProps> = ({
       setFormError('Por favor, informe a Data e o Horário de Saída.');
       return;
     }
+    if (tipoServico === 'comarca_interior' && !autorizacaoLocalResponsavel.trim()) {
+      setFormError('Por favor, informe a Matrícula/Nome do Responsável pela Autorização Local.');
+      return;
+    }
 
     // Nomes consolidados dos acompanhantes
     const acompanhantesFormatados = passageirosDetalhes
@@ -706,6 +739,9 @@ export const VisitorPortal: React.FC<VisitorPortalProps> = ({
       email: email.trim(),
       orgaoOuVinculo: cargoServidor || 'Servidor do Judiciário',
       comarca,
+      tipoFrotaInterior: tipoServico === 'comarca_interior' ? tipoFrotaInterior : undefined,
+      abrangenciaDeslocamento: tipoServico === 'comarca_interior' ? abrangenciaDeslocamento : undefined,
+      autorizacaoLocalResponsavel: tipoServico === 'comarca_interior' ? autorizacaoLocalResponsavel.trim() : undefined,
       origem: origem.trim(),
       destino: destino.trim(),
       dataSaida,
@@ -785,6 +821,10 @@ export const VisitorPortal: React.FC<VisitorPortalProps> = ({
     setItem4Confirmado(false);
     setItem4Expandido(true);
     setItem3Erro(null);
+    setTipoFrotaInterior('veiculo_proprio_comarca');
+    setAbrangenciaDeslocamento('jurisdicao_comarca');
+    setAutorizacaoLocalResponsavel('');
+    setAutorizacaoLocalErro(null);
   };
 
   // Mapeamento unificado de todas as viagens e pedidos do solicitante atual
@@ -868,7 +908,11 @@ export const VisitorPortal: React.FC<VisitorPortalProps> = ({
         destino: t.destino,
         dataSaida: t.dataSaida,
         horaSaida: t.horaSaida,
-        tipoServico: t.finalidade?.includes('Reserva') ? 'Reserva de Veículo (Direção Própria)' : 'Solicitação de Veículo com Motorista',
+        tipoServico: t.finalidade?.includes('Comarca / Interior')
+          ? 'Solicitação em Comarca / Interior'
+          : t.finalidade?.includes('Reserva')
+            ? 'Reserva de Veículo (Direção Própria)'
+            : 'Solicitação de Veículo com Motorista',
         veiculoPrefixo: t.veiculoPrefixo,
         veiculoModelo: t.veiculoModelo,
         motoristaNome: t.motoristaNome,
@@ -928,7 +972,9 @@ export const VisitorPortal: React.FC<VisitorPortalProps> = ({
         destino: destinoExtraido,
         dataSaida: c.prazoSugerido?.split(' ')[0] || c.dataAbertura?.split(' ')[0] || '2026-09-24',
         horaSaida: c.prazoSugerido?.split(' ')[1] || '08:00',
-        tipoServico: c.tipo === 'solicitacao_veiculo' ? 'Viagem com Motorista Oficial' : 'Reserva de Veículo',
+        tipoServico: c.tipo === 'solicitacao_veiculo'
+          ? (c.titulo?.includes('Comarca / Interior') ? 'Solicitação em Comarca / Interior' : 'Viagem com Motorista Oficial')
+          : 'Reserva de Veículo',
         veiculoPrefixo: c.veiculoPrefixo,
         motoristaNome: c.motoristaNome,
         statusGeral,
@@ -1028,7 +1074,9 @@ export const VisitorPortal: React.FC<VisitorPortalProps> = ({
               <strong className="text-slate-900">
                 {submissionResult.solicitacao.tipoServico === 'com_motorista'
                   ? '🚗 Solicitação de veículo com motorista'
-                  : '🔑 Solicitação de veículo sem motorista (Você será o condutor)'}
+                  : submissionResult.solicitacao.tipoServico === 'comarca_interior'
+                    ? '📍 Solicitação em Comarca / Interior'
+                    : '🔑 Solicitação de veículo sem motorista (Você será o condutor)'}
               </strong>
             </div>
             <div>
@@ -1118,6 +1166,31 @@ export const VisitorPortal: React.FC<VisitorPortalProps> = ({
               </div>
             </div>
           </div>
+
+          {/* Resumo da Autorização Local quando Comarca / Interior */}
+          {submissionResult.solicitacao.tipoServico === 'comarca_interior' && (
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 p-3.5 bg-amber-50/80 border border-amber-200 rounded-xl text-xs shadow-2xs animate-in fade-in">
+              <div className="flex items-center gap-3 min-w-0">
+                <div className="w-10 h-10 rounded-xl bg-amber-100 text-amber-800 flex items-center justify-center shrink-0 border border-amber-200 shadow-2xs">
+                  <MapPin className="w-5 h-5" />
+                </div>
+                <div className="min-w-0">
+                  <div className="flex items-center gap-2 flex-wrap">
+                    <span className="text-xs font-bold text-amber-950">
+                      Atendimento Descentralizado — Comarca: {submissionResult.solicitacao.comarca}
+                    </span>
+                    <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold bg-white text-amber-800 border border-amber-300">
+                      <AlertCircle className="w-3 h-3 text-amber-600" />
+                      <span>Autorização Local: {submissionResult.solicitacao.autorizacaoLocalResponsavel}</span>
+                    </span>
+                  </div>
+                  <p className="text-[11px] text-amber-900/80 mt-0.5 truncate">
+                    Frota: {submissionResult.solicitacao.tipoFrotaInterior === 'pool_regional' ? 'Pool Regional' : submissionResult.solicitacao.tipoFrotaInterior === 'veiculo_transito' ? 'Veículo de Trânsito' : 'Veículo próprio da Comarca'} • Abrangência: {submissionResult.solicitacao.abrangenciaDeslocamento === 'intramunicipal' ? 'Intramunicipal' : submissionResult.solicitacao.abrangenciaDeslocamento === 'intermunicipal' ? 'Deslocamento Intermunicipal' : 'Jurisdição da Comarca'}
+                  </p>
+                </div>
+              </div>
+            </div>
+          )}
 
           {/* Documento Vinculado da Autorização de Condução quando sem motorista */}
           {submissionResult.solicitacao.tipoServico === 'reserva_veiculo' && (
@@ -1275,6 +1348,11 @@ export const VisitorPortal: React.FC<VisitorPortalProps> = ({
                             <span className="w-2 h-2 rounded-full bg-amber-400 animate-pulse" />
                             <span>Solicitação de veículo com motorista</span>
                           </span>
+                        ) : tipoServico === 'comarca_interior' ? (
+                          <span className="inline-flex items-center gap-2 px-3 py-1 rounded-xl text-xs sm:text-sm font-bold bg-[#05202B] text-sky-300 shadow-xs">
+                            <span className="w-2 h-2 rounded-full bg-sky-400 animate-pulse" />
+                            <span>Solicitação em Comarca / Interior</span>
+                          </span>
                         ) : (
                           <span className="inline-flex items-center gap-2 px-3 py-1 rounded-xl text-xs sm:text-sm font-bold bg-[#05202B] text-emerald-300 shadow-xs">
                             <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
@@ -1295,6 +1373,21 @@ export const VisitorPortal: React.FC<VisitorPortalProps> = ({
                     <span>Abrir Conteúdo (+)</span>
                   </button>
                 </div>
+
+                {/* Alerta de Autorização Local para Comarca / Interior (Estado Agrupado) */}
+                {tipoServico === 'comarca_interior' && (
+                  <div className="mt-4 pt-3.5 border-t border-blue-100/90 animate-in fade-in duration-200">
+                    <div className="flex items-start gap-2.5 p-3 rounded-xl bg-amber-50/90 border border-amber-200/90 text-amber-950 text-xs shadow-2xs">
+                      <AlertCircle className="w-4 h-4 text-amber-600 shrink-0 mt-0.5" />
+                      <div className="leading-relaxed">
+                        <strong className="font-bold text-amber-900">⚠️ Requer autorização da Direção do Fórum / Chefia Local:</strong>{' '}
+                        <span>
+                          Para atendimento descentralizado ou veículo alocado localmente em Comarcas do Interior, informe abaixo a Comarca de lotação, tipo de frota, abrangência e o responsável pela autorização local.
+                        </span>
+                      </div>
+                    </div>
+                  </div>
+                )}
 
                 {/* Exibição da Necessidade de Autorização e Documento Vinculado Automaticamente */}
                 {tipoServico === 'reserva_veiculo' && (
@@ -1370,25 +1463,25 @@ export const VisitorPortal: React.FC<VisitorPortalProps> = ({
                   </div>
                 )}
 
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4 items-stretch">
                   {/* Opção A: Solicitação de veículo com motorista (Ícone colorido: motorista/chofer ao lado da porta do carro) */}
                   <button
                     type="button"
                     onClick={() => handleSelectModalidade('com_motorista')}
-                    className={`group relative flex items-center justify-between p-4 sm:p-5 rounded-2xl border text-left transition-all duration-200 cursor-pointer ${
+                    className={`group relative flex items-center justify-between gap-3 p-4 rounded-2xl border text-left transition-all duration-200 cursor-pointer h-full ${
                       tipoServico === 'com_motorista' && item1Confirmado
                         ? 'bg-[#05202B] border-[#05202B] text-white shadow-lg ring-2 ring-[#05202B]/20'
                         : 'bg-white border-slate-200 text-slate-800 hover:border-blue-400 hover:bg-blue-50/20 hover:shadow-md'
                     }`}
                   >
-                    <div className="flex items-center gap-4 sm:gap-5 min-w-0">
-                      <div className={`w-18 h-18 sm:w-20 sm:h-20 rounded-2xl flex items-center justify-center shrink-0 p-2 transition-transform group-hover:scale-105 shadow-sm ${
+                    <div className="flex items-center gap-3.5 min-w-0">
+                      <div className={`w-16 h-16 rounded-2xl flex items-center justify-center shrink-0 p-1.5 transition-transform group-hover:scale-105 shadow-sm ${
                         tipoServico === 'com_motorista' && item1Confirmado
                           ? 'bg-gradient-to-br from-blue-900/60 via-slate-800 to-[#05202B] border border-blue-400/40 shadow-blue-500/20'
                           : 'bg-gradient-to-br from-blue-50 via-sky-50 to-indigo-100/70 border-2 border-blue-200/80 group-hover:border-blue-300'
                       }`}>
                         {/* Ícone colorido correspondente à 2ª imagem: Motorista/Chofer oficial ao lado da porta aberta do carro */}
-                        <svg className="w-13 h-13 sm:w-15 sm:h-15 drop-shadow-sm" viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg">
+                        <svg className="w-12 h-12 drop-shadow-sm" viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg">
                           {/* Carro Oficial à direita */}
                           <path d="M52 28 C 58 28 66 31 73 39 L 88 56 C 90 59 91 62 91 66 L 91 76 C 91 78 89 80 87 80 L 84 80 C 84 73 78 67 71 67 C 64 67 58 73 58 80 L 51 80 C 49 80 48 78 48 76 L 48 32 C 48 30 50 28 52 28 Z" fill="#2563EB" />
                           <path d="M54 33 C 58 33 64 35 70 42 L 81 54 C 82 55 82 56 80 56 L 54 56 C 52 56 51 55 51 53 L 51 35 C 51 34 52 33 54 33 Z" fill="#BAE6FD" />
@@ -1421,8 +1514,8 @@ export const VisitorPortal: React.FC<VisitorPortalProps> = ({
                           <path d="M21 19 Q 31 23 42 19 L 43 21 Q 31 25 20 21 Z" fill="#0F172A" />
                         </svg>
                       </div>
-                      <div className="min-w-0 py-1">
-                        <span className={`text-base sm:text-lg lg:text-xl font-extrabold block tracking-tight leading-snug ${
+                      <div className="min-w-0 py-0.5">
+                        <span className={`text-sm sm:text-base font-extrabold block tracking-tight leading-snug ${
                           tipoServico === 'com_motorista' && item1Confirmado ? 'text-white' : 'text-slate-900'
                         }`}>
                           Solicitação de veículo com motorista
@@ -1430,10 +1523,10 @@ export const VisitorPortal: React.FC<VisitorPortalProps> = ({
                       </div>
                     </div>
 
-                    <div className="shrink-0 pl-3">
+                    <div className="shrink-0 pl-1">
                       {tipoServico === 'com_motorista' && item1Confirmado ? (
-                        <span className="inline-flex items-center gap-1.5 text-xs font-bold text-amber-300 bg-white/10 px-3 py-1.5 rounded-full border border-amber-300/30 shadow-2xs">
-                          <Check className="w-4 h-4 stroke-[2.5]" />
+                        <span className="inline-flex items-center gap-1 text-[11px] font-bold text-amber-300 bg-white/10 px-2.5 py-1 rounded-full border border-amber-300/30 shadow-2xs">
+                          <Check className="w-3.5 h-3.5 stroke-[2.5]" />
                           <span>Selecionado</span>
                         </span>
                       ) : (
@@ -1446,14 +1539,14 @@ export const VisitorPortal: React.FC<VisitorPortalProps> = ({
                   <button
                     type="button"
                     onClick={() => handleSelectModalidade('reserva_veiculo')}
-                    className={`group relative flex items-center justify-between p-4 sm:p-5 rounded-2xl border text-left transition-all duration-200 cursor-pointer ${
+                    className={`group relative flex items-center justify-between gap-3 p-4 rounded-2xl border text-left transition-all duration-200 cursor-pointer h-full ${
                       tipoServico === 'reserva_veiculo' && item1Confirmado
                         ? 'bg-[#05202B] border-[#05202B] text-white shadow-lg ring-2 ring-[#05202B]/20'
                         : 'bg-white border-slate-200 text-slate-800 hover:border-blue-400 hover:bg-blue-50/20 hover:shadow-md'
                     }`}
                   >
-                    <div className="flex items-center gap-4 sm:gap-5 min-w-0">
-                      <div className={`w-18 h-18 sm:w-20 sm:h-20 rounded-2xl flex items-center justify-center shrink-0 p-2 transition-transform group-hover:scale-105 shadow-sm ${
+                    <div className="flex items-center gap-3.5 min-w-0">
+                      <div className={`w-16 h-16 rounded-2xl flex items-center justify-center shrink-0 p-1.5 transition-transform group-hover:scale-105 shadow-sm ${
                         tipoServico === 'reserva_veiculo' && item1Confirmado
                           ? 'bg-gradient-to-br from-blue-900/60 via-slate-800 to-[#05202B] border border-blue-400/40 shadow-blue-500/20'
                           : 'bg-gradient-to-br from-blue-50 via-sky-50 to-indigo-100/70 border-2 border-blue-200/80 group-hover:border-blue-300'
@@ -1462,21 +1555,21 @@ export const VisitorPortal: React.FC<VisitorPortalProps> = ({
                         <img
                           src="/assets/aistudio/image_d2bd0ba9.png"
                           alt="Solicitação de veículo sem motorista"
-                          className="w-13 h-13 sm:w-15 sm:h-15 object-contain drop-shadow-sm select-none"
+                          className="w-12 h-12 object-contain drop-shadow-sm select-none"
                         />
                       </div>
-                      <div className="min-w-0 py-1">
-                        <span className={`text-base sm:text-lg lg:text-xl font-extrabold block tracking-tight leading-snug ${
+                      <div className="min-w-0 py-0.5">
+                        <span className={`text-sm sm:text-base font-extrabold block tracking-tight leading-snug ${
                           tipoServico === 'reserva_veiculo' && item1Confirmado ? 'text-white' : 'text-slate-900'
                         }`}>
                           Solicitação de veículo sem motorista
                         </span>
-                        <span className={`text-sm sm:text-base font-bold block mt-1.5 ${
+                        <span className={`text-xs sm:text-[13px] font-bold block mt-1 ${
                           tipoServico === 'reserva_veiculo' && item1Confirmado ? 'text-blue-300' : 'text-blue-600'
                         }`}>
                           (Você será o condutor)
                         </span>
-                        <span className={`inline-flex items-center gap-1 mt-2 text-[11px] font-semibold px-2 py-0.5 rounded-md border ${
+                        <span className={`inline-flex items-center gap-1 mt-1.5 text-[11px] font-semibold px-2 py-0.5 rounded-md border leading-tight ${
                           tipoServico === 'reserva_veiculo' && item1Confirmado
                             ? 'bg-blue-900/50 text-amber-300 border-amber-300/30'
                             : 'bg-amber-50 text-amber-800 border-amber-200'
@@ -1487,10 +1580,79 @@ export const VisitorPortal: React.FC<VisitorPortalProps> = ({
                       </div>
                     </div>
 
-                    <div className="shrink-0 pl-3">
+                    <div className="shrink-0 pl-1">
                       {tipoServico === 'reserva_veiculo' && item1Confirmado ? (
-                        <span className="inline-flex items-center gap-1.5 text-xs font-bold text-amber-300 bg-white/10 px-3 py-1.5 rounded-full border border-amber-300/30 shadow-2xs">
-                          <Check className="w-4 h-4 stroke-[2.5]" />
+                        <span className="inline-flex items-center gap-1 text-[11px] font-bold text-amber-300 bg-white/10 px-2.5 py-1 rounded-full border border-amber-300/30 shadow-2xs">
+                          <Check className="w-3.5 h-3.5 stroke-[2.5]" />
+                          <span>Selecionado</span>
+                        </span>
+                      ) : (
+                        <div className="w-6 h-6 rounded-full border-2 border-slate-300 group-hover:border-blue-500 flex items-center justify-center transition-colors" />
+                      )}
+                    </div>
+                  </button>
+
+                  {/* Opção C: Solicitação em Comarca / Interior */}
+                  <button
+                    type="button"
+                    onClick={() => handleSelectModalidade('comarca_interior')}
+                    className={`group relative flex items-center justify-between gap-3 p-4 rounded-2xl border text-left transition-all duration-200 cursor-pointer h-full md:col-span-2 xl:col-span-1 ${
+                      tipoServico === 'comarca_interior' && item1Confirmado
+                        ? 'bg-[#05202B] border-[#05202B] text-white shadow-lg ring-2 ring-[#05202B]/20'
+                        : 'bg-white border-slate-200 text-slate-800 hover:border-blue-400 hover:bg-blue-50/20 hover:shadow-md'
+                    }`}
+                  >
+                    <div className="flex items-center gap-3.5 min-w-0">
+                      <div className={`w-16 h-16 rounded-2xl flex items-center justify-center shrink-0 p-1.5 transition-transform group-hover:scale-105 shadow-sm ${
+                        tipoServico === 'comarca_interior' && item1Confirmado
+                          ? 'bg-gradient-to-br from-blue-900/60 via-slate-800 to-[#05202B] border border-blue-400/40 shadow-blue-500/20'
+                          : 'bg-gradient-to-br from-blue-50 via-sky-50 to-indigo-100/70 border-2 border-blue-200/80 group-hover:border-blue-300'
+                      }`}>
+                        {/* Ícone representativo de localização geográfica / polo regional (Comarcas do Interior) */}
+                        <svg className="w-12 h-12 drop-shadow-sm" viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg">
+                          {/* Base cartográfica regional */}
+                          <path d="M14 72 L 32 62 L 66 66 L 86 58 L 88 80 L 64 88 L 32 84 L 12 88 Z" fill="#DBEAFE" stroke="#60A5FA" strokeWidth="2.5" strokeLinejoin="round" />
+                          {/* Rotas / Conexões regionais entre polos */}
+                          <path d="M26 76 Q 42 70 50 74 T 76 70" stroke="#2563EB" strokeWidth="2.5" strokeDasharray="4 3" strokeLinecap="round" />
+                          <circle cx="25" cy="76" r="4" fill="#1D4ED8" />
+                          <circle cx="76" cy="70" r="4" fill="#F59E0B" />
+                          {/* Edifício / Fórum da Comarca estilizado à direita */}
+                          <rect x="57" y="42" width="22" height="20" rx="2" fill="#1E3A8A" />
+                          <polygon points="54,42 68,31 82,42" fill="#2563EB" />
+                          <rect x="61" y="46" width="3.5" height="12" rx="1" fill="#BAE6FD" />
+                          <rect x="66.5" y="46" width="3.5" height="12" rx="1" fill="#BAE6FD" />
+                          <rect x="72" y="46" width="3.5" height="12" rx="1" fill="#BAE6FD" />
+                          {/* Pino de localização geográfica principal (Polo Regional) */}
+                          <path d="M40 12 C 29 12 20 21 20 32 C 20 46 37 64 39.2 66.3 C 39.6 66.8 40.4 66.8 40.8 66.3 C 43 64 60 46 60 32 C 60 21 51 12 40 12 Z" fill="#2563EB" stroke="#1E40AF" strokeWidth="2" />
+                          <circle cx="40" cy="32" r="9.5" fill="#FFFFFF" />
+                          <circle cx="40" cy="32" r="5" fill="#F59E0B" />
+                        </svg>
+                      </div>
+                      <div className="min-w-0 py-0.5">
+                        <span className={`text-sm sm:text-base font-extrabold block tracking-tight leading-snug ${
+                          tipoServico === 'comarca_interior' && item1Confirmado ? 'text-white' : 'text-slate-900'
+                        }`}>
+                          Solicitação em Comarca / Interior
+                        </span>
+                        <span className={`text-xs sm:text-[13px] font-bold block mt-1 ${
+                          tipoServico === 'comarca_interior' && item1Confirmado ? 'text-blue-300' : 'text-blue-600'
+                        }`}>
+                          (Atendimento descentralizado ou veículo alocado localmente)
+                        </span>
+                        <span className={`inline-flex items-center gap-1 mt-1.5 text-[11px] font-semibold px-2 py-0.5 rounded-md border leading-tight ${
+                          tipoServico === 'comarca_interior' && item1Confirmado
+                            ? 'bg-blue-900/50 text-amber-300 border-amber-300/30'
+                            : 'bg-amber-50 text-amber-800 border-amber-200'
+                        }`}>
+                          <span>⚠️ Requer autorização da Direção do Fórum / Chefia Local</span>
+                        </span>
+                      </div>
+                    </div>
+
+                    <div className="shrink-0 pl-1">
+                      {tipoServico === 'comarca_interior' && item1Confirmado ? (
+                        <span className="inline-flex items-center gap-1 text-[11px] font-bold text-amber-300 bg-white/10 px-2.5 py-1 rounded-full border border-amber-300/30 shadow-2xs">
+                          <Check className="w-3.5 h-3.5 stroke-[2.5]" />
                           <span>Selecionado</span>
                         </span>
                       ) : (
@@ -1499,6 +1661,19 @@ export const VisitorPortal: React.FC<VisitorPortalProps> = ({
                     </div>
                   </button>
                 </div>
+
+                {/* Seção Informativa para Modalidade Comarca / Interior (Estado Expandido) */}
+                {tipoServico === 'comarca_interior' && (
+                  <div className="mt-4 p-4 rounded-2xl bg-amber-50/70 border border-amber-200/90 shadow-2xs animate-in fade-in duration-200">
+                    <div className="flex items-start gap-2.5">
+                      <AlertCircle className="w-4 h-4 text-amber-700 shrink-0 mt-0.5" />
+                      <div className="text-xs text-amber-950">
+                        <strong>Aviso Institucional (Comarcas do Interior):</strong> O atendimento descentralizado ou com veículo alocado localmente requer{' '}
+                        <strong>autorização da Direção do Fórum / Chefia Local</strong> e preenchimento dos dados de frota e abrangência na etapa seguinte.
+                      </div>
+                    </div>
+                  </div>
+                )}
 
                 {/* Seção Informativa do Documento Vinculado na Modalidade Sem Motorista (Estado Expandido) */}
                 {tipoServico === 'reserva_veiculo' && (
@@ -1581,6 +1756,14 @@ export const VisitorPortal: React.FC<VisitorPortalProps> = ({
                           <span className="text-emerald-700 font-medium">
                             WhatsApp: {telefone}{telefoneSecundario.trim() ? ` / ${telefoneSecundario.trim()}` : ''}
                           </span>
+                          {tipoServico === 'comarca_interior' && (
+                            <>
+                              <span className="text-slate-400">•</span>
+                              <span className="text-blue-800 font-semibold">
+                                {tipoFrotaInterior === 'pool_regional' ? 'Pool Regional' : tipoFrotaInterior === 'veiculo_transito' ? 'Veículo de Trânsito' : 'Veículo próprio da Comarca'} • {abrangenciaDeslocamento === 'intramunicipal' ? 'Intramunicipal' : abrangenciaDeslocamento === 'intermunicipal' ? 'Deslocamento Intermunicipal' : 'Jurisdição da Comarca'} • Aut.: {autorizacaoLocalResponsavel}
+                              </span>
+                            </>
+                          )}
                         </div>
                       </div>
                     </div>
@@ -1757,6 +1940,109 @@ export const VisitorPortal: React.FC<VisitorPortalProps> = ({
                         </div>
                       </div>
 
+                      {/* Campos específicos para Solicitação em Comarca / Interior */}
+                      {tipoServico === 'comarca_interior' && (
+                        <div className="pt-3 border-t border-slate-200/80 space-y-3 animate-in fade-in duration-200">
+                          <div className="flex items-center justify-between gap-2 flex-wrap">
+                            <div className="flex items-center gap-2">
+                              <MapPin className="w-4 h-4 text-blue-700 shrink-0" />
+                              <span className="text-xs font-bold text-slate-900">
+                                Dados Específicos — Comarca / Interior
+                              </span>
+                            </div>
+                            <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-[11px] font-semibold bg-amber-50 text-amber-800 border border-amber-200">
+                              ⚠️ Requer autorização da Direção do Fórum / Chefia Local
+                            </span>
+                          </div>
+
+                          {autorizacaoLocalErro && (
+                            <div className="p-2.5 rounded-xl bg-red-50 border border-red-200 text-xs font-semibold text-red-900 flex items-center gap-2">
+                              <AlertCircle className="w-4 h-4 text-red-600 shrink-0" />
+                              <span>{autorizacaoLocalErro}</span>
+                            </div>
+                          )}
+
+                          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
+                            {/* Comarca de Origem / Lotação */}
+                            <div>
+                              <label className="block text-xs font-semibold text-slate-700 mb-1">
+                                Comarca de Origem / Lotação *
+                              </label>
+                              <div className="relative">
+                                <Building2 className="w-4 h-4 text-blue-600 absolute left-3 top-1/2 -translate-y-1/2" />
+                                <select
+                                  value={comarca}
+                                  onChange={(e) => setComarca(e.target.value)}
+                                  className="w-full pl-9 pr-3 py-2 rounded-xl text-xs font-medium bg-white border border-slate-300 text-slate-900 focus:outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-400/20 shadow-2xs cursor-pointer"
+                                >
+                                  {comarcasDisponiveis.map((c) => (
+                                    <option key={c} value={c}>{c}</option>
+                                  ))}
+                                </select>
+                              </div>
+                            </div>
+
+                            {/* Tipo de Frota */}
+                            <div>
+                              <label className="block text-xs font-semibold text-slate-700 mb-1">
+                                Tipo de Frota *
+                              </label>
+                              <div className="relative">
+                                <Car className="w-4 h-4 text-blue-600 absolute left-3 top-1/2 -translate-y-1/2" />
+                                <select
+                                  value={tipoFrotaInterior}
+                                  onChange={(e) => setTipoFrotaInterior(e.target.value as 'veiculo_proprio_comarca' | 'pool_regional' | 'veiculo_transito')}
+                                  className="w-full pl-9 pr-3 py-2 rounded-xl text-xs font-medium bg-white border border-slate-300 text-slate-900 focus:outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-400/20 shadow-2xs cursor-pointer"
+                                >
+                                  <option value="veiculo_proprio_comarca">Veículo próprio da Comarca</option>
+                                  <option value="pool_regional">Pool Regional</option>
+                                  <option value="veiculo_transito">Veículo de Trânsito</option>
+                                </select>
+                              </div>
+                            </div>
+
+                            {/* Abrangência do Deslocamento */}
+                            <div>
+                              <label className="block text-xs font-semibold text-slate-700 mb-1">
+                                Abrangência do Deslocamento *
+                              </label>
+                              <div className="relative">
+                                <Compass className="w-4 h-4 text-blue-600 absolute left-3 top-1/2 -translate-y-1/2" />
+                                <select
+                                  value={abrangenciaDeslocamento}
+                                  onChange={(e) => setAbrangenciaDeslocamento(e.target.value as 'intramunicipal' | 'jurisdicao_comarca' | 'intermunicipal')}
+                                  className="w-full pl-9 pr-3 py-2 rounded-xl text-xs font-medium bg-white border border-slate-300 text-slate-900 focus:outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-400/20 shadow-2xs cursor-pointer"
+                                >
+                                  <option value="intramunicipal">Intramunicipal</option>
+                                  <option value="jurisdicao_comarca">Jurisdição da Comarca</option>
+                                  <option value="intermunicipal">Deslocamento Intermunicipal</option>
+                                </select>
+                              </div>
+                            </div>
+
+                            {/* Matrícula/Nome do Responsável pela Autorização Local */}
+                            <div>
+                              <label className="block text-xs font-semibold text-slate-700 mb-1">
+                                Matrícula/Nome do Responsável pela Autorização Local *
+                              </label>
+                              <div className="relative">
+                                <ShieldCheck className="w-4 h-4 text-amber-600 absolute left-3 top-1/2 -translate-y-1/2" />
+                                <input
+                                  type="text"
+                                  value={autorizacaoLocalResponsavel}
+                                  onChange={(e) => {
+                                    setAutorizacaoLocalResponsavel(e.target.value);
+                                    if (autorizacaoLocalErro) setAutorizacaoLocalErro(null);
+                                  }}
+                                  placeholder="Ex: TJPR-42.190-5 / Direção do Fórum"
+                                  className="w-full pl-9 pr-3 py-2 rounded-xl text-xs font-medium bg-white border border-slate-300 text-slate-900 focus:outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-400/20 shadow-2xs"
+                                />
+                              </div>
+                            </div>
+                          </div>
+                        </div>
+                      )}
+
                       <div className="flex items-center justify-between text-[11px] text-slate-500 pt-1">
                         <span>
                           {dadosCadastraisConfirmados
@@ -1924,13 +2210,82 @@ export const VisitorPortal: React.FC<VisitorPortalProps> = ({
                               onChange={(e) => setComarca(e.target.value)}
                               className="w-full pl-9 pr-3 py-2 rounded-xl text-xs font-medium bg-white border-2 border-blue-500 text-slate-900 focus:outline-none focus:ring-2 focus:ring-blue-400/20 shadow-xs cursor-pointer"
                             >
-                              {comarcas.map((c) => (
+                              {comarcasDisponiveis.map((c) => (
                                 <option key={c} value={c}>{c}</option>
                               ))}
                             </select>
                           </div>
                         </div>
+
+                        {tipoServico === 'comarca_interior' && (
+                          <>
+                            {/* Tipo de Frota */}
+                            <div>
+                              <label className="block text-xs font-semibold text-slate-700 mb-1">
+                                Tipo de Frota *
+                              </label>
+                              <div className="relative">
+                                <Car className="w-4 h-4 text-blue-600 absolute left-3 top-1/2 -translate-y-1/2" />
+                                <select
+                                  value={tipoFrotaInterior}
+                                  onChange={(e) => setTipoFrotaInterior(e.target.value as 'veiculo_proprio_comarca' | 'pool_regional' | 'veiculo_transito')}
+                                  className="w-full pl-9 pr-3 py-2 rounded-xl text-xs font-medium bg-white border-2 border-blue-500 text-slate-900 focus:outline-none focus:ring-2 focus:ring-blue-400/20 shadow-xs cursor-pointer"
+                                >
+                                  <option value="veiculo_proprio_comarca">Veículo próprio da Comarca</option>
+                                  <option value="pool_regional">Pool Regional</option>
+                                  <option value="veiculo_transito">Veículo de Trânsito</option>
+                                </select>
+                              </div>
+                            </div>
+
+                            {/* Abrangência do Deslocamento */}
+                            <div>
+                              <label className="block text-xs font-semibold text-slate-700 mb-1">
+                                Abrangência do Deslocamento *
+                              </label>
+                              <div className="relative">
+                                <Compass className="w-4 h-4 text-blue-600 absolute left-3 top-1/2 -translate-y-1/2" />
+                                <select
+                                  value={abrangenciaDeslocamento}
+                                  onChange={(e) => setAbrangenciaDeslocamento(e.target.value as 'intramunicipal' | 'jurisdicao_comarca' | 'intermunicipal')}
+                                  className="w-full pl-9 pr-3 py-2 rounded-xl text-xs font-medium bg-white border-2 border-blue-500 text-slate-900 focus:outline-none focus:ring-2 focus:ring-blue-400/20 shadow-xs cursor-pointer"
+                                >
+                                  <option value="intramunicipal">Intramunicipal</option>
+                                  <option value="jurisdicao_comarca">Jurisdição da Comarca</option>
+                                  <option value="intermunicipal">Deslocamento Intermunicipal</option>
+                                </select>
+                              </div>
+                            </div>
+
+                            {/* Matrícula/Nome do Responsável pela Autorização Local */}
+                            <div className="sm:col-span-2 lg:col-span-1">
+                              <label className="block text-xs font-semibold text-slate-700 mb-1">
+                                Matrícula/Nome do Responsável pela Autorização Local *
+                              </label>
+                              <div className="relative">
+                                <ShieldCheck className="w-4 h-4 text-amber-600 absolute left-3 top-1/2 -translate-y-1/2" />
+                                <input
+                                  type="text"
+                                  value={autorizacaoLocalResponsavel}
+                                  onChange={(e) => {
+                                    setAutorizacaoLocalResponsavel(e.target.value);
+                                    if (autorizacaoLocalErro) setAutorizacaoLocalErro(null);
+                                  }}
+                                  placeholder="Ex: TJPR-42.190-5 / Direção do Fórum"
+                                  className="w-full pl-9 pr-3 py-2 rounded-xl text-xs font-medium bg-white border-2 border-blue-500 text-slate-900 focus:outline-none focus:ring-2 focus:ring-blue-400/20 shadow-xs"
+                                />
+                              </div>
+                            </div>
+                          </>
+                        )}
                       </div>
+
+                      {autorizacaoLocalErro && tipoServico === 'comarca_interior' && (
+                        <div className="p-2.5 rounded-xl bg-red-50 border border-red-200 text-xs font-semibold text-red-900 flex items-center gap-2">
+                          <AlertCircle className="w-4 h-4 text-red-600 shrink-0" />
+                          <span>{autorizacaoLocalErro}</span>
+                        </div>
+                      )}
 
                       {/* Botões do Modo Edição */}
                       <div className="pt-3 flex items-center justify-end gap-2 border-t border-slate-200">

@@ -93,7 +93,7 @@ export interface Chamado {
   dataAvaliacao?: string;
   finalizadoPorSolicitante?: boolean;
   // Condução Própria (Sem Motorista) & Autorização para Conduzir Veículos Oficiais
-  tipoServico?: 'com_motorista' | 'reserva_veiculo';
+  tipoServico?: 'com_motorista' | 'reserva_veiculo' | 'comarca_interior';
   documentoAutorizacao?: string;
   documentoIdVinculado?: string;
   autorizacaoConduzirValidada?: boolean;
@@ -449,7 +449,7 @@ export interface Trip {
   sigaStatus?: 'integrado' | 'pendente_sinc' | 'homologado';
   sigaTipoDemanda?: string;
   // Condução Própria (Sem Motorista) & Autorização Vinculada
-  tipoServico?: 'com_motorista' | 'reserva_veiculo';
+  tipoServico?: 'com_motorista' | 'reserva_veiculo' | 'comarca_interior';
   documentoAutorizacao?: string;
   documentoIdVinculado?: string;
   autorizacaoConduzirValidada?: boolean;
@@ -656,7 +656,7 @@ export interface PassengerDetail {
 }
 
 export interface VisitorSolicitationData {
-  tipoServico: 'com_motorista' | 'reserva_veiculo';
+  tipoServico: 'com_motorista' | 'reserva_veiculo' | 'comarca_interior';
   solicitanteNome: string;
   matriculaServidor?: string;
   cargoServidor?: string;
@@ -667,6 +667,9 @@ export interface VisitorSolicitationData {
   email: string;
   orgaoOuVinculo: string;
   comarca: string;
+  tipoFrotaInterior?: 'veiculo_proprio_comarca' | 'pool_regional' | 'veiculo_transito';
+  abrangenciaDeslocamento?: 'intramunicipal' | 'jurisdicao_comarca' | 'intermunicipal';
+  autorizacaoLocalResponsavel?: string;
   origem: string;
   destino: string;
   dataSaida: string;
